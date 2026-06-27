@@ -1,0 +1,12 @@
+body {
+  min-height: 100vh;
+  background: #f7f8fa;
+}
+
+.blog-shell {
+  padding: 2rem 0;
+}
+
+.status-panel {
+  background: #ffffff;
+}

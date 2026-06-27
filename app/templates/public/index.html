@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}首页 - AI 辅助个人博客系统{% endblock %}
+
+{% block content %}
+  <section class="blog-shell">
+    <div class="row align-items-center g-4">
+      <div class="col-lg-8">
+        <p class="text-uppercase small text-secondary mb-2">Personal Blog System V0.1</p>
+        <h1 class="h2 fw-semibold mb-3">AI 辅助个人博客系统工程骨架已启动</h1>
+        <p class="lead text-secondary mb-4">
+          当前阶段已完成 Flask app factory、扩展初始化、Blueprint 注册和基础模板。
+          下一阶段将实现数据库模型、初始化脚本和演示数据。
+        </p>
+        <div class="d-flex flex-wrap gap-2">
+          <span class="badge text-bg-primary">Flask</span>
+          <span class="badge text-bg-secondary">SQLAlchemy</span>
+          <span class="badge text-bg-secondary">Flask-Login</span>
+          <span class="badge text-bg-secondary">SQLite</span>
+          <span class="badge text-bg-secondary">Bootstrap</span>
+        </div>
+      </div>
+      <div class="col-lg-4">
+        <div class="status-panel border rounded-2 p-3">
+          <h2 class="h6 fw-semibold mb-3">第一阶段验收</h2>
+          <ul class="list-unstyled mb-0 small text-secondary">
+            <li class="mb-2">✓ 项目目录已模块化</li>
+            <li class="mb-2">✓ Flask 应用可创建</li>
+            <li class="mb-2">✓ 前台首页可访问</li>
+            <li>✓ 后续模块边界已预留</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+{% endblock %}
