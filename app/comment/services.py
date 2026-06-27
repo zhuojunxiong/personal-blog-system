@@ -57,12 +57,13 @@ class CommentService:
         return errors
 
     @staticmethod
-    def create_pending(article, data):
+    def create_pending(article, data, user=None):
         errors = CommentService.validate(data)
         if errors:
             return None, errors
         comment = Comment(
             article_id=article.id,
+            user_id=user.id if user else None,
             nickname=normalize_text(data.get("nickname")),
             email=normalize_text(data.get("email")),
             content=normalize_text(data.get("content")),

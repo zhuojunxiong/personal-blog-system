@@ -1,0 +1,36 @@
+{% extends "admin/base.html" %}
+
+{% block title %}用户管理{% endblock %}
+{% block page_title %}用户管理{% endblock %}
+
+{% block content %}
+  <section class="admin-panel">
+    <div class="panel-head"><h2>用户列表</h2></div>
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <thead><tr><th>用户</th><th>邮箱</th><th>角色</th><th>状态</th><th>文章</th><th>专栏</th><th>操作</th></tr></thead>
+        <tbody>
+          {% for user in users %}
+            <tr>
+              <td><strong>{{ user.nickname }}</strong><div class="small text-secondary">{{ user.username }}</div></td>
+              <td>{{ user.email }}</td>
+              <td>{{ user.role }}</td>
+              <td><span class="badge text-bg-light">{{ user.status }}</span></td>
+              <td>{{ user.articles|length }}</td>
+              <td>{{ user.columns|length }}</td>
+              <td>
+                {% if not user.is_admin %}
+                  <form method="post" action="{{ url_for('user.admin_toggle_user', user_id=user.id) }}">
+                    <button class="btn btn-sm btn-outline-warning" type="submit">{{ '禁用' if user.status == 'active' else '启用' }}</button>
+                  </form>
+                {% else %}
+                  <span class="text-secondary">管理员</span>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+{% endblock %}

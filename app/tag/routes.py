@@ -1,5 +1,5 @@
 from flask import Blueprint, flash, redirect, render_template, request, url_for
-from flask_login import login_required
+from app.admin.decorators import admin_required
 
 from app.tag.services import TagService
 
@@ -7,7 +7,7 @@ tag_bp = Blueprint("tag", __name__, url_prefix="/admin/tags")
 
 
 @tag_bp.route("/", methods=["GET", "POST"])
-@login_required
+@admin_required
 def index():
     if request.method == "POST":
         tag, errors = TagService.create(request.form)
@@ -20,7 +20,7 @@ def index():
 
 
 @tag_bp.route("/<int:tag_id>/edit", methods=["GET", "POST"])
-@login_required
+@admin_required
 def edit(tag_id):
     tag = TagService.get_or_404(tag_id)
     if request.method == "POST":
@@ -34,7 +34,7 @@ def edit(tag_id):
 
 
 @tag_bp.route("/<int:tag_id>/delete", methods=["POST"])
-@login_required
+@admin_required
 def delete(tag_id):
     tag = TagService.get_or_404(tag_id)
     TagService.delete(tag)

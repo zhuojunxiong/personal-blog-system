@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}{{ profile_user.nickname }} - 作者主页{% endblock %}
+
+{% block content %}
+  <section class="content-section">
+    <div class="container">
+      <div class="profile-hero">
+        <p class="eyebrow">Author</p>
+        <h1>{{ profile_user.nickname }}</h1>
+        <p>{{ profile_user.bio or "这个作者还没有填写简介。" }}</p>
+        <div class="article-meta">
+          <span>{{ columns|length }} 个专栏</span>
+          <span>{{ articles|length }} 篇公开文章</span>
+          <span>加入于 {{ profile_user.created_at.strftime('%Y-%m-%d') }}</span>
+        </div>
+      </div>
+      <div class="row g-4 mt-2">
+        <div class="col-lg-4">
+          <div class="info-panel">
+            <h2 class="h5">作者专栏</h2>
+            {% for column in columns %}
+              <a class="author-row" href="{{ url_for('column.detail', column_id=column.id) }}">
+                <strong>{{ column.name }}</strong>
+                <span>{{ column.description }}</span>
+              </a>
+            {% else %}
+              <div class="empty-state compact">暂无专栏</div>
+            {% endfor %}
+          </div>
+        </div>
+        <div class="col-lg-8">
+          {% if articles %}
+            <div class="article-grid one-col">
+              {% for article in articles %}
+                {% include "public/_article_card.html" %}
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="empty-state">该作者还没有公开文章。</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </section>
+{% endblock %}

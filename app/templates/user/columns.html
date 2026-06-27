@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}我的专栏{% endblock %}
+
+{% block content %}
+  <section class="content-section">
+    <div class="container">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">My Columns</p>
+          <h1>我的专栏</h1>
+        </div>
+        <a class="btn btn-outline-dark" href="{{ url_for('user.center') }}">返回个人中心</a>
+      </div>
+      <div class="row g-4">
+        <div class="col-lg-4">
+          <form class="admin-panel" method="post">
+            <h2>创建专栏</h2>
+            <label class="form-label">专栏名称</label>
+            <input class="form-control mb-3" name="name" required maxlength="120">
+            <label class="form-label">专栏简介</label>
+            <textarea class="form-control mb-3" name="description" rows="4"></textarea>
+            <button class="btn btn-dark" type="submit">创建</button>
+          </form>
+        </div>
+        <div class="col-lg-8">
+          <div class="taxonomy-grid">
+            {% for column in columns %}
+              <div class="taxonomy-card">
+                <h2>{{ column.name }}</h2>
+                <p>{{ column.description }}</p>
+                <span>{{ column.articles|length }} 篇文章</span>
+                <div class="d-flex gap-2 mt-3">
+                  <a class="btn btn-sm btn-outline-dark" href="{{ url_for('column.edit', column_id=column.id) }}">编辑</a>
+                  <form method="post" action="{{ url_for('column.delete', column_id=column.id) }}" onsubmit="return confirm('确定删除该专栏吗？');">
+                    <button class="btn btn-sm btn-outline-danger" type="submit">删除</button>
+                  </form>
+                </div>
+              </div>
+            {% else %}
+              <div class="empty-state">暂无专栏</div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+{% endblock %}

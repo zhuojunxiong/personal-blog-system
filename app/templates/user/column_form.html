@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block title %}编辑专栏{% endblock %}
+
+{% block content %}
+  <section class="content-section">
+    <div class="container narrow-container">
+      <form class="admin-panel" method="post">
+        <h1>编辑专栏</h1>
+        <label class="form-label">专栏名称</label>
+        <input class="form-control mb-3" name="name" required maxlength="120" value="{{ column.name }}">
+        <label class="form-label">专栏简介</label>
+        <textarea class="form-control mb-3" name="description" rows="4">{{ column.description }}</textarea>
+        <button class="btn btn-dark" type="submit">保存</button>
+        <a class="btn btn-outline-dark" href="{{ url_for('column.my_columns') }}">返回</a>
+      </form>
+    </div>
+  </section>
+{% endblock %}

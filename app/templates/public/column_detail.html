@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}{{ column.name }} - 专栏{% endblock %}
+
+{% block content %}
+  <section class="content-section">
+    <div class="container">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Column</p>
+          <h1>{{ column.name }}</h1>
+          <p class="text-secondary">{{ column.description }}</p>
+          <a class="clean-link" href="{{ url_for('user.profile', user_id=column.user.id) }}">作者：{{ column.user.nickname }}</a>
+        </div>
+      </div>
+      {% if articles %}
+        <div class="article-grid">
+          {% for article in articles %}
+            {% include "public/_article_card.html" %}
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="empty-state">该专栏还没有公开文章。</div>
+      {% endif %}
+    </div>
+  </section>
+{% endblock %}

@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}文章 - 多用户知识专栏{% endblock %}
+
+{% block content %}
+  <section class="content-section">
+    <div class="container">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Articles</p>
+          <h1>公开文章</h1>
+        </div>
+        <a class="btn btn-dark" href="{{ url_for('user.write_article') }}">写文章</a>
+      </div>
+      {% if articles %}
+        <div class="article-grid">
+          {% for article in articles %}
+            {% include "public/_article_card.html" %}
+          {% endfor %}
+        </div>
+        {% include "public/_pagination.html" %}
+      {% else %}
+        <div class="empty-state">暂无公开文章。</div>
+      {% endif %}
+    </div>
+  </section>
+{% endblock %}

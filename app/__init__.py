@@ -33,20 +33,24 @@ def register_blueprints(app):
     from app.article.routes import article_bp
     from app.auth.routes import auth_bp
     from app.category.routes import category_bp
+    from app.column.routes import column_bp
     from app.comment.routes import comment_bp
     from app.dashboard.routes import dashboard_bp
     from app.public.routes import public_bp
     from app.tag.routes import tag_bp
+    from app.user.routes import user_bp
 
     app.register_blueprint(public_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(admin_bp)
     app.register_blueprint(dashboard_bp)
     app.register_blueprint(article_bp)
+    app.register_blueprint(column_bp)
     app.register_blueprint(category_bp)
     app.register_blueprint(tag_bp)
     app.register_blueprint(comment_bp)
     app.register_blueprint(ai_bp)
+    app.register_blueprint(user_bp)
 
 
 def register_error_handlers(app):
@@ -55,6 +59,10 @@ def register_error_handlers(app):
     @app.errorhandler(404)
     def page_not_found(error):
         return render_template("errors/404.html"), 404
+
+    @app.errorhandler(403)
+    def forbidden(error):
+        return render_template("errors/403.html"), 403
 
     @app.errorhandler(500)
     def internal_error(error):

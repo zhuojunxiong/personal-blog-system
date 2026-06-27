@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}编辑资料{% endblock %}
+
+{% block content %}
+  <section class="content-section">
+    <div class="container narrow-container">
+      <form class="admin-panel" method="post">
+        <h1>编辑资料</h1>
+        <label class="form-label">昵称</label>
+        <input class="form-control mb-3" name="nickname" required maxlength="64" value="{{ current_user.nickname }}">
+        <label class="form-label">邮箱</label>
+        <input class="form-control mb-3" name="email" type="email" required maxlength="120" value="{{ current_user.email }}">
+        <label class="form-label">个人简介</label>
+        <textarea class="form-control mb-3" name="bio" rows="5" maxlength="500">{{ current_user.bio }}</textarea>
+        <button class="btn btn-dark" type="submit">保存</button>
+        <a class="btn btn-outline-dark" href="{{ url_for('user.center') }}">返回</a>
+      </form>
+    </div>
+  </section>
+{% endblock %}

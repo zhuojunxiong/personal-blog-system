@@ -33,10 +33,13 @@ class User(UserMixin, db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(64), unique=True, nullable=False, index=True)
+    email = db.Column(db.String(120), unique=True, nullable=False, index=True)
     password_hash = db.Column(db.String(255), nullable=False)
-    nickname = db.Column(db.String(64), nullable=False, default="管理员")
-    role = db.Column(db.String(32), nullable=False, default="admin")
+    nickname = db.Column(db.String(64), nullable=False, default="知识创作者")
+    role = db.Column(db.String(32), nullable=False, default="user")
     status = db.Column(db.String(32), nullable=False, default="active")
+    bio = db.Column(db.String(500), default="")
+    avatar = db.Column(db.String(255), default="")
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     updated_at = db.Column(
         db.DateTime,
@@ -54,6 +57,30 @@ class User(UserMixin, db.Model):
     @property
     def is_active(self):
         return self.status == "active"
+
+    @property
+    def is_admin(self):
+        return self.role == "admin"
+
+
+class BlogColumn(db.Model):
+    __tablename__ = "blog_columns"
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    name = db.Column(db.String(120), nullable=False)
+    description = db.Column(db.String(500), default="")
+    status = db.Column(db.String(32), nullable=False, default="active")
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = db.Column(
+        db.DateTime,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
+        nullable=False,
+    )
+
+    user = db.relationship("User", backref=db.backref("columns", lazy=True))
+    articles = db.relationship("Article", back_populates="column")
 
 
 class Category(db.Model):
@@ -103,9 +130,13 @@ class Article(db.Model):
     summary = db.Column(db.String(500), default="")
     content = db.Column(db.Text, nullable=False)
     status = db.Column(db.String(32), nullable=False, default=ARTICLE_STATUS_DRAFT)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
+    column_id = db.Column(db.Integer, db.ForeignKey("blog_columns.id"))
     category_id = db.Column(db.Integer, db.ForeignKey("categories.id"), nullable=False)
     author = db.Column(db.String(80), nullable=False, default="管理员")
     view_count = db.Column(db.Integer, nullable=False, default=0)
+    like_count = db.Column(db.Integer, nullable=False, default=0)
+    favorite_count = db.Column(db.Integer, nullable=False, default=0)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     updated_at = db.Column(
         db.DateTime,
@@ -115,6 +146,8 @@ class Article(db.Model):
     )
     published_at = db.Column(db.DateTime)
 
+    user = db.relationship("User", backref=db.backref("articles", lazy=True))
+    column = db.relationship("BlogColumn", back_populates="articles")
     category = db.relationship("Category", back_populates="articles")
     tags = db.relationship(
         "Tag",
@@ -142,6 +175,7 @@ class Comment(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     article_id = db.Column(db.Integer, db.ForeignKey("articles.id"), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
     nickname = db.Column(db.String(80), nullable=False)
     email = db.Column(db.String(120), nullable=False)
     content = db.Column(db.Text, nullable=False)
@@ -155,6 +189,39 @@ class Comment(db.Model):
     )
 
     article = db.relationship("Article", back_populates="comments")
+    user = db.relationship("User", backref=db.backref("comments", lazy=True))
+
+
+class Like(db.Model):
+    __tablename__ = "likes"
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    article_id = db.Column(db.Integer, db.ForeignKey("articles.id"), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+    user = db.relationship("User", backref=db.backref("likes", lazy=True))
+    article = db.relationship("Article", backref=db.backref("likes", lazy=True, cascade="all, delete-orphan"))
+
+    __table_args__ = (
+        db.UniqueConstraint("user_id", "article_id", name="uq_user_article_like"),
+    )
+
+
+class Favorite(db.Model):
+    __tablename__ = "favorites"
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    article_id = db.Column(db.Integer, db.ForeignKey("articles.id"), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+    user = db.relationship("User", backref=db.backref("favorites", lazy=True))
+    article = db.relationship("Article", backref=db.backref("favorites", lazy=True, cascade="all, delete-orphan"))
+
+    __table_args__ = (
+        db.UniqueConstraint("user_id", "article_id", name="uq_user_article_favorite"),
+    )
 
 
 class AiLog(db.Model):

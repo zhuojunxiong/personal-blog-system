@@ -14,14 +14,14 @@
         <label class="form-label">作者</label>
         <input class="form-control" name="author" maxlength="80" value="{{ article.author if article else request.form.get('author', '管理员') }}">
       </div>
-      <div class="col-lg-4">
+      <div class="col-lg-3">
         <label class="form-label">状态</label>
         <select class="form-select" name="status">
           <option value="draft" {% if article and article.status == 'draft' %}selected{% endif %}>草稿</option>
           <option value="published" {% if article and article.status == 'published' %}selected{% endif %}>已发布</option>
         </select>
       </div>
-      <div class="col-lg-4">
+      <div class="col-lg-3">
         <label class="form-label">分类</label>
         <select class="form-select" name="category_id" required>
           <option value="">请选择分类</option>
@@ -30,7 +30,16 @@
           {% endfor %}
         </select>
       </div>
-      <div class="col-lg-4">
+      <div class="col-lg-3">
+        <label class="form-label">专栏</label>
+        <select class="form-select" name="column_id">
+          <option value="">不归属专栏</option>
+          {% for column in columns %}
+            <option value="{{ column.id }}" {% if article and article.column_id == column.id %}selected{% endif %}>{{ column.user.nickname }} / {{ column.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-lg-3">
         <label class="form-label">AI 占位</label>
         <button class="btn btn-outline-secondary w-100" formaction="{{ url_for('ai.placeholder') }}" formmethod="post">AI 功能暂未开放</button>
       </div>

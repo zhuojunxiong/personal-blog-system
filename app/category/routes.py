@@ -1,5 +1,5 @@
 from flask import Blueprint, flash, redirect, render_template, request, url_for
-from flask_login import login_required
+from app.admin.decorators import admin_required
 
 from app.category.services import CategoryService
 
@@ -7,7 +7,7 @@ category_bp = Blueprint("category", __name__, url_prefix="/admin/categories")
 
 
 @category_bp.route("/", methods=["GET", "POST"])
-@login_required
+@admin_required
 def index():
     if request.method == "POST":
         category, errors = CategoryService.create(request.form)
@@ -20,7 +20,7 @@ def index():
 
 
 @category_bp.route("/<int:category_id>/edit", methods=["GET", "POST"])
-@login_required
+@admin_required
 def edit(category_id):
     category = CategoryService.get_or_404(category_id)
     if request.method == "POST":
@@ -34,7 +34,7 @@ def edit(category_id):
 
 
 @category_bp.route("/<int:category_id>/delete", methods=["POST"])
-@login_required
+@admin_required
 def delete(category_id):
     category = CategoryService.get_or_404(category_id)
     errors = CategoryService.delete(category)

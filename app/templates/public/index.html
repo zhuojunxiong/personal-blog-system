@@ -6,15 +6,16 @@
   <section class="hero-section">
     <div class="container">
       <div class="hero-copy">
-        <p class="eyebrow">Personal Knowledge Blog · V0.2</p>
-        <h1>记录、整理、检索自己的知识内容。</h1>
-        <p class="hero-desc">这是一个面向课程实践的个人博客系统，当前版本已经完成文章、分类、标签、评论和后台管理闭环。</p>
+        <p class="eyebrow">Knowledge Columns · V0.3</p>
+        <h1>每个用户都能建立自己的知识专栏。</h1>
+        <p class="hero-desc">这里不是单人博客，也不是问答社区，而是围绕读博客、写博客、整理知识和交流反馈设计的多用户知识创作平台。</p>
         <form class="hero-search" action="{{ url_for('public.search') }}" method="get">
           <input class="form-control form-control-lg" name="q" placeholder="搜索标题、摘要或正文">
           <button class="btn btn-dark btn-lg" type="submit">搜索</button>
         </form>
         <div class="hero-actions">
           <a class="btn btn-dark btn-lg" href="#latest">开始阅读</a>
+          <a class="btn btn-outline-dark btn-lg" href="{{ url_for('auth.register') }}">成为创作者</a>
           <a class="btn btn-outline-dark btn-lg" href="{{ url_for('public.category_list') }}">查看分类</a>
         </div>
       </div>
@@ -26,7 +27,7 @@
       <div class="section-heading">
         <div>
           <p class="eyebrow">Latest Articles</p>
-          <h2>最新发布</h2>
+          <h2>最新文章</h2>
         </div>
         <span class="text-secondary">共 {{ pagination.total }} 篇已发布文章</span>
       </div>
@@ -49,7 +50,7 @@
       <div class="row g-4">
         <div class="col-lg-6">
           <div class="info-panel">
-            <h3>分类导航</h3>
+          <h3>热门分类</h3>
             <div class="d-flex flex-wrap gap-2">
               {% for category in categories %}
                 <a class="pill pill-large" href="{{ url_for('public.category_detail', category_id=category.id) }}">{{ category.name }}</a>
@@ -61,7 +62,7 @@
         </div>
         <div class="col-lg-6">
           <div class="info-panel">
-            <h3>标签云</h3>
+          <h3>热门标签</h3>
             <div class="d-flex flex-wrap gap-2">
               {% for tag in tags %}
                 <a class="pill pill-large" href="{{ url_for('public.tag_detail', tag_id=tag.id) }}">{{ tag.name }}</a>
@@ -69,6 +70,45 @@
                 <span class="text-secondary">暂无标签</span>
               {% endfor %}
             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <section class="content-section pt-0">
+    <div class="container">
+      <div class="row g-4">
+        <div class="col-lg-7">
+          <div class="info-panel">
+            <div class="section-heading mb-3">
+              <h3>推荐专栏</h3>
+              <a class="btn btn-sm btn-outline-dark" href="{{ url_for('column.index') }}">全部专栏</a>
+            </div>
+            <div class="taxonomy-grid compact-grid">
+              {% for column in columns %}
+                <a class="taxonomy-card" href="{{ url_for('column.detail', column_id=column.id) }}">
+                  <h2>{{ column.name }}</h2>
+                  <p>{{ column.description }}</p>
+                  <span>{{ column.user.nickname }} · {{ column.articles|length }} 篇</span>
+                </a>
+              {% else %}
+                <div class="empty-state compact">暂无专栏</div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-5">
+          <div class="info-panel">
+            <h3>活跃作者</h3>
+            {% for author in active_authors %}
+              <a class="author-row" href="{{ url_for('user.profile', user_id=author.id) }}">
+                <strong>{{ author.nickname }}</strong>
+                <span>{{ author.bio or '这个作者还没有填写简介。' }}</span>
+              </a>
+            {% else %}
+              <div class="empty-state compact">暂无作者</div>
+            {% endfor %}
+            <div class="ai-placeholder mt-3">AI 助手将在后续版本开放，目前不调用真实接口。</div>
           </div>
         </div>
       </div>

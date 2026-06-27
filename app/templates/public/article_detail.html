@@ -15,10 +15,31 @@
         <h1>{{ article.title }}</h1>
         <p class="lead text-secondary">{{ article.summary }}</p>
         <div class="article-meta justify-content-center">
-          <span>{{ article.author }}</span>
+          <span>
+            {% if article.user %}
+              作者 <a class="clean-link" href="{{ url_for('user.profile', user_id=article.user.id) }}">{{ article.user.nickname }}</a>
+            {% else %}
+              {{ article.author }}
+            {% endif %}
+          </span>
+          {% if article.column %}
+            <span>专栏 <a class="clean-link" href="{{ url_for('column.detail', column_id=article.column.id) }}">{{ article.column.name }}</a></span>
+          {% endif %}
           <span>发布 {{ article.published_at.strftime('%Y-%m-%d %H:%M') if article.published_at else article.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
           <span>更新 {{ article.updated_at.strftime('%Y-%m-%d %H:%M') }}</span>
           <span>{{ article.view_count }} 次浏览</span>
+        </div>
+        <div class="interaction-bar">
+          {% if current_user.is_authenticated %}
+            <form method="post" action="{{ url_for('comment.like', slug=article.slug) }}">
+              <button class="btn btn-{{ 'dark' if liked else 'outline-dark' }}" type="submit">{{ '已点赞' if liked else '点赞' }} · {{ article.like_count }}</button>
+            </form>
+            <form method="post" action="{{ url_for('comment.favorite', slug=article.slug) }}">
+              <button class="btn btn-{{ 'dark' if favorited else 'outline-dark' }}" type="submit">{{ '已收藏' if favorited else '收藏' }} · {{ article.favorite_count }}</button>
+            </form>
+          {% else %}
+            <a class="btn btn-outline-dark" href="{{ url_for('auth.login') }}">登录后点赞收藏</a>
+          {% endif %}
         </div>
       </div>
       <div class="article-body">
@@ -54,27 +75,17 @@
           <div class="empty-state compact">还没有已审核评论，欢迎留下第一条评论。</div>
         {% endfor %}
 
-        <form class="mt-4" action="{{ url_for('comment.submit', slug=article.slug) }}" method="post">
-          <h3 class="h5 mb-3">提交评论</h3>
-          <div class="row g-3">
-            <div class="col-md-6">
-              <label class="form-label">昵称</label>
-              <input class="form-control" name="nickname" maxlength="80" required>
-            </div>
-            <div class="col-md-6">
-              <label class="form-label">邮箱</label>
-              <input class="form-control" name="email" type="email" maxlength="120" required>
-            </div>
-            <div class="col-12">
-              <label class="form-label">评论内容</label>
-              <textarea class="form-control" name="content" rows="4" maxlength="1000" required></textarea>
-            </div>
-            <div class="col-12">
-              <button class="btn btn-dark" type="submit">提交审核</button>
-              <span class="small text-secondary ms-2">评论通过审核后才会展示。</span>
-            </div>
-          </div>
-        </form>
+        {% if current_user.is_authenticated %}
+          <form class="mt-4" action="{{ url_for('comment.submit', slug=article.slug) }}" method="post">
+            <h3 class="h5 mb-3">提交评论</h3>
+            <label class="form-label">评论内容</label>
+            <textarea class="form-control" name="content" rows="4" maxlength="1000" required></textarea>
+            <button class="btn btn-dark mt-3" type="submit">提交审核</button>
+            <span class="small text-secondary ms-2">评论通过审核后才会展示。</span>
+          </form>
+        {% else %}
+          <div class="empty-state compact mt-4">登录后可以发表评论、点赞和收藏文章。</div>
+        {% endif %}
       </div>
     </div>
   </section>

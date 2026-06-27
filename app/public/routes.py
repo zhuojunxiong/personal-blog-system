@@ -1,8 +1,11 @@
 from flask import Blueprint, abort, render_template, request
+from flask_login import current_user
 
 from app.article.services import ArticleService
 from app.category.services import CategoryService
+from app.column.services import ColumnService
 from app.comment.services import CommentService
+from app.models import COMMENT_STATUS_APPROVED, Article, BlogColumn, Comment, User
 from app.tag.services import TagService
 
 public_bp = Blueprint("public", __name__)
@@ -18,6 +21,9 @@ def index():
         articles=pagination.items,
         categories=CategoryService.all_ordered(),
         tags=TagService.all_ordered(),
+        columns=ColumnService.all_active()[:6],
+        active_authors=User.query.filter_by(role="user", status="active").limit(6).all(),
+        latest_comments=Comment.query.filter_by(status=COMMENT_STATUS_APPROVED).order_by(Comment.created_at.desc()).limit(5).all(),
     )
 
 
@@ -32,6 +38,8 @@ def article_detail(slug):
         "public/article_detail.html",
         article=article,
         comments=comments,
+        liked=ArticleService.liked_by(article, current_user),
+        favorited=ArticleService.favorited_by(article, current_user),
     )
 
 
@@ -81,6 +89,17 @@ def search():
     return render_template(
         "public/search.html",
         keyword=keyword,
+        pagination=pagination,
+        articles=pagination.items,
+    )
+
+
+@public_bp.route("/articles")
+def articles():
+    page = request.args.get("page", 1, type=int)
+    pagination = ArticleService.list_published(page=page)
+    return render_template(
+        "public/articles.html",
         pagination=pagination,
         articles=pagination.items,
     )

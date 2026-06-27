@@ -14,17 +14,22 @@ from app.models import Category, User
 
 
 def init_database():
+    reset = "--reset" in sys.argv
     app = create_app()
     with app.app_context():
+        if reset:
+            db.drop_all()
         db.create_all()
 
         admin = User.query.filter_by(username="admin").first()
         if not admin:
             admin = User(
                 username="admin",
+                email="admin@example.com",
                 nickname="系统管理员",
                 role="admin",
                 status="active",
+                bio="平台管理员，负责内容和用户管理。",
             )
             admin.set_password("admin123456")
             db.session.add(admin)

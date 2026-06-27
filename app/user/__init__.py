@@ -1,0 +1,1 @@
+"""Registered user workspace module."""

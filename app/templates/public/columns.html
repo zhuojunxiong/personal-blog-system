@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}专栏 - 多用户知识专栏{% endblock %}
+
+{% block content %}
+  <section class="content-section">
+    <div class="container">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Columns</p>
+          <h1>知识专栏</h1>
+        </div>
+        <a class="btn btn-dark" href="{{ url_for('column.my_columns') }}">创建专栏</a>
+      </div>
+      <div class="taxonomy-grid">
+        {% for column in columns %}
+          <a class="taxonomy-card" href="{{ url_for('column.detail', column_id=column.id) }}">
+            <h2>{{ column.name }}</h2>
+            <p>{{ column.description or "这个专栏还没有简介。" }}</p>
+            <span>{{ column.user.nickname }} · {{ column.articles|length }} 篇文章</span>
+          </a>
+        {% else %}
+          <div class="empty-state">暂无专栏。</div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+{% endblock %}

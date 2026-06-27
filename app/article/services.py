@@ -8,9 +8,13 @@ from app.models import (
     ARTICLE_STATUS_PUBLISHED,
     ARTICLE_STATUSES,
     Article,
+    BlogColumn,
     Category,
     Comment,
+    Favorite,
+    Like,
     Tag,
+    User,
 )
 from app.services import make_slug, normalize_text
 
@@ -39,6 +43,10 @@ class ArticleService:
                     Article.title.ilike(like),
                     Article.summary.ilike(like),
                     Article.content.ilike(like),
+                    Article.author.ilike(like),
+                    Article.tags.any(Tag.name.ilike(like)),
+                    Article.user.has(User.username.ilike(like)),
+                    Article.user.has(User.nickname.ilike(like)),
                 )
             )
         return (
@@ -78,6 +86,26 @@ class ArticleService:
         return Article.query.get_or_404(article_id)
 
     @staticmethod
+    def list_by_user(user_id):
+        return Article.query.filter_by(user_id=user_id).order_by(Article.updated_at.desc()).all()
+
+    @staticmethod
+    def published_by_user(user_id):
+        return (
+            Article.query.filter_by(user_id=user_id, status=ARTICLE_STATUS_PUBLISHED)
+            .order_by(Article.published_at.desc(), Article.created_at.desc())
+            .all()
+        )
+
+    @staticmethod
+    def published_by_column(column_id):
+        return (
+            Article.query.filter_by(column_id=column_id, status=ARTICLE_STATUS_PUBLISHED)
+            .order_by(Article.published_at.desc(), Article.created_at.desc())
+            .all()
+        )
+
+    @staticmethod
     def validate(data):
         errors = []
         title = normalize_text(data.get("title"))
@@ -100,24 +128,32 @@ class ArticleService:
             errors.append("请选择文章分类。")
         elif not Category.query.get(category_id):
             errors.append("选择的分类不存在。")
+        column_id = data.get("column_id")
+        if column_id and not BlogColumn.query.get(column_id):
+            errors.append("选择的专栏不存在。")
 
         return errors
 
     @staticmethod
-    def create(data, tag_ids):
+    def create(data, tag_ids, user=None):
         errors = ArticleService.validate(data)
         if errors:
             return None, errors
 
         status = data.get("status") or ARTICLE_STATUS_DRAFT
+        author_name = normalize_text(data.get("author"))
+        if user and not author_name:
+            author_name = user.nickname or user.username
         article = Article(
             title=normalize_text(data.get("title")),
             slug=ArticleService.unique_slug(data.get("title")),
             summary=normalize_text(data.get("summary")),
             content=normalize_text(data.get("content")),
             status=status,
+            user_id=user.id if user else data.get("user_id") or None,
+            column_id=data.get("column_id") or None,
             category_id=int(data.get("category_id")),
-            author=normalize_text(data.get("author")) or "管理员",
+            author=author_name or "管理员",
             published_at=datetime.utcnow() if status == ARTICLE_STATUS_PUBLISHED else None,
         )
         article.tags = Tag.query.filter(Tag.id.in_(tag_ids)).all() if tag_ids else []
@@ -137,8 +173,11 @@ class ArticleService:
         article.summary = normalize_text(data.get("summary"))
         article.content = normalize_text(data.get("content"))
         article.status = status
+        article.column_id = data.get("column_id") or None
         article.category_id = int(data.get("category_id"))
-        article.author = normalize_text(data.get("author")) or "管理员"
+        article.author = normalize_text(data.get("author")) or article.author or (
+            article.user.nickname if article.user else "管理员"
+        )
         if old_status != ARTICLE_STATUS_PUBLISHED and status == ARTICLE_STATUS_PUBLISHED:
             article.published_at = datetime.utcnow()
         if status == ARTICLE_STATUS_DRAFT:
@@ -156,6 +195,44 @@ class ArticleService:
     def increment_view(article):
         article.view_count += 1
         db.session.commit()
+
+    @staticmethod
+    def toggle_like(article, user):
+        existing = Like.query.filter_by(article_id=article.id, user_id=user.id).first()
+        if existing:
+            db.session.delete(existing)
+            article.like_count = max(0, article.like_count - 1)
+            db.session.commit()
+            return False
+        db.session.add(Like(article=article, user=user))
+        article.like_count += 1
+        db.session.commit()
+        return True
+
+    @staticmethod
+    def toggle_favorite(article, user):
+        existing = Favorite.query.filter_by(article_id=article.id, user_id=user.id).first()
+        if existing:
+            db.session.delete(existing)
+            article.favorite_count = max(0, article.favorite_count - 1)
+            db.session.commit()
+            return False
+        db.session.add(Favorite(article=article, user=user))
+        article.favorite_count += 1
+        db.session.commit()
+        return True
+
+    @staticmethod
+    def liked_by(article, user):
+        if not user or not user.is_authenticated:
+            return False
+        return Like.query.filter_by(article_id=article.id, user_id=user.id).first() is not None
+
+    @staticmethod
+    def favorited_by(article, user):
+        if not user or not user.is_authenticated:
+            return False
+        return Favorite.query.filter_by(article_id=article.id, user_id=user.id).first() is not None
 
     @staticmethod
     def unique_slug(title, article_id=None):
