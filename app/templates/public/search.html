@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}搜索 - 个人知识博客{% endblock %}
+
+{% block content %}
+  <section class="content-section">
+    <div class="container">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Search</p>
+          <h1>搜索结果</h1>
+          <p class="text-secondary">
+            {% if keyword %}关键词 “{{ keyword }}” 找到 {{ pagination.total }} 条结果。{% else %}请输入关键词搜索已发布文章。{% endif %}
+          </p>
+        </div>
+      </div>
+      {% if articles %}
+        <div class="article-grid">
+          {% for article in articles %}
+            {% include "public/_article_card.html" %}
+          {% endfor %}
+        </div>
+        {% include "public/_pagination.html" %}
+      {% else %}
+        <div class="empty-state">没有找到匹配文章，可以换一个关键词试试。</div>
+      {% endif %}
+    </div>
+  </section>
+{% endblock %}

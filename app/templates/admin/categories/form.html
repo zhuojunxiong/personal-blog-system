@@ -1,0 +1,17 @@
+{% extends "admin/base.html" %}
+
+{% block title %}编辑分类{% endblock %}
+{% block page_title %}编辑分类{% endblock %}
+
+{% block content %}
+  <form class="admin-panel" method="post">
+    <label class="form-label">名称</label>
+    <input class="form-control mb-3" name="name" required maxlength="80" value="{{ category.name }}">
+    <label class="form-label">描述</label>
+    <textarea class="form-control mb-3" name="description" rows="3">{{ category.description }}</textarea>
+    <label class="form-label">排序</label>
+    <input class="form-control mb-3" name="sort_order" type="number" value="{{ category.sort_order }}">
+    <button class="btn btn-dark" type="submit">保存</button>
+    <a class="btn btn-outline-dark" href="{{ url_for('category.index') }}">返回</a>
+  </form>
+{% endblock %}

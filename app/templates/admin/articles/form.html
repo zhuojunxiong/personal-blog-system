@@ -1,0 +1,62 @@
+{% extends "admin/base.html" %}
+
+{% block title %}{{ '编辑文章' if article else '新增文章' }}{% endblock %}
+{% block page_title %}{{ '编辑文章' if article else '新增文章' }}{% endblock %}
+
+{% block content %}
+  <form class="admin-panel" method="post">
+    <div class="row g-3">
+      <div class="col-lg-8">
+        <label class="form-label">标题</label>
+        <input class="form-control" name="title" maxlength="160" required value="{{ article.title if article else request.form.get('title', '') }}">
+      </div>
+      <div class="col-lg-4">
+        <label class="form-label">作者</label>
+        <input class="form-control" name="author" maxlength="80" value="{{ article.author if article else request.form.get('author', '管理员') }}">
+      </div>
+      <div class="col-lg-4">
+        <label class="form-label">状态</label>
+        <select class="form-select" name="status">
+          <option value="draft" {% if article and article.status == 'draft' %}selected{% endif %}>草稿</option>
+          <option value="published" {% if article and article.status == 'published' %}selected{% endif %}>已发布</option>
+        </select>
+      </div>
+      <div class="col-lg-4">
+        <label class="form-label">分类</label>
+        <select class="form-select" name="category_id" required>
+          <option value="">请选择分类</option>
+          {% for category in categories %}
+            <option value="{{ category.id }}" {% if article and article.category_id == category.id %}selected{% endif %}>{{ category.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-lg-4">
+        <label class="form-label">AI 占位</label>
+        <button class="btn btn-outline-secondary w-100" formaction="{{ url_for('ai.placeholder') }}" formmethod="post">AI 功能暂未开放</button>
+      </div>
+      <div class="col-12">
+        <label class="form-label">标签</label>
+        <div class="tag-select">
+          {% for tag in tags %}
+            <label class="pill check-pill">
+              <input type="checkbox" name="tag_ids" value="{{ tag.id }}" {% if article and tag in article.tags %}checked{% endif %}>
+              {{ tag.name }}
+            </label>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="col-12">
+        <label class="form-label">摘要</label>
+        <textarea class="form-control" name="summary" rows="3" maxlength="500">{{ article.summary if article else request.form.get('summary', '') }}</textarea>
+      </div>
+      <div class="col-12">
+        <label class="form-label">正文</label>
+        <textarea class="form-control article-editor" name="content" rows="14" required>{{ article.content if article else request.form.get('content', '') }}</textarea>
+      </div>
+      <div class="col-12 d-flex gap-2">
+        <button class="btn btn-dark" type="submit">保存</button>
+        <a class="btn btn-outline-dark" href="{{ url_for('article.index') }}">返回</a>
+      </div>
+    </div>
+  </form>
+{% endblock %}

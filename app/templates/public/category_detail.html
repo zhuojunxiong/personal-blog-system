@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}{{ category.name }} - 分类{% endblock %}
+
+{% block content %}
+  <section class="content-section">
+    <div class="container">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Category</p>
+          <h1>{{ category.name }}</h1>
+          <p class="text-secondary">{{ category.description }}</p>
+        </div>
+        <a class="btn btn-outline-dark" href="{{ url_for('public.category_list') }}">全部分类</a>
+      </div>
+      {% if articles %}
+        <div class="article-grid">
+          {% for article in articles %}
+            {% include "public/_article_card.html" %}
+          {% endfor %}
+        </div>
+        {% include "public/_pagination.html" %}
+      {% else %}
+        <div class="empty-state">该分类下还没有已发布文章。</div>
+      {% endif %}
+    </div>
+  </section>
+{% endblock %}

@@ -13,36 +13,45 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
   </head>
   <body>
-    <nav class="navbar navbar-expand-lg bg-body-tertiary border-bottom">
+    <nav class="navbar navbar-expand-lg site-nav">
       <div class="container">
-        <a class="navbar-brand fw-semibold" href="{{ url_for('public.index') }}">个人博客系统 V0.1</a>
+        <a class="navbar-brand fw-semibold" href="{{ url_for('public.index') }}">个人知识博客</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar" aria-controls="mainNavbar" aria-expanded="false" aria-label="切换导航">
           <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="mainNavbar">
-          <div class="navbar-nav ms-auto">
-            <a class="nav-link active" href="{{ url_for('public.index') }}">首页</a>
-            <a class="nav-link disabled" aria-disabled="true">后台登录</a>
+          <div class="navbar-nav ms-lg-4">
+            <a class="nav-link" href="{{ url_for('public.index') }}">首页</a>
+            <a class="nav-link" href="{{ url_for('public.category_list') }}">分类</a>
+            <a class="nav-link" href="{{ url_for('public.tag_list') }}">标签</a>
           </div>
+          <form class="d-flex ms-lg-auto mt-3 mt-lg-0 nav-search" action="{{ url_for('public.search') }}" method="get">
+            <input class="form-control" name="q" type="search" placeholder="搜索文章" value="{{ request.args.get('q', '') }}">
+            <button class="btn btn-dark ms-2" type="submit">搜索</button>
+          </form>
+          <a class="btn btn-outline-dark ms-lg-2 mt-3 mt-lg-0" href="{{ url_for('auth.login') }}">后台</a>
         </div>
       </div>
     </nav>
 
-    <main class="container py-4">
-      {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-          {% for category, message in messages %}
-            <div class="alert alert-{{ category }} mb-3" role="alert">{{ message }}</div>
-          {% endfor %}
-        {% endif %}
-      {% endwith %}
+    <main>
+      <div class="container flash-wrap">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }} mb-3" role="alert">{{ message }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+      </div>
 
       {% block content %}{% endblock %}
     </main>
 
-    <footer class="border-top py-3 mt-5">
-      <div class="container small text-secondary">
-        基于 AI 辅助的个人博客系统设计与实现 · V0.1 工程骨架
+    <footer class="site-footer">
+      <div class="container d-flex flex-column flex-md-row justify-content-between gap-2">
+        <span>基于 AI 辅助的个人博客系统设计与实现 · V0.2</span>
+        <span class="text-secondary">AI 功能暂未开放，当前版本聚焦博客业务闭环。</span>
       </div>
     </footer>
 

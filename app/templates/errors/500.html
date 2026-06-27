@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}系统暂时不可用{% endblock %}
+
+{% block content %}
+  <section class="content-section">
+    <div class="container narrow-container text-center">
+      <p class="eyebrow">500</p>
+      <h1>系统暂时不可用</h1>
+      <p class="text-secondary">服务器处理请求时遇到问题，请稍后再试。</p>
+      <a class="btn btn-dark" href="{{ url_for('public.index') }}">返回首页</a>
+    </div>
+  </section>
+{% endblock %}

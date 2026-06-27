@@ -1,0 +1,19 @@
+<article class="article-card">
+  <div class="d-flex align-items-center gap-2 mb-3 flex-wrap">
+    <a class="pill pill-soft" href="{{ url_for('public.category_detail', category_id=article.category.id) }}">{{ article.category.name }}</a>
+    {% for tag in article.tags %}
+      <a class="pill" href="{{ url_for('public.tag_detail', tag_id=tag.id) }}">{{ tag.name }}</a>
+    {% endfor %}
+  </div>
+  <h2 class="h4 fw-semibold mb-2">
+    <a class="clean-link" href="{{ url_for('public.article_detail', slug=article.slug) }}">{{ article.title }}</a>
+  </h2>
+  <p class="text-secondary mb-4">{{ article.summary or article.content[:120] }}</p>
+  <div class="article-meta">
+    <span>{{ article.author }}</span>
+    <span>{{ article.published_at.strftime('%Y-%m-%d') if article.published_at else article.created_at.strftime('%Y-%m-%d') }}</span>
+    <span>{{ article.view_count }} 次浏览</span>
+    <span>{{ article.approved_comment_count }} 条评论</span>
+  </div>
+  <a class="read-more" href="{{ url_for('public.article_detail', slug=article.slug) }}">继续阅读</a>
+</article>

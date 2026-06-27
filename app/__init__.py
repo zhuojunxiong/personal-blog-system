@@ -16,14 +16,61 @@ def create_app(config_class=Config):
 
     @login_manager.user_loader
     def load_user(user_id):
-        return None
+        from app.models import User
+
+        return User.query.get(int(user_id))
 
     register_blueprints(app)
+    register_error_handlers(app)
+    register_template_helpers(app)
 
     return app
 
 
 def register_blueprints(app):
+    from app.admin.routes import admin_bp
+    from app.ai.routes import ai_bp
+    from app.article.routes import article_bp
+    from app.auth.routes import auth_bp
+    from app.category.routes import category_bp
+    from app.comment.routes import comment_bp
+    from app.dashboard.routes import dashboard_bp
     from app.public.routes import public_bp
+    from app.tag.routes import tag_bp
 
     app.register_blueprint(public_bp)
+    app.register_blueprint(auth_bp)
+    app.register_blueprint(admin_bp)
+    app.register_blueprint(dashboard_bp)
+    app.register_blueprint(article_bp)
+    app.register_blueprint(category_bp)
+    app.register_blueprint(tag_bp)
+    app.register_blueprint(comment_bp)
+    app.register_blueprint(ai_bp)
+
+
+def register_error_handlers(app):
+    from flask import render_template
+
+    @app.errorhandler(404)
+    def page_not_found(error):
+        return render_template("errors/404.html"), 404
+
+    @app.errorhandler(500)
+    def internal_error(error):
+        db.session.rollback()
+        return render_template("errors/500.html"), 500
+
+
+def register_template_helpers(app):
+    from flask import request, url_for
+
+    @app.context_processor
+    def inject_helpers():
+        def page_url(page):
+            args = dict(request.view_args or {})
+            args.update(request.args.to_dict(flat=True))
+            args["page"] = page
+            return url_for(request.endpoint, **args)
+
+        return {"page_url": page_url}

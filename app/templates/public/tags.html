@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}标签 - 个人知识博客{% endblock %}
+
+{% block content %}
+  <section class="content-section">
+    <div class="container">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Tags</p>
+          <h1>标签</h1>
+        </div>
+      </div>
+      <div class="tag-cloud">
+        {% for tag in tags %}
+          <a class="pill pill-large" href="{{ url_for('public.tag_detail', tag_id=tag.id) }}">
+            {{ tag.name }} · {{ tag.articles|selectattr('status', 'equalto', 'published')|list|length }}
+          </a>
+        {% else %}
+          <div class="empty-state">暂无标签。</div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+{% endblock %}

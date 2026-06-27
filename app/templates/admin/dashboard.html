@@ -1,0 +1,59 @@
+{% extends "admin/base.html" %}
+
+{% block title %}仪表盘{% endblock %}
+{% block page_title %}仪表盘{% endblock %}
+
+{% block content %}
+  <div class="stats-grid">
+    <div class="stat-card"><span>文章总数</span><strong>{{ stats.article_count }}</strong></div>
+    <div class="stat-card"><span>已发布</span><strong>{{ stats.published_count }}</strong></div>
+    <div class="stat-card"><span>草稿</span><strong>{{ stats.draft_count }}</strong></div>
+    <div class="stat-card"><span>分类</span><strong>{{ stats.category_count }}</strong></div>
+    <div class="stat-card"><span>标签</span><strong>{{ stats.tag_count }}</strong></div>
+    <div class="stat-card"><span>待审核评论</span><strong>{{ stats.pending_comment_count }}</strong></div>
+  </div>
+
+  <div class="row g-4 mt-1">
+    <div class="col-lg-7">
+      <section class="admin-panel">
+        <div class="panel-head">
+          <h2>最近文章</h2>
+          <a class="btn btn-sm btn-dark" href="{{ url_for('article.create') }}">新增文章</a>
+        </div>
+        <div class="table-responsive">
+          <table class="table align-middle">
+            <thead><tr><th>标题</th><th>状态</th><th>更新时间</th></tr></thead>
+            <tbody>
+              {% for article in stats.recent_articles %}
+                <tr>
+                  <td>{{ article.title }}</td>
+                  <td><span class="badge text-bg-{{ 'success' if article.status == 'published' else 'secondary' }}">{{ '已发布' if article.status == 'published' else '草稿' }}</span></td>
+                  <td>{{ article.updated_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                </tr>
+              {% else %}
+                <tr><td colspan="3" class="text-secondary">暂无文章</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+    <div class="col-lg-5">
+      <section class="admin-panel">
+        <div class="panel-head">
+          <h2>最新评论</h2>
+          <a class="btn btn-sm btn-outline-dark" href="{{ url_for('comment.admin_index') }}">查看全部</a>
+        </div>
+        {% for comment in stats.latest_comments %}
+          <div class="comment-item">
+            <strong>{{ comment.nickname }}</strong>
+            <p class="mb-1 text-secondary">{{ comment.content[:80] }}</p>
+            <span class="badge text-bg-light">{{ comment.status }}</span>
+          </div>
+        {% else %}
+          <div class="empty-state compact">暂无评论</div>
+        {% endfor %}
+      </section>
+    </div>
+  </div>
+{% endblock %}

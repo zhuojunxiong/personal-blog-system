@@ -1,0 +1,46 @@
+{% extends "admin/base.html" %}
+
+{% block title %}评论管理{% endblock %}
+{% block page_title %}评论管理{% endblock %}
+
+{% block content %}
+  <section class="admin-panel">
+    <div class="panel-head">
+      <h2>评论列表</h2>
+      <div class="d-flex gap-2 flex-wrap">
+        <a class="btn btn-sm btn-outline-dark" href="{{ url_for('comment.admin_index') }}">全部</a>
+        <a class="btn btn-sm btn-outline-dark" href="{{ url_for('comment.admin_index', status='pending') }}">待审核</a>
+        <a class="btn btn-sm btn-outline-dark" href="{{ url_for('comment.admin_index', status='approved') }}">已通过</a>
+        <a class="btn btn-sm btn-outline-dark" href="{{ url_for('comment.admin_index', status='hidden') }}">已隐藏</a>
+      </div>
+    </div>
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <thead><tr><th>评论</th><th>文章</th><th>状态</th><th>时间</th><th>操作</th></tr></thead>
+        <tbody>
+          {% for comment in comments %}
+            <tr>
+              <td>
+                <strong>{{ comment.nickname }}</strong>
+                <div class="small text-secondary">{{ comment.email }}</div>
+                <div>{{ comment.content }}</div>
+              </td>
+              <td>{{ comment.article.title }}</td>
+              <td><span class="badge text-bg-light">{{ comment.status }}</span></td>
+              <td>{{ comment.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+              <td>
+                <div class="d-flex gap-2 flex-wrap">
+                  <form method="post" action="{{ url_for('comment.approve', comment_id=comment.id) }}"><button class="btn btn-sm btn-outline-success" type="submit">通过</button></form>
+                  <form method="post" action="{{ url_for('comment.hide', comment_id=comment.id) }}"><button class="btn btn-sm btn-outline-warning" type="submit">隐藏</button></form>
+                  <form method="post" action="{{ url_for('comment.delete', comment_id=comment.id) }}" onsubmit="return confirm('确定删除该评论吗？');"><button class="btn btn-sm btn-outline-danger" type="submit">删除</button></form>
+                </div>
+              </td>
+            </tr>
+          {% else %}
+            <tr><td colspan="5" class="text-secondary">暂无评论</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+{% endblock %}

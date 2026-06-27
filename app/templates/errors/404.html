@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}页面不存在{% endblock %}
+
+{% block content %}
+  <section class="content-section">
+    <div class="container narrow-container text-center">
+      <p class="eyebrow">404</p>
+      <h1>页面不存在</h1>
+      <p class="text-secondary">你访问的内容不存在，或者尚未发布。</p>
+      <a class="btn btn-dark" href="{{ url_for('public.index') }}">返回首页</a>
+    </div>
+  </section>
+{% endblock %}

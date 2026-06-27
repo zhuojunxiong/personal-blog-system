@@ -1,0 +1,13 @@
+{% extends "admin/base.html" %}
+
+{% block title %}编辑标签{% endblock %}
+{% block page_title %}编辑标签{% endblock %}
+
+{% block content %}
+  <form class="admin-panel" method="post">
+    <label class="form-label">名称</label>
+    <input class="form-control mb-3" name="name" required maxlength="80" value="{{ tag.name }}">
+    <button class="btn btn-dark" type="submit">保存</button>
+    <a class="btn btn-outline-dark" href="{{ url_for('tag.index') }}">返回</a>
+  </form>
+{% endblock %}
