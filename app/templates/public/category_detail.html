@@ -3,19 +3,23 @@
 {% block title %}{{ category.name }} - 分类{% endblock %}
 
 {% block content %}
+  <section class="page-hero">
+    <div class="container page-hero-grid">
+      <div>
+        <p class="eyebrow">Category</p>
+        <h1>{{ category.name }}</h1>
+        <p>{{ category.description or "浏览该分类下已经发布的文章。" }}</p>
+      </div>
+      <a class="btn btn-secondary" href="{{ url_for('public.category_list') }}">全部分类</a>
+    </div>
+  </section>
+
   <section class="content-section">
     <div class="container">
-      <div class="section-heading">
-        <div>
-          <p class="eyebrow">Category</p>
-          <h1>{{ category.name }}</h1>
-          <p class="text-secondary">{{ category.description }}</p>
-        </div>
-        <a class="btn btn-outline-dark" href="{{ url_for('public.category_list') }}">全部分类</a>
-      </div>
       {% if articles %}
-        <div class="article-grid">
+        <div class="list-stack">
           {% for article in articles %}
+            {% set article_card_variant = 'horizontal' %}
             {% include "public/_article_card.html" %}
           {% endfor %}
         </div>

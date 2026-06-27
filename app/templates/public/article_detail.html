@@ -1,92 +1,145 @@
 {% extends "base.html" %}
 
-{% block title %}{{ article.title }} - 个人知识博客{% endblock %}
+{% block title %}{{ article.title }} - 知识专栏{% endblock %}
 
 {% block content %}
   <article class="article-detail">
-    <div class="container narrow-container">
-      <div class="article-head">
-        <div class="d-flex gap-2 flex-wrap mb-3">
-          <a class="pill pill-soft" href="{{ url_for('public.category_detail', category_id=article.category.id) }}">{{ article.category.name }}</a>
-          {% for tag in article.tags %}
-            <a class="pill" href="{{ url_for('public.tag_detail', tag_id=tag.id) }}">{{ tag.name }}</a>
+    <div class="container article-detail-shell">
+      <div>
+        <header class="article-head" id="article-top">
+          <div class="card-tags">
+            <a class="pill pill-soft" href="{{ url_for('public.category_detail', category_id=article.category.id) }}">{{ article.category.name }}</a>
+            {% for tag in article.tags %}
+              <a class="pill" href="{{ url_for('public.tag_detail', tag_id=tag.id) }}">{{ tag.name }}</a>
+            {% endfor %}
+          </div>
+          <h1>{{ article.title }}</h1>
+          {% if article.summary %}
+            <p class="article-lead">{{ article.summary }}</p>
+          {% endif %}
+          <div class="article-meta">
+            <span>
+              {% if article.user %}
+                作者 <a class="clean-link" href="{{ url_for('user.profile', user_id=article.user.id) }}">{{ article.user.nickname }}</a>
+              {% else %}
+                作者 {{ article.author }}
+              {% endif %}
+            </span>
+            {% if article.column %}
+              <span>专栏 <a class="clean-link" href="{{ url_for('column.detail', column_id=article.column.id) }}">{{ article.column.name }}</a></span>
+            {% endif %}
+            <span>发布 {{ article.published_at.strftime('%Y-%m-%d %H:%M') if article.published_at else article.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+            <span>{{ article.view_count }} 阅读</span>
+            <span>{{ article.approved_comment_count }} 评论</span>
+          </div>
+          <div class="interaction-bar">
+            <a class="btn btn-secondary" href="{{ url_for('public.articles') }}">返回文章列表</a>
+            {% if article.column %}
+              <a class="btn btn-secondary" href="{{ url_for('column.detail', column_id=article.column.id) }}">进入专栏</a>
+            {% endif %}
+            {% if current_user.is_authenticated %}
+              <form method="post" action="{{ url_for('comment.like', slug=article.slug) }}">
+                <button class="btn btn-{{ 'dark' if liked else 'outline-dark' }}" type="submit">{{ '已点赞' if liked else '点赞' }} · {{ article.like_count }}</button>
+              </form>
+              <form method="post" action="{{ url_for('comment.favorite', slug=article.slug) }}">
+                <button class="btn btn-{{ 'dark' if favorited else 'outline-dark' }}" type="submit">{{ '已收藏' if favorited else '收藏' }} · {{ article.favorite_count }}</button>
+              </form>
+            {% else %}
+              <a class="btn btn-primary" href="{{ url_for('auth.login') }}">登录后互动</a>
+            {% endif %}
+          </div>
+        </header>
+
+        <div class="article-body" id="article-body">
+          {% for paragraph in article.content.splitlines() %}
+            {% if paragraph.strip() %}
+              <p>{{ paragraph }}</p>
+            {% endif %}
           {% endfor %}
         </div>
-        <h1>{{ article.title }}</h1>
-        <p class="lead text-secondary">{{ article.summary }}</p>
-        <div class="article-meta justify-content-center">
-          <span>
-            {% if article.user %}
-              作者 <a class="clean-link" href="{{ url_for('user.profile', user_id=article.user.id) }}">{{ article.user.nickname }}</a>
+
+        <section class="comment-panel" id="comments">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Comments</p>
+              <h2>评论区</h2>
+            </div>
+            <span class="muted">{{ comments|length }} 条已审核评论</span>
+          </div>
+
+          <div class="comment-list">
+            {% for comment in comments %}
+              <div class="comment-card">
+                <div class="comment-card-header">
+                  <strong>{{ comment.nickname }}</strong>
+                  <span class="muted">{{ comment.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+                </div>
+                <p>{{ comment.content }}</p>
+              </div>
             {% else %}
-              {{ article.author }}
-            {% endif %}
-          </span>
-          {% if article.column %}
-            <span>专栏 <a class="clean-link" href="{{ url_for('column.detail', column_id=article.column.id) }}">{{ article.column.name }}</a></span>
-          {% endif %}
-          <span>发布 {{ article.published_at.strftime('%Y-%m-%d %H:%M') if article.published_at else article.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
-          <span>更新 {{ article.updated_at.strftime('%Y-%m-%d %H:%M') }}</span>
-          <span>{{ article.view_count }} 次浏览</span>
-        </div>
-        <div class="interaction-bar">
+              <div class="empty-state compact">还没有已审核评论，欢迎留下第一条评论。</div>
+            {% endfor %}
+          </div>
+
           {% if current_user.is_authenticated %}
-            <form method="post" action="{{ url_for('comment.like', slug=article.slug) }}">
-              <button class="btn btn-{{ 'dark' if liked else 'outline-dark' }}" type="submit">{{ '已点赞' if liked else '点赞' }} · {{ article.like_count }}</button>
-            </form>
-            <form method="post" action="{{ url_for('comment.favorite', slug=article.slug) }}">
-              <button class="btn btn-{{ 'dark' if favorited else 'outline-dark' }}" type="submit">{{ '已收藏' if favorited else '收藏' }} · {{ article.favorite_count }}</button>
+            <form class="mt-4" action="{{ url_for('comment.submit', slug=article.slug) }}" method="post">
+              <h3 class="h5 mb-3">发表评论</h3>
+              <label class="form-label">评论内容</label>
+              <textarea class="form-control" name="content" rows="4" maxlength="1000" required placeholder="写下你的想法，审核通过后会公开展示。"></textarea>
+              <button class="btn btn-primary mt-3" type="submit">提交审核</button>
             </form>
           {% else %}
-            <a class="btn btn-outline-dark" href="{{ url_for('auth.login') }}">登录后点赞收藏</a>
+            <div class="empty-state compact mt-4">登录后可以发表评论、点赞和收藏文章。</div>
+          {% endif %}
+        </section>
+      </div>
+
+      <aside class="article-side">
+        <div class="info-panel">
+          <h3>文章目录</h3>
+          <ul class="toc-list">
+            <li><a href="#article-top">文章信息</a></li>
+            <li><a href="#article-body">正文阅读</a></li>
+            <li><a href="#comments">评论区</a></li>
+          </ul>
+        </div>
+        <div class="info-panel">
+          <h3>关于作者</h3>
+          {% if article.user %}
+            <a class="user-card-head" href="{{ url_for('user.profile', user_id=article.user.id) }}">
+              <span class="avatar-mini">{{ article.user.nickname[:1] }}</span>
+              <span>
+                <strong>{{ article.user.nickname }}</strong><br>
+                <span class="muted">{{ article.user.bio or "这个作者还没有填写简介。" }}</span>
+              </span>
+            </a>
+          {% else %}
+            <p>{{ article.author }}</p>
           {% endif %}
         </div>
-      </div>
-      <div class="article-body">
-        {% for paragraph in article.content.splitlines() %}
-          {% if paragraph.strip() %}
-            <p>{{ paragraph }}</p>
-          {% endif %}
-        {% endfor %}
-      </div>
+        {% if article.column %}
+          <div class="info-panel">
+            <h3>相关专栏</h3>
+            <a class="sidebar-row" href="{{ url_for('column.detail', column_id=article.column.id) }}">
+              <strong>{{ article.column.name }}</strong>
+              <span>{{ article.column.description or "进入专栏阅读更多文章。" }}</span>
+            </a>
+          </div>
+        {% endif %}
+        {% if related_articles %}
+          <div class="info-panel">
+            <h3>同专栏文章</h3>
+            <div class="sidebar-list">
+              {% for item in related_articles %}
+                <a class="sidebar-row" href="{{ url_for('public.article_detail', slug=item.slug) }}">
+                  <strong>{{ item.title }}</strong>
+                  <span>{{ item.published_at.strftime('%Y-%m-%d') if item.published_at else item.created_at.strftime('%Y-%m-%d') }}</span>
+                </a>
+              {% endfor %}
+            </div>
+          </div>
+        {% endif %}
+      </aside>
     </div>
   </article>
-
-  <section class="content-section pt-0">
-    <div class="container narrow-container">
-      <div class="comment-panel">
-        <div class="section-heading mb-3">
-          <div>
-            <p class="eyebrow">Comments</p>
-            <h2>评论</h2>
-          </div>
-          <span class="text-secondary">{{ comments|length }} 条已审核评论</span>
-        </div>
-
-        {% for comment in comments %}
-          <div class="comment-item">
-            <div class="d-flex justify-content-between gap-3">
-              <strong>{{ comment.nickname }}</strong>
-              <span class="small text-secondary">{{ comment.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
-            </div>
-            <p class="mb-0 text-secondary">{{ comment.content }}</p>
-          </div>
-        {% else %}
-          <div class="empty-state compact">还没有已审核评论，欢迎留下第一条评论。</div>
-        {% endfor %}
-
-        {% if current_user.is_authenticated %}
-          <form class="mt-4" action="{{ url_for('comment.submit', slug=article.slug) }}" method="post">
-            <h3 class="h5 mb-3">提交评论</h3>
-            <label class="form-label">评论内容</label>
-            <textarea class="form-control" name="content" rows="4" maxlength="1000" required></textarea>
-            <button class="btn btn-dark mt-3" type="submit">提交审核</button>
-            <span class="small text-secondary ms-2">评论通过审核后才会展示。</span>
-          </form>
-        {% else %}
-          <div class="empty-state compact mt-4">登录后可以发表评论、点赞和收藏文章。</div>
-        {% endif %}
-      </div>
-    </div>
-  </section>
 {% endblock %}

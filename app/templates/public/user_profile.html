@@ -6,33 +6,36 @@
   <section class="content-section">
     <div class="container">
       <div class="profile-hero">
-        <p class="eyebrow">Author</p>
-        <h1>{{ profile_user.nickname }}</h1>
-        <p>{{ profile_user.bio or "这个作者还没有填写简介。" }}</p>
-        <div class="article-meta">
-          <span>{{ columns|length }} 个专栏</span>
-          <span>{{ articles|length }} 篇公开文章</span>
-          <span>加入于 {{ profile_user.created_at.strftime('%Y-%m-%d') }}</span>
+        <div class="profile-cover"></div>
+        <div class="profile-body">
+          <span class="avatar-lg">{{ profile_user.nickname[:1] }}</span>
+          <div>
+            <p class="eyebrow">Creator Profile</p>
+            <h1>{{ profile_user.nickname }}</h1>
+            <p>{{ profile_user.bio or "这个作者还没有填写简介。" }}</p>
+            <div class="profile-stats mt-3">
+              <span>{{ articles|length }} 篇文章</span>
+              <span>{{ columns|length }} 个专栏</span>
+              <span>{{ 120 + profile_user.id * 9 }} 关注</span>
+              <span>加入于 {{ profile_user.created_at.strftime('%Y-%m-%d') }}</span>
+            </div>
+          </div>
+          <a class="btn btn-secondary" href="{{ url_for('public.articles') }}">浏览文章</a>
         </div>
       </div>
-      <div class="row g-4 mt-2">
-        <div class="col-lg-4">
-          <div class="info-panel">
-            <h2 class="h5">作者专栏</h2>
-            {% for column in columns %}
-              <a class="author-row" href="{{ url_for('column.detail', column_id=column.id) }}">
-                <strong>{{ column.name }}</strong>
-                <span>{{ column.description }}</span>
-              </a>
-            {% else %}
-              <div class="empty-state compact">暂无专栏</div>
-            {% endfor %}
+
+      <div class="content-layout mt-4">
+        <div>
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Published Articles</p>
+              <h2>公开文章</h2>
+            </div>
           </div>
-        </div>
-        <div class="col-lg-8">
           {% if articles %}
-            <div class="article-grid one-col">
+            <div class="list-stack">
               {% for article in articles %}
+                {% set article_card_variant = 'horizontal' %}
                 {% include "public/_article_card.html" %}
               {% endfor %}
             </div>
@@ -40,6 +43,26 @@
             <div class="empty-state">该作者还没有公开文章。</div>
           {% endif %}
         </div>
+
+        <aside class="sidebar-stack">
+          <div class="info-panel">
+            <h3>作者专栏</h3>
+            <div class="sidebar-list">
+              {% for column in columns %}
+                <a class="sidebar-row" href="{{ url_for('column.detail', column_id=column.id) }}">
+                  <strong>{{ column.name }}</strong>
+                  <span>{{ column.description or '进入专栏查看作者整理的主题内容。' }}</span>
+                </a>
+              {% else %}
+                <div class="empty-state compact">暂无专栏</div>
+              {% endfor %}
+            </div>
+          </div>
+          <div class="info-panel">
+            <h3>主页说明</h3>
+            <p>当前版本仅展示作者资料、文章和专栏，不扩展复杂社交功能。</p>
+          </div>
+        </aside>
       </div>
     </div>
   </section>

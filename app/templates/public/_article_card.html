@@ -1,30 +1,36 @@
-<article class="article-card">
-  <div class="d-flex align-items-center gap-2 mb-3 flex-wrap">
-    <a class="pill pill-soft" href="{{ url_for('public.category_detail', category_id=article.category.id) }}">{{ article.category.name }}</a>
-    {% for tag in article.tags %}
-      <a class="pill" href="{{ url_for('public.tag_detail', tag_id=tag.id) }}">{{ tag.name }}</a>
-    {% endfor %}
-  </div>
-  <h2 class="h4 fw-semibold mb-2">
-    <a class="clean-link" href="{{ url_for('public.article_detail', slug=article.slug) }}">{{ article.title }}</a>
-  </h2>
-  <p class="text-secondary mb-4">{{ article.summary or article.content[:120] }}</p>
-  <div class="article-meta">
-    <span>
-      {% if article.user %}
-        <a class="clean-link" href="{{ url_for('user.profile', user_id=article.user.id) }}">{{ article.user.nickname }}</a>
-      {% else %}
-        {{ article.author }}
+{% set card_index = loop.index0 if loop is defined else article.id %}
+{% set variant = article_card_variant|default('') %}
+<article class="article-card {% if variant == 'horizontal' %}article-card--horizontal{% endif %}">
+  <a class="article-thumb thumb-{{ (card_index % 6) + 1 }}" href="{{ url_for('public.article_detail', slug=article.slug) }}" aria-label="阅读 {{ article.title }}"></a>
+  <div class="article-card-body">
+    <div class="card-tags">
+      <a class="pill pill-soft" href="{{ url_for('public.category_detail', category_id=article.category.id) }}">{{ article.category.name }}</a>
+      {% for tag in article.tags %}
+        <a class="pill" href="{{ url_for('public.tag_detail', tag_id=tag.id) }}">{{ tag.name }}</a>
+      {% endfor %}
+    </div>
+    <h2>
+      <a class="clean-link" href="{{ url_for('public.article_detail', slug=article.slug) }}">{{ article.title }}</a>
+    </h2>
+    <p class="article-summary">{{ article.summary or article.content[:120] }}</p>
+    <div class="article-meta">
+      <span>
+        {% if article.user %}
+          作者 <a class="clean-link" href="{{ url_for('user.profile', user_id=article.user.id) }}">{{ article.user.nickname }}</a>
+        {% else %}
+          作者 {{ article.author }}
+        {% endif %}
+      </span>
+      {% if article.column %}
+        <span>专栏 <a class="clean-link" href="{{ url_for('column.detail', column_id=article.column.id) }}">{{ article.column.name }}</a></span>
       {% endif %}
-    </span>
-    {% if article.column %}
-      <span><a class="clean-link" href="{{ url_for('column.detail', column_id=article.column.id) }}">{{ article.column.name }}</a></span>
-    {% endif %}
-    <span>{{ article.published_at.strftime('%Y-%m-%d') if article.published_at else article.created_at.strftime('%Y-%m-%d') }}</span>
-    <span>{{ article.view_count }} 次浏览</span>
-    <span>{{ article.like_count }} 赞</span>
-    <span>{{ article.favorite_count }} 收藏</span>
-    <span>{{ article.approved_comment_count }} 条评论</span>
+      <span>{{ article.published_at.strftime('%Y-%m-%d') if article.published_at else article.created_at.strftime('%Y-%m-%d') }}</span>
+      <span>{{ article.view_count }} 阅读</span>
+      <span>{{ article.approved_comment_count }} 评论</span>
+    </div>
+    <div class="article-card-footer">
+      <span class="article-meta">{{ article.like_count }} 赞 · {{ article.favorite_count }} 收藏</span>
+      <a class="read-more" href="{{ url_for('public.article_detail', slug=article.slug) }}">继续阅读</a>
+    </div>
   </div>
-  <a class="read-more" href="{{ url_for('public.article_detail', slug=article.slug) }}">继续阅读</a>
 </article>

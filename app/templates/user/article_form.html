@@ -1,75 +1,90 @@
 {% extends "base.html" %}
 
-{% block title %}{{ '编辑文章' if article else '写文章' }}{% endblock %}
+{% block title %}{{ '编辑文章' if article else '写文章' }} - 知识专栏{% endblock %}
 
 {% block content %}
-  <section class="content-section">
+  <section class="page-hero">
+    <div class="container page-hero-grid">
+      <div>
+        <p class="eyebrow">Writing Studio</p>
+        <h1>{{ '编辑文章' if article else '写一篇新文章' }}</h1>
+        <p>把标题、摘要、分类、标签和正文整理成一篇可以公开阅读的知识文章。</p>
+      </div>
+      <a class="btn btn-secondary" href="{{ url_for('user.center') }}">返回个人中心</a>
+    </div>
+  </section>
+
+  <section class="editor-section">
     <div class="container">
-      <form class="admin-panel" method="post">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">Writing</p>
-            <h1>{{ '编辑文章' if article else '写文章' }}</h1>
+      <form method="post" class="editor-shell">
+        <div class="editor-main">
+          <div class="editor-panel">
+            <label class="form-label">文章标题</label>
+            <input class="form-control editor-title" name="title" maxlength="160" required value="{{ article.title if article else request.form.get('title', '') }}" placeholder="输入一个清晰、有信息量的标题">
+          </div>
+
+          <div class="editor-panel">
+            <label class="form-label">文章摘要</label>
+            <textarea class="form-control" name="summary" rows="4" maxlength="500" placeholder="用几句话说明文章解决什么问题，方便读者快速判断。">{{ article.summary if article else request.form.get('summary', '') }}</textarea>
+          </div>
+
+          <div class="editor-panel">
+            <label class="form-label">正文内容</label>
+            <textarea class="form-control article-editor" name="content" rows="18" required placeholder="在这里输入正文，当前版本可按 Markdown 习惯组织标题、列表和段落。">{{ article.content if article else request.form.get('content', '') }}</textarea>
           </div>
         </div>
-        <div class="row g-3">
-          <div class="col-lg-8">
-            <label class="form-label">标题</label>
-            <input class="form-control" name="title" maxlength="160" required value="{{ article.title if article else request.form.get('title', '') }}">
+
+        <aside class="editor-sidebar">
+          <div class="editor-panel">
+            <h2>发布设置</h2>
+            <p class="muted">保存草稿不会公开展示，发布后会进入公开文章列表。</p>
+            {% if article %}
+              <span class="pill {% if article.status == 'published' %}pill-soft{% endif %}">当前状态：{{ '已发布' if article.status == 'published' else '草稿' }}</span>
+            {% endif %}
           </div>
-          <div class="col-lg-4">
-            <label class="form-label">状态</label>
-            <select class="form-select" name="status">
-              <option value="draft" {% if article and article.status == 'draft' %}selected{% endif %}>草稿</option>
-              <option value="published" {% if article and article.status == 'published' %}selected{% endif %}>发布</option>
-            </select>
-          </div>
-          <div class="col-lg-4">
-            <label class="form-label">专栏</label>
+
+          <div class="editor-panel">
+            <label class="form-label">所属专栏</label>
             <select class="form-select" name="column_id">
               <option value="">不归属专栏</option>
               {% for column in columns %}
-                <option value="{{ column.id }}" {% if article and article.column_id == column.id %}selected{% endif %}>{{ column.name }}</option>
+                <option value="{{ column.id }}" {% if (article and article.column_id == column.id) or (not article and request.form.get('column_id') == (column.id|string)) %}selected{% endif %}>{{ column.name }}</option>
               {% endfor %}
             </select>
+            {% if not columns %}
+              <p class="muted small mt-2">你还没有创建专栏，也可以先发布不归属专栏的文章。</p>
+            {% endif %}
           </div>
-          <div class="col-lg-4">
-            <label class="form-label">分类</label>
+
+          <div class="editor-panel">
+            <label class="form-label">文章分类</label>
             <select class="form-select" name="category_id" required>
               <option value="">请选择分类</option>
               {% for category in categories %}
-                <option value="{{ category.id }}" {% if article and article.category_id == category.id %}selected{% endif %}>{{ category.name }}</option>
+                <option value="{{ category.id }}" {% if (article and article.category_id == category.id) or (not article and request.form.get('category_id') == (category.id|string)) %}selected{% endif %}>{{ category.name }}</option>
               {% endfor %}
             </select>
           </div>
-          <div class="col-lg-4">
-            <label class="form-label">AI 占位</label>
-            <button class="btn btn-outline-secondary w-100" type="button" disabled>AI 功能后续开放</button>
-          </div>
-          <div class="col-12">
-            <label class="form-label">标签</label>
+
+          <div class="editor-panel">
+            <label class="form-label">文章标签</label>
             <div class="tag-select">
               {% for tag in tags %}
                 <label class="pill check-pill">
-                  <input type="checkbox" name="tag_ids" value="{{ tag.id }}" {% if article and tag in article.tags %}checked{% endif %}>
+                  <input type="checkbox" name="tag_ids" value="{{ tag.id }}" {% if (article and tag in article.tags) or ((tag.id|string) in request.form.getlist('tag_ids')) %}checked{% endif %}>
                   {{ tag.name }}
                 </label>
+              {% else %}
+                <span class="muted">暂无标签</span>
               {% endfor %}
             </div>
           </div>
-          <div class="col-12">
-            <label class="form-label">摘要</label>
-            <textarea class="form-control" name="summary" rows="3" maxlength="500">{{ article.summary if article else request.form.get('summary', '') }}</textarea>
+
+          <div class="editor-actions">
+            <button class="btn btn-secondary" type="submit" name="status" value="draft">保存草稿</button>
+            <button class="btn btn-primary" type="submit" name="status" value="published">发布文章</button>
           </div>
-          <div class="col-12">
-            <label class="form-label">正文</label>
-            <textarea class="form-control article-editor" name="content" rows="14" required>{{ article.content if article else request.form.get('content', '') }}</textarea>
-          </div>
-          <div class="col-12">
-            <button class="btn btn-dark" type="submit">保存文章</button>
-            <a class="btn btn-outline-dark" href="{{ url_for('user.center') }}">返回个人中心</a>
-          </div>
-        </div>
+        </aside>
       </form>
     </div>
   </section>

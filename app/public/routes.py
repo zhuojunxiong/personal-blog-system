@@ -1,5 +1,6 @@
 from flask import Blueprint, abort, render_template, request
 from flask_login import current_user
+from sqlalchemy import or_
 
 from app.article.services import ArticleService
 from app.category.services import CategoryService
@@ -34,12 +35,20 @@ def article_detail(slug):
         abort(404)
     ArticleService.increment_view(article)
     comments = CommentService.approved_for_article(article.id)
+    related_articles = []
+    if article.column_id:
+        related_articles = [
+            item
+            for item in ArticleService.published_by_column(article.column_id)
+            if item.id != article.id
+        ][:4]
     return render_template(
         "public/article_detail.html",
         article=article,
         comments=comments,
         liked=ArticleService.liked_by(article, current_user),
         favorited=ArticleService.favorited_by(article, current_user),
+        related_articles=related_articles,
     )
 
 
@@ -86,11 +95,44 @@ def search():
     keyword = request.args.get("q", "").strip()
     page = request.args.get("page", 1, type=int)
     pagination = ArticleService.search_published(keyword, page=page)
+    columns = []
+    users = []
+    if keyword:
+        like = f"%{keyword}%"
+        columns = (
+            BlogColumn.query.filter_by(status="active")
+            .filter(
+                or_(
+                    BlogColumn.name.ilike(like),
+                    BlogColumn.description.ilike(like),
+                    BlogColumn.user.has(User.nickname.ilike(like)),
+                    BlogColumn.user.has(User.username.ilike(like)),
+                )
+            )
+            .limit(6)
+            .all()
+        )
+        users = (
+            User.query.filter_by(role="user", status="active")
+            .filter(
+                or_(
+                    User.nickname.ilike(like),
+                    User.username.ilike(like),
+                    User.bio.ilike(like),
+                )
+            )
+            .limit(6)
+            .all()
+        )
     return render_template(
         "public/search.html",
         keyword=keyword,
         pagination=pagination,
         articles=pagination.items,
+        columns=columns,
+        users=users,
+        categories=CategoryService.all_ordered(),
+        tags=TagService.all_ordered(),
     )
 
 
@@ -102,4 +144,6 @@ def articles():
         "public/articles.html",
         pagination=pagination,
         articles=pagination.items,
+        categories=CategoryService.all_ordered(),
+        tags=TagService.all_ordered(),
     )

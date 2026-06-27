@@ -1,22 +1,27 @@
 {% extends "base.html" %}
 
-{% block title %}分类 - 个人知识博客{% endblock %}
+{% block title %}分类 - 知识专栏{% endblock %}
 
 {% block content %}
+  <section class="page-hero">
+    <div class="container">
+      <p class="eyebrow">Categories</p>
+      <h1>分类浏览</h1>
+      <p>按知识方向浏览文章，快速进入技术实践、学习记录、产品设计等主题。</p>
+    </div>
+  </section>
+
   <section class="content-section">
     <div class="container">
-      <div class="section-heading">
-        <div>
-          <p class="eyebrow">Categories</p>
-          <h1>分类</h1>
-        </div>
-      </div>
       <div class="taxonomy-grid">
         {% for category in categories %}
           <a class="taxonomy-card" href="{{ url_for('public.category_detail', category_id=category.id) }}">
+            <span class="category-icon">{{ category.name[:1] }}</span>
             <h2>{{ category.name }}</h2>
             <p>{{ category.description or "暂无描述" }}</p>
-            <span>{{ category.articles|selectattr('status', 'equalto', 'published')|list|length }} 篇文章</span>
+            <div class="card-stats">
+              <span>{{ category.articles|selectattr('status', 'equalto', 'published')|list|length }} 篇文章</span>
+            </div>
           </a>
         {% else %}
           <div class="empty-state">暂无分类。</div>

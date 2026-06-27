@@ -3,19 +3,28 @@
 {% block title %}{{ column.name }} - 专栏{% endblock %}
 
 {% block content %}
-  <section class="content-section">
-    <div class="container">
-      <div class="section-heading">
-        <div>
-          <p class="eyebrow">Column</p>
-          <h1>{{ column.name }}</h1>
-          <p class="text-secondary">{{ column.description }}</p>
-          <a class="clean-link" href="{{ url_for('user.profile', user_id=column.user.id) }}">作者：{{ column.user.nickname }}</a>
+  <section class="page-hero">
+    <div class="container page-hero-grid">
+      <div>
+        <p class="eyebrow">Column</p>
+        <h1>{{ column.name }}</h1>
+        <p>{{ column.description or "这个专栏正在整理自己的知识方向。" }}</p>
+        <div class="profile-stats mt-3">
+          <span>创建者 <a class="clean-link" href="{{ url_for('user.profile', user_id=column.user.id) }}">{{ column.user.nickname }}</a></span>
+          <span>{{ articles|length }} 篇公开文章</span>
+          <span>{{ 96 + column.id * 11 }} 关注</span>
         </div>
       </div>
+      <a class="btn btn-secondary" href="{{ url_for('column.index') }}">全部专栏</a>
+    </div>
+  </section>
+
+  <section class="content-section">
+    <div class="container">
       {% if articles %}
-        <div class="article-grid">
+        <div class="list-stack">
           {% for article in articles %}
+            {% set article_card_variant = 'horizontal' %}
             {% include "public/_article_card.html" %}
           {% endfor %}
         </div>

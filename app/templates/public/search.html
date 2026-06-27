@@ -1,29 +1,135 @@
 {% extends "base.html" %}
 
-{% block title %}搜索 - 个人知识博客{% endblock %}
+{% block title %}搜索 - 知识专栏{% endblock %}
 
 {% block content %}
-  <section class="content-section">
+  <section class="page-hero">
     <div class="container">
-      <div class="section-heading">
-        <div>
-          <p class="eyebrow">Search</p>
-          <h1>搜索结果</h1>
-          <p class="text-secondary">
-            {% if keyword %}关键词 “{{ keyword }}” 找到 {{ pagination.total }} 条结果。{% else %}请输入关键词搜索已发布文章。{% endif %}
-          </p>
-        </div>
+      <p class="eyebrow">Search</p>
+      <h1>搜索结果</h1>
+      <p>
+        {% if keyword %}
+          关键词“{{ keyword }}”找到 {{ pagination.total }} 篇文章、{{ columns|length }} 个专栏、{{ users|length }} 位用户。
+        {% else %}
+          输入关键词，搜索文章、专栏、作者、分类和标签。
+        {% endif %}
+      </p>
+      <form class="page-search page-toolbar" action="{{ url_for('public.search') }}" method="get">
+        <input class="form-control" name="q" type="search" value="{{ keyword }}" placeholder="搜索文章、专栏、作者或标签">
+        <button class="btn btn-primary" type="submit">搜索</button>
+      </form>
+    </div>
+  </section>
+
+  <section class="content-section">
+    <div class="container content-layout">
+      <div class="list-stack">
+        {% if keyword %}
+          <section class="result-block">
+            <div class="section-heading">
+              <div>
+                <p class="eyebrow">Articles</p>
+                <h2>文章结果（{{ pagination.total }}）</h2>
+              </div>
+            </div>
+            {% if articles %}
+              <div class="list-stack">
+                {% for article in articles %}
+                  {% set article_card_variant = 'horizontal' %}
+                  {% include "public/_article_card.html" %}
+                {% endfor %}
+              </div>
+              {% include "public/_pagination.html" %}
+            {% else %}
+              <div class="empty-state compact">没有找到匹配文章，可以换一个关键词试试。</div>
+            {% endif %}
+          </section>
+
+          <section class="result-block">
+            <div class="section-heading">
+              <div>
+                <p class="eyebrow">Columns</p>
+                <h2>专栏结果（{{ columns|length }}）</h2>
+              </div>
+            </div>
+            {% if columns %}
+              <div class="column-grid">
+                {% for column in columns %}
+                  <a class="column-card" href="{{ url_for('column.detail', column_id=column.id) }}">
+                    <span class="column-icon">{{ column.name[:1] }}</span>
+                    <h2>{{ column.name }}</h2>
+                    <p>{{ column.description or '这个专栏还没有简介。' }}</p>
+                    <div class="card-stats">
+                      <span>{{ column.user.nickname }}</span>
+                      <span>{{ column.articles|length }} 篇文章</span>
+                    </div>
+                  </a>
+                {% endfor %}
+              </div>
+            {% else %}
+              <div class="empty-state compact">没有找到匹配专栏。</div>
+            {% endif %}
+          </section>
+
+          <section class="result-block">
+            <div class="section-heading">
+              <div>
+                <p class="eyebrow">Users</p>
+                <h2>用户结果（{{ users|length }}）</h2>
+              </div>
+            </div>
+            {% if users %}
+              <div class="user-grid">
+                {% for user in users %}
+                  <a class="user-card" href="{{ url_for('user.profile', user_id=user.id) }}">
+                    <div class="user-card-head">
+                      <span class="avatar-mini">{{ user.nickname[:1] }}</span>
+                      <div>
+                        <h2>{{ user.nickname }}</h2>
+                        <p>{{ user.bio or '这个用户还没有填写简介。' }}</p>
+                      </div>
+                    </div>
+                    <div class="card-stats">
+                      <span>{{ user.articles|length }} 篇文章</span>
+                      <span>{{ user.columns|length }} 个专栏</span>
+                    </div>
+                  </a>
+                {% endfor %}
+              </div>
+            {% else %}
+              <div class="empty-state compact">没有找到匹配用户。</div>
+            {% endif %}
+          </section>
+        {% else %}
+          <div class="empty-state">请输入关键词开始搜索。</div>
+        {% endif %}
       </div>
-      {% if articles %}
-        <div class="article-grid">
-          {% for article in articles %}
-            {% include "public/_article_card.html" %}
-          {% endfor %}
+
+      <aside class="sidebar-stack">
+        <div class="info-panel">
+          <h3>相关分类</h3>
+          <div class="sidebar-list">
+            {% for category in categories %}
+              <a class="sidebar-row" href="{{ url_for('public.category_detail', category_id=category.id) }}">
+                <strong>{{ category.name }}</strong>
+                <span>{{ category.description or '浏览该分类下的文章。' }}</span>
+              </a>
+            {% else %}
+              <div class="empty-state compact">暂无分类</div>
+            {% endfor %}
+          </div>
         </div>
-        {% include "public/_pagination.html" %}
-      {% else %}
-        <div class="empty-state">没有找到匹配文章，可以换一个关键词试试。</div>
-      {% endif %}
+        <div class="info-panel">
+          <h3>相关标签</h3>
+          <div class="tag-cloud">
+            {% for tag in tags %}
+              <a class="pill" href="{{ url_for('public.tag_detail', tag_id=tag.id) }}">{{ tag.name }}</a>
+            {% else %}
+              <span class="muted">暂无标签</span>
+            {% endfor %}
+          </div>
+        </div>
+      </aside>
     </div>
   </section>
 {% endblock %}
