@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% from "shared/_profile_layout.html" import profile_shell with context %}
+{% from "shared/_ui_states.html" import empty_state %}
+{% from "shared/_flash_messages.html" import flash_toasts %}
+
+{% block title %}我的书房 - 稷下{% endblock %}
+{% block site_nav %}{% endblock %}
+{% block site_footer %}{% endblock %}
+{% block flash_area %}{{ flash_toasts(flash_messages) }}{% endblock %}
+
+{% block content %}
+  {% call profile_shell(active="profile", topbar_label="我的书房") %}
+    <section class="profile-page-head">
+      <p class="profile-eyebrow">Private Study</p>
+      <h1>我的书房</h1>
+      <p>把写作、沉淀与阅读轨迹收回到一张安静的桌面上。</p>
+    </section>
+
+    <div class="study-grid">
+      <section class="study-panel study-panel-large">
+        <div class="study-panel-head">
+          <div>
+            <p class="profile-eyebrow">开始写作</p>
+            <h2>今日案头</h2>
+          </div>
+          <a class="v041-btn v041-btn-primary" href="{{ url_for('user.write_article') }}">开始写作</a>
+        </div>
+        {% if latest_draft %}
+          <article class="study-feature">
+            <span class="study-pill">最近草稿</span>
+            <h3>{{ latest_draft.title }}</h3>
+            <p>{{ latest_draft.summary or latest_draft.content[:96] }}</p>
+            <div class="study-meta">
+              <span>更新于 {{ latest_draft.updated_at.strftime("%Y-%m-%d") }}</span>
+              <a href="{{ url_for('user.edit_article_alias', article_id=latest_draft.id) }}">继续整理</a>
+            </div>
+          </article>
+        {% else %}
+          {{ empty_state("还没有草稿", "可以从一段问题、一条札记或一个标题开始。", "写一篇新文章", url_for('user.write_article')) }}
+        {% endif %}
+      </section>
+
+      <section class="study-panel">
+        <div class="study-panel-head">
+          <div>
+            <p class="profile-eyebrow">我的沉淀</p>
+            <h2>文章与专栏</h2>
+          </div>
+          <a class="v041-btn" href="{{ url_for('user.archive') }}">查看</a>
+        </div>
+        <div class="study-stat-row">
+          <div>
+            <strong>{{ published_articles|length }}</strong>
+            <span>已发布文章</span>
+          </div>
+          <div>
+            <strong>{{ columns|length }}</strong>
+            <span>专栏</span>
+          </div>
+        </div>
+        {% if published_articles %}
+          <div class="quiet-list">
+            {% for article in published_articles[:3] %}
+              <a class="quiet-list-item" href="{{ url_for('public.article_detail', slug=article.slug) }}">
+                <span>{{ article.title }}</span>
+                <small>{{ (article.published_at or article.created_at).strftime("%Y-%m-%d") }}</small>
+              </a>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p class="study-note">还没有公开沉淀，草稿完成后会出现在这里。</p>
+        {% endif %}
+      </section>
+
+      <section class="study-panel">
+        <div class="study-panel-head">
+          <div>
+            <p class="profile-eyebrow">阅读轨迹</p>
+            <h2>最近回看</h2>
+          </div>
+          <a class="v041-btn" href="{{ url_for('user.reading') }}">查看</a>
+        </div>
+        {% if recent_reads %}
+          <div class="quiet-list">
+            {% for item in recent_reads[:3] %}
+              {% if item.article %}
+                <a class="quiet-list-item" href="{{ url_for('public.article_detail', slug=item.article.slug) }}">
+                  <span>{{ item.article.title }}</span>
+                  <small>收藏于 {{ item.created_at.strftime("%Y-%m-%d") }}</small>
+                </a>
+              {% endif %}
+            {% endfor %}
+          </div>
+        {% else %}
+          <p class="study-note">暂无阅读记录。后续会接入真实最近阅读。</p>
+        {% endif %}
+      </section>
+    </div>
+  {% endcall %}
+{% endblock %}

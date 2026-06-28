@@ -1,14 +1,19 @@
 {% extends "base.html" %}
 
-{% block title %}没有权限{% endblock %}
+{% block title %}没有权限 - 稷下{% endblock %}
+{% block site_nav %}{% endblock %}
+{% block site_footer %}{% endblock %}
 
 {% block content %}
-  <section class="content-section">
-    <div class="container narrow-container text-center">
-      <p class="eyebrow">403</p>
+  <main class="v041-status-page">
+    <section class="v041-status-card">
+      <p class="profile-eyebrow">403</p>
       <h1>没有权限</h1>
-      <p class="text-secondary">你没有权限访问或操作这项内容。</p>
-      <a class="btn btn-dark" href="{{ url_for('public.index') }}">返回首页</a>
-    </div>
-  </section>
+      <p>这份内容暂时不属于你，或者当前账号没有继续访问的权限。</p>
+      <div class="v041-status-actions">
+        <button class="v041-btn" type="button" onclick="window.history.back()">返回上一页</button>
+        <a class="v041-btn v041-btn-primary" href="{{ url_for('public.home') }}">回到首页</a>
+      </div>
+    </section>
+  </main>
 {% endblock %}

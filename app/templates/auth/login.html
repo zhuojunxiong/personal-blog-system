@@ -1,55 +1,52 @@
 {% extends "base.html" %}
 
-{% block title %}{{ '管理员登录' if admin_only else '登录' }} - 知识专栏{% endblock %}
+{% block title %}{{ '管理员登录' if admin_only else '登录' }} - 稷下{% endblock %}
+{% block site_nav %}{% endblock %}
+{% block site_footer %}{% endblock %}
+{% block flash_area %}
+  {% from "shared/_flash_messages.html" import flash_toasts %}
+  {{ flash_toasts(flash_messages) }}
+{% endblock %}
 
 {% block content %}
-  <section class="auth-section">
-    <div class="container auth-layout">
-      <div class="auth-copy">
-        <p class="eyebrow">{{ 'Admin Login' if admin_only else 'Welcome Back' }}</p>
-        <h1>{{ '进入内容管理后台' if admin_only else '欢迎回到知识专栏' }}</h1>
-        <p>
-          {{ '管理员登录后可以审核评论、维护分类标签和管理平台内容。' if admin_only else '登录后，你可以创建专栏、发布文章、参与评论，并把自己的学习过程整理成持续更新的知识空间。' }}
-        </p>
-        <div class="auth-art-board" aria-hidden="true">
-          <div class="visual-toolbar">
-            <span></span>
-            <span></span>
-            <span></span>
-          </div>
-          <div class="auth-figure">
-            <span class="auth-figure-person"></span>
-            <span class="auth-figure-lines"><span></span><span></span><span></span></span>
-          </div>
-        </div>
-      </div>
+  <div class="auth-page auth-page-login">
+    <section class="auth-shell" aria-labelledby="auth-title">
+      <aside class="auth-visual-panel" aria-hidden="true">
+        <div class="auth-brand-mark v041-xingkai">稷下</div>
+        <p class="auth-brand-roman">JIXIA</p>
+        <p class="auth-brand-verse v041-serif">让写作回到思考，让阅读回到平等</p>
+      </aside>
 
-      <div class="auth-card">
-        <p class="eyebrow">{{ 'Secure Access' if admin_only else 'Account Login' }}</p>
-        <h2>{{ '管理员登录' if admin_only else '登录账号' }}</h2>
-        <p class="muted">{{ '请输入管理员账号进入后台。' if admin_only else '继续阅读、创作和维护你的知识专栏。' }}</p>
-        <form method="post">
-          <div class="mb-3">
-            <label class="form-label">用户名</label>
-            <input class="form-control" name="username" required autofocus placeholder="请输入用户名">
-          </div>
-          <div class="mb-3">
-            <label class="form-label">密码</label>
-            <input class="form-control" name="password" type="password" required placeholder="请输入密码">
-          </div>
-          <div class="d-flex justify-content-between align-items-center mb-4">
-            <label class="d-inline-flex align-items-center gap-2 muted">
-              <input type="checkbox" disabled>
-              记住我
-            </label>
-            <span class="muted">忘记密码?</span>
-          </div>
-          <button class="btn btn-primary btn-lg w-100" type="submit">登录</button>
+      <section class="auth-form-panel">
+        <a class="auth-back-home" href="{{ url_for('public.home') }}">
+          <span aria-hidden="true">←</span>
+          <span>回到首页</span>
+        </a>
+
+        <div class="auth-form-head">
+          <h1 id="auth-title" class="v041-serif">{{ '管理员登录' if admin_only else '欢迎回来' }}</h1>
+          <span aria-hidden="true"></span>
+          <p>{{ '进入内容管理后台。' if admin_only else '继续你的阅读、写作与思考。' }}</p>
+        </div>
+
+        <form class="auth-form" method="post" data-v041-auth-form>
+          <label class="auth-input-wrap">
+            <span aria-hidden="true">人</span>
+            <input name="username" type="text" value="{{ request.form.get('username', '') }}" required autofocus placeholder="账号 / 用户名 / 邮箱" data-v041-required="请输入账号。">
+          </label>
+
+          <label class="auth-input-wrap">
+            <span aria-hidden="true">锁</span>
+            <input name="password" type="password" required placeholder="密码" data-v041-required="请输入密码。">
+          </label>
+
+          <button class="auth-submit" type="submit" data-v041-loading-label="登录中...">登录</button>
         </form>
+
         {% if not admin_only %}
-          <p class="auth-note">还没有账号？<a class="clean-link" href="{{ url_for('auth.register') }}">立即注册</a></p>
+          <p class="auth-switch v041-serif">还没有账号？<a href="{{ url_for('auth.register') }}">去注册</a></p>
         {% endif %}
-      </div>
-    </div>
-  </section>
+      </section>
+    </section>
+  </div>
 {% endblock %}

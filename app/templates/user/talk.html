@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+{% from "shared/_profile_layout.html" import profile_shell with context %}
+{% from "shared/_ui_states.html" import empty_state %}
+{% from "shared/_flash_messages.html" import flash_toasts %}
+
+{% block title %}清谈 - 稷下{% endblock %}
+{% block site_nav %}{% endblock %}
+{% block site_footer %}{% endblock %}
+{% block flash_area %}{{ flash_toasts(flash_messages) }}{% endblock %}
+
+{% block content %}
+  {% call profile_shell(active="talk", topbar_label="清谈") %}
+    <section class="profile-page-head">
+      <p class="profile-eyebrow">Conversation</p>
+      <h1>清谈</h1>
+      <p>这里不是即时聊天，只收拢与文章有关的往来和札记。</p>
+    </section>
+
+    <div class="talk-grid">
+      <section class="study-panel talk-compose-panel">
+        <div class="study-panel-head">
+          <div>
+            <p class="profile-eyebrow">发起清谈</p>
+            <h2>{{ selected_article.title if selected_article else "选择一篇文章开始" }}</h2>
+          </div>
+          {% if selected_article %}
+            <a class="v041-btn" href="{{ url_for('public.article_detail', slug=selected_article.slug) }}">回到文章</a>
+          {% endif %}
+        </div>
+        {% if selected_article %}
+          <form class="talk-compose-form" method="post" action="{{ url_for('comment.submit', slug=selected_article.slug) }}">
+            <label class="v041-field">
+              <span class="v041-label">清谈内容</span>
+              <textarea class="v041-textarea" name="content" maxlength="1000" required placeholder="写下你对这篇文章的回应。评论提交后会进入审核。"></textarea>
+            </label>
+            <div class="write-actions">
+              <button class="v041-btn v041-btn-primary" type="submit">提交清谈</button>
+            </div>
+          </form>
+        {% else %}
+          <p class="study-note">请先从某篇文章阅读页点击“发起清谈”，再在这里留下回应。</p>
+        {% endif %}
+      </section>
+
+      <section class="study-panel">
+        <div class="study-panel-head">
+          <div>
+            <p class="profile-eyebrow">待回应</p>
+            <h2>{{ pending_comments|length }} 条待处理</h2>
+          </div>
+        </div>
+        {% if pending_comments %}
+          <div class="quiet-list">
+            {% for comment in pending_comments[:5] %}
+              <a class="quiet-list-item" href="{{ url_for('public.article_detail', slug=comment.article.slug) }}">
+                <span>{{ comment.nickname }}：{{ comment.content[:34] }}</span>
+                <small>{{ comment.created_at.strftime("%Y-%m-%d") }}</small>
+              </a>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p class="study-note">暂时没有待回应的评论。</p>
+        {% endif %}
+      </section>
+
+      <section class="study-panel talk-wide">
+        <div class="study-panel-head">
+          <div>
+            <p class="profile-eyebrow">最近往来</p>
+            <h2>与文章有关的交流</h2>
+          </div>
+        </div>
+        {% if recent_exchanges %}
+          <div class="talk-list">
+            {% for comment in recent_exchanges %}
+              <article class="talk-item">
+                <span class="v041-avatar">{{ comment.nickname[:1] }}</span>
+                <div>
+                  <div class="talk-item-head">
+                    <strong>{{ comment.nickname }}</strong>
+                    <small>{{ comment.created_at.strftime("%Y-%m-%d") }}</small>
+                  </div>
+                  <p>{{ comment.content }}</p>
+                  <a href="{{ url_for('public.article_detail', slug=comment.article.slug) }}">{{ comment.article.title }}</a>
+                </div>
+              </article>
+            {% endfor %}
+          </div>
+        {% else %}
+          {{ empty_state("还没有往来", "评论与回复模型仍保持轻量，后续会在这里继续生长。") }}
+        {% endif %}
+      </section>
+
+      <section class="study-panel">
+        <div class="study-panel-head">
+          <div>
+            <p class="profile-eyebrow">消息归类</p>
+            <h2>轻量概览</h2>
+          </div>
+        </div>
+        <div class="study-stat-row study-stat-row-vertical">
+          <div>
+            <strong>{{ received_comments|length }}</strong>
+            <span>收到的评论</span>
+          </div>
+          <div>
+            <strong>{{ my_comments|length }}</strong>
+            <span>我发表的评论</span>
+          </div>
+          <div>
+            <strong>{{ approved_comments|length }}</strong>
+            <span>已通过评论</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="study-panel">
+        <div class="study-panel-head">
+          <div>
+            <p class="profile-eyebrow">清谈札记</p>
+            <h2>待开发</h2>
+          </div>
+        </div>
+        <p class="study-note">后续可以在这里记录交流后的想法。本阶段不新增消息系统或复杂回复模型。</p>
+      </section>
+    </div>
+  {% endcall %}
+{% endblock %}

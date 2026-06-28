@@ -1,14 +1,24 @@
 {% extends "base.html" %}
 
-{% block title %}页面不存在{% endblock %}
+{% block title %}页面不存在 - 稷下{% endblock %}
+{% block site_nav %}{% endblock %}
+{% block site_footer %}{% endblock %}
 
 {% block content %}
-  <section class="content-section">
-    <div class="container narrow-container text-center">
-      <p class="eyebrow">404</p>
+  <main class="v041-status-page">
+    <section class="v041-status-card">
+      <p class="profile-eyebrow">404</p>
       <h1>页面不存在</h1>
-      <p class="text-secondary">你访问的内容不存在，或者尚未发布。</p>
-      <a class="btn btn-dark" href="{{ url_for('public.index') }}">返回首页</a>
-    </div>
-  </section>
+      <p>你访问的内容不存在，或者它还没有准备好被公开阅读。</p>
+      <div class="v041-status-actions">
+        <a class="v041-btn v041-btn-primary" href="{{ url_for('public.home') }}">回到首页</a>
+        <a class="v041-btn" href="{{ url_for('public.search') }}">去搜索</a>
+        {% if current_user.is_authenticated %}
+          <a class="v041-btn" href="{{ url_for('user.profile_home') }}">我的书房</a>
+        {% else %}
+          <a class="v041-btn" href="{{ url_for('auth.login') }}">登录</a>
+        {% endif %}
+      </div>
+    </section>
+  </main>
 {% endblock %}

@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% from "shared/_profile_layout.html" import profile_shell with context %}
+{% from "shared/_ui_states.html" import empty_state %}
+{% from "shared/_flash_messages.html" import flash_toasts %}
+
+{% block title %}阅读轨迹 - 稷下{% endblock %}
+{% block site_nav %}{% endblock %}
+{% block site_footer %}{% endblock %}
+{% block flash_area %}{{ flash_toasts(flash_messages) }}{% endblock %}
+
+{% block content %}
+  {% call profile_shell(active="profile", topbar_label="阅读轨迹") %}
+    <section class="profile-page-head">
+      <p class="profile-eyebrow">Reading Trace</p>
+      <h1>阅读轨迹</h1>
+      <p>先记录你主动收藏过的文字；真实最近阅读将在后续版本接入。</p>
+    </section>
+
+    <div class="reading-grid">
+      <section class="study-panel">
+        <div class="study-panel-head">
+          <div>
+            <p class="profile-eyebrow">最近阅读</p>
+            <h2>近期回到过的文章</h2>
+          </div>
+        </div>
+        {% if recent_reads %}
+          <div class="reading-list">
+            {% for item in recent_reads %}
+              {% if item.article %}
+                <a class="reading-item" href="{{ url_for('public.article_detail', slug=item.article.slug) }}">
+                  <span class="v041-avatar">{{ (item.article.user.nickname if item.article.user else item.article.author)[:1] }}</span>
+                  <span>
+                    <strong>{{ item.article.title }}</strong>
+                    <small>暂以收藏时间记录：{{ item.created_at.strftime("%Y-%m-%d") }}</small>
+                  </span>
+                </a>
+              {% endif %}
+            {% endfor %}
+          </div>
+        {% else %}
+          {{ empty_state("还没有最近阅读", "阅读历史表尚未接入，本页会先保持轻量状态。") }}
+        {% endif %}
+      </section>
+
+      <section class="study-panel">
+        <div class="study-panel-head">
+          <div>
+            <p class="profile-eyebrow">我的收藏</p>
+            <h2>{{ favorites|length }} 篇收藏</h2>
+          </div>
+          <a class="v041-btn" href="{{ url_for('public.search') }}">继续寻找</a>
+        </div>
+        {% if favorites %}
+          <div class="reading-list">
+            {% for item in favorites %}
+              {% if item.article %}
+                <a class="reading-item" href="{{ url_for('public.article_detail', slug=item.article.slug) }}">
+                  <span class="v041-avatar">{{ (item.article.user.nickname if item.article.user else item.article.author)[:1] }}</span>
+                  <span>
+                    <strong>{{ item.article.title }}</strong>
+                    <small>收藏于 {{ item.created_at.strftime("%Y-%m-%d") }}</small>
+                  </span>
+                </a>
+              {% endif %}
+            {% endfor %}
+          </div>
+        {% else %}
+          {{ empty_state("还没有收藏", "在阅读空间收藏的文章会安静地留在这里。", "去搜索", url_for('public.search')) }}
+        {% endif %}
+      </section>
+    </div>
+  {% endcall %}
+{% endblock %}

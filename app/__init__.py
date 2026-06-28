@@ -12,7 +12,7 @@ def create_app(config_class=Config):
     db.init_app(app)
     login_manager.init_app(app)
     login_manager.login_view = "auth.login"
-    login_manager.login_message = "请先登录管理员后台。"
+    login_manager.login_message = "请先登录后继续。"
 
     @login_manager.user_loader
     def load_user(user_id):

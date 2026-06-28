@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% from "shared/_profile_layout.html" import profile_shell with context %}
+{% from "shared/_flash_messages.html" import flash_toasts %}
+
+{% block title %}个人设置 - 稷下{% endblock %}
+{% block site_nav %}{% endblock %}
+{% block site_footer %}{% endblock %}
+{% block flash_area %}{{ flash_toasts(flash_messages) }}{% endblock %}
+
+{% block content %}
+  {% call profile_shell(active="settings", topbar_label="个人设置") %}
+    <section class="profile-page-head">
+      <p class="profile-eyebrow">Settings</p>
+      <h1>个人设置</h1>
+      <p>只保留必要的账户动作，其他展示能力留给后续版本。</p>
+    </section>
+
+    <div class="settings-stack">
+      <section class="settings-row">
+        <div>
+          <h2>修改密码</h2>
+          <p>更新当前账号的登录密码。</p>
+        </div>
+        <button class="v041-btn" type="button" data-v041-open-password>修改密码</button>
+      </section>
+
+      <section class="settings-row">
+        <div>
+          <h2>退出登录</h2>
+          <p>离开当前会话前会再次确认。</p>
+        </div>
+        <form action="{{ url_for('auth.logout') }}" method="get">
+          <button
+            class="v041-btn v041-btn-danger"
+            type="submit"
+            data-v041-confirm="确认退出当前账号吗？"
+            data-v041-confirm-title="退出登录"
+          >退出登录</button>
+        </form>
+      </section>
+
+      <section class="settings-row is-muted">
+        <div>
+          <h2>个人展示界面</h2>
+          <p>待开发。后续会用于整理公开主页的展示方式。</p>
+        </div>
+        <span class="study-pill">待开发</span>
+      </section>
+    </div>
+
+    <div class="settings-modal-backdrop" data-v041-password-modal aria-hidden="true">
+      <section class="settings-modal" role="dialog" aria-modal="true" aria-labelledby="password-modal-title">
+        <div class="study-panel-head">
+          <div>
+            <p class="profile-eyebrow">Password</p>
+            <h2 id="password-modal-title">修改密码</h2>
+          </div>
+          <button class="v041-btn v041-btn-ghost" type="button" data-v041-close-password aria-label="关闭修改密码弹窗">关闭</button>
+        </div>
+        <form class="settings-password-form" action="{{ url_for('user.change_password') }}" method="post" data-v041-auth-form>
+          <label class="v041-field">
+            <span class="v041-label">当前密码</span>
+            <input class="v041-input" name="old_password" type="password" autocomplete="current-password" data-v041-required="请输入当前密码。">
+          </label>
+          <label class="v041-field">
+            <span class="v041-label">新密码</span>
+            <input class="v041-input" name="new_password" type="password" minlength="6" autocomplete="new-password" data-v041-required="请输入新密码。">
+          </label>
+          <label class="v041-field">
+            <span class="v041-label">确认新密码</span>
+            <input class="v041-input" name="confirm_password" type="password" minlength="6" autocomplete="new-password" data-v041-required="请再次输入新密码。">
+          </label>
+          <div class="v041-dialog-actions">
+            <button class="v041-btn" type="button" data-v041-close-password>取消</button>
+            <button class="v041-btn v041-btn-primary" type="submit" data-v041-loading-label="保存中...">保存</button>
+          </div>
+        </form>
+      </section>
+    </div>
+  {% endcall %}
+{% endblock %}

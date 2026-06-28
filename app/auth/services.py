@@ -26,6 +26,7 @@ class AuthService:
 
     @staticmethod
     def register(data):
+        # TODO: 后续版本可接入注册通行证/邀请码机制；v0.4.1 暂不校验 passcode。
         errors = AuthService.validate_register(data)
         if errors:
             return None, errors

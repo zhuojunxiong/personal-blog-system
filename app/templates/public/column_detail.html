@@ -1,36 +1,55 @@
 {% extends "base.html" %}
+{% from "shared/_app_topbar.html" import app_topbar with context %}
+{% from "shared/_ui_states.html" import empty_state %}
 
 {% block title %}{{ column.name }} - 专栏{% endblock %}
+{% block site_nav %}{% endblock %}
+{% block site_footer %}{% endblock %}
 
 {% block content %}
-  <section class="page-hero">
-    <div class="container page-hero-grid">
-      <div>
-        <p class="eyebrow">Column</p>
-        <h1>{{ column.name }}</h1>
-        <p>{{ column.description or "这个专栏正在整理自己的知识方向。" }}</p>
-        <div class="profile-stats mt-3">
-          <span>创建者 <a class="clean-link" href="{{ url_for('user.profile', user_id=column.user.id) }}">{{ column.user.nickname }}</a></span>
-          <span>{{ articles|length }} 篇公开文章</span>
-          <span>{{ 96 + column.id * 11 }} 关注</span>
+  <div class="public-profile-page">
+    {{ app_topbar("专栏详情") }}
+    <main class="public-profile-shell">
+      <section class="public-hero-card public-column-hero">
+        <div class="public-hero-avatar">卷</div>
+        <div>
+          <p class="profile-eyebrow">Column</p>
+          <h1>{{ column.name }}</h1>
+          <p>{{ column.description or "这个专栏正在形成自己的知识方向。" }}</p>
+          <div class="public-hero-meta">
+            <span>创建者 <a href="{{ url_for('user.profile', user_id=column.user.id) }}">{{ column.user.nickname }}</a></span>
+            <span>{{ articles|length }} 篇文章</span>
+            <span>创建于 {{ column.created_at.strftime("%Y-%m-%d") }}</span>
+          </div>
         </div>
-      </div>
-      <a class="btn btn-secondary" href="{{ url_for('column.index') }}">全部专栏</a>
-    </div>
-  </section>
+        <div class="public-hero-actions">
+          <a class="v041-btn" href="{{ url_for('public.home') }}">返回首页</a>
+          <a class="v041-btn v041-btn-primary" href="{{ url_for('user.profile', user_id=column.user.id) }}">作者主页</a>
+        </div>
+      </section>
 
-  <section class="content-section">
-    <div class="container">
-      {% if articles %}
-        <div class="list-stack">
-          {% for article in articles %}
-            {% set article_card_variant = 'horizontal' %}
-            {% include "public/_article_card.html" %}
-          {% endfor %}
+      <section class="public-panel">
+        <div class="study-panel-head">
+          <div>
+            <p class="profile-eyebrow">Collected Articles</p>
+            <h2>专栏文章</h2>
+          </div>
+          <a class="v041-btn" href="{{ url_for('public.search') }}">继续搜索</a>
         </div>
-      {% else %}
-        <div class="empty-state">该专栏还没有公开文章。</div>
-      {% endif %}
-    </div>
-  </section>
+        {% if articles %}
+          <div class="public-article-list public-article-list-two">
+            {% for article in articles %}
+              <a class="public-article-item" href="{{ url_for('public.article_detail', slug=article.slug) }}">
+                <span>{{ article.title }}</span>
+                <small>{{ article.summary or article.content[:118] }}</small>
+                <em>{{ (article.published_at or article.created_at).strftime("%Y-%m-%d") }}</em>
+              </a>
+            {% endfor %}
+          </div>
+        {% else %}
+          {{ empty_state("专栏暂无文章", "这个专栏还没有公开文章。", "返回作者主页", url_for('user.profile', user_id=column.user.id)) }}
+        {% endif %}
+      </section>
+    </main>
+  </div>
 {% endblock %}

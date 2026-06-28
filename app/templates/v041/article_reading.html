@@ -18,7 +18,7 @@
       </a>
       <div class="article-topbar-user">
         {% if current_user.is_authenticated %}
-          <a class="v041-avatar" href="{{ url_for('user.center') }}" aria-label="进入个人空间">{{ current_user.nickname[:1] }}</a>
+          <a class="v041-avatar" href="{{ url_for('user.profile_home') }}" aria-label="进入个人空间">{{ current_user.nickname[:1] }}</a>
         {% else %}
           <a class="v041-btn" href="{{ url_for('auth.login') }}">登录</a>
         {% endif %}
@@ -116,6 +116,17 @@
             <span aria-hidden="true">↑</span>
             <span>回到顶部</span>
           </a>
+          {% if current_user.is_authenticated %}
+            <a class="article-action-button" href="{{ url_for('user.talk', article=article.slug) }}">
+              <span aria-hidden="true">✎</span>
+              <span>发起清谈</span>
+            </a>
+          {% else %}
+            <a class="article-action-button" href="{{ url_for('auth.login', next=url_for('user.talk', article=article.slug)) }}">
+              <span aria-hidden="true">✎</span>
+              <span>发起清谈</span>
+            </a>
+          {% endif %}
         </section>
 
         <section class="article-side-card ai-reading-card">

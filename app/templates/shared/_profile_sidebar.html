@@ -7,17 +7,17 @@
     </div>
     <div class="profile-sidebar-divider" aria-hidden="true"></div>
     <nav class="profile-nav" aria-label="个人空间导航">
-      <a class="profile-nav-item {% if active == 'profile' %}is-active{% endif %}" href="{{ url_for('user.center') }}">
+      <a class="profile-nav-item {% if active == 'profile' %}is-active{% endif %}" href="{{ url_for('user.profile_home') }}">
         <span aria-hidden="true">⌂</span>
         <span>我的书房</span>
       </a>
-      <a class="profile-nav-item {% if active == 'talk' %}is-active{% endif %}" href="#">
+      <a class="profile-nav-item {% if active == 'talk' %}is-active{% endif %}" href="{{ url_for('user.talk') }}">
         <span aria-hidden="true">☷</span>
         <span>清谈</span>
       </a>
     </nav>
     <div class="profile-sidebar-bottom">
-      <a class="profile-nav-item {% if active == 'settings' %}is-active{% endif %}" href="#" aria-label="个人设置">
+      <a class="profile-nav-item {% if active == 'settings' %}is-active{% endif %}" href="{{ url_for('user.settings') }}" aria-label="个人设置">
         <span aria-hidden="true">⚙</span>
         <span>设置</span>
       </a>

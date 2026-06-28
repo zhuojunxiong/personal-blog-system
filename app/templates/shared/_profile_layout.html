@@ -1,5 +1,5 @@
-{% from "shared/_app_topbar.html" import app_topbar %}
-{% from "shared/_profile_sidebar.html" import profile_sidebar %}
+{% from "shared/_app_topbar.html" import app_topbar with context %}
+{% from "shared/_profile_sidebar.html" import profile_sidebar with context %}
 
 {% macro profile_shell(active="profile", topbar_label=None, caller=None) %}
   <div class="profile-shell">

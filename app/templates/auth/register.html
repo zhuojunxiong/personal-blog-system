@@ -1,53 +1,61 @@
 {% extends "base.html" %}
 
-{% block title %}注册 - 知识专栏{% endblock %}
+{% block title %}注册 - 稷下{% endblock %}
+{% block site_nav %}{% endblock %}
+{% block site_footer %}{% endblock %}
+{% block flash_area %}
+  {% from "shared/_flash_messages.html" import flash_toasts %}
+  {{ flash_toasts(flash_messages) }}
+{% endblock %}
 
 {% block content %}
-  <section class="auth-section">
-    <div class="container auth-layout">
-      <div class="auth-copy">
-        <p class="eyebrow">Join Platform</p>
-        <h1>创建你的专属知识空间</h1>
-        <p>加入以后，开始创建自己的专栏，发布属于你的文章，把课程实践、项目经验和阅读思考沉淀下来。</p>
-        <div class="auth-art-board" aria-hidden="true">
-          <div class="visual-toolbar">
-            <span></span>
-            <span></span>
-            <span></span>
-          </div>
-          <div class="auth-figure">
-            <span class="auth-figure-person thumb-4"></span>
-            <span class="auth-figure-lines"><span></span><span></span><span></span></span>
-          </div>
-        </div>
-      </div>
+  <div class="auth-page auth-page-register">
+    <section class="auth-shell" aria-labelledby="auth-title">
+      <aside class="auth-visual-panel" aria-hidden="true">
+        <div class="auth-brand-mark v041-xingkai">稷下</div>
+        <p class="auth-brand-roman">JIXIA</p>
+        <p class="auth-brand-verse v041-serif">让写作回到思考，让阅读回到平等</p>
+      </aside>
 
-      <div class="auth-card">
-        <p class="eyebrow">Create Account</p>
-        <h2>注册账号</h2>
-        <p class="muted">普通用户也可以拥有自己的专栏和文章主页。</p>
-        <form method="post">
-          <div class="mb-3">
-            <label class="form-label">用户名</label>
-            <input class="form-control" name="username" required maxlength="64" placeholder="请输入用户名">
-          </div>
-          <div class="mb-3">
-            <label class="form-label">昵称</label>
-            <input class="form-control" name="nickname" maxlength="64" placeholder="展示给读者的名字">
-          </div>
-          <div class="mb-3">
-            <label class="form-label">邮箱</label>
-            <input class="form-control" name="email" type="email" required maxlength="120" placeholder="name@example.com">
-          </div>
-          <div class="mb-3">
-            <label class="form-label">密码</label>
-            <input class="form-control" name="password" type="password" required minlength="6" placeholder="至少 6 位">
-          </div>
-          <p class="muted small">注册即表示同意平台的基础使用规则，当前版本仅保留提示占位。</p>
-          <button class="btn btn-primary btn-lg w-100" type="submit">注册并登录</button>
+      <section class="auth-form-panel">
+        <a class="auth-back-home" href="{{ url_for('public.home') }}">
+          <span aria-hidden="true">←</span>
+          <span>回到首页</span>
+        </a>
+
+        <div class="auth-form-head">
+          <h1 id="auth-title" class="v041-serif">欢迎加入</h1>
+          <span aria-hidden="true"></span>
+          <p>从第一篇文字开始，整理自己的思想脉络。</p>
+        </div>
+
+        <form class="auth-form" method="post" data-v041-auth-form>
+          <label class="auth-input-wrap">
+            <span aria-hidden="true">人</span>
+            <input name="username" type="text" value="{{ request.form.get('username', '') }}" required maxlength="64" placeholder="真实姓名 / 用户名" data-v041-required="请输入用户名。">
+          </label>
+
+          <label class="auth-input-wrap">
+            <span aria-hidden="true">@</span>
+            <input name="email" type="email" value="{{ request.form.get('email', '') }}" required maxlength="120" placeholder="邮箱" data-v041-required="请输入邮箱。">
+          </label>
+
+          <label class="auth-input-wrap">
+            <span aria-hidden="true">锁</span>
+            <input name="password" type="password" required minlength="6" placeholder="密码" data-v041-required="请输入密码。">
+          </label>
+
+          <label class="auth-input-wrap">
+            <span aria-hidden="true">令</span>
+            <input name="passcode" type="text" value="{{ request.form.get('passcode', '') }}" placeholder="通行证">
+          </label>
+          <p class="auth-form-note">通行证为后续版本预留，当前可以留空。</p>
+
+          <button class="auth-submit" type="submit" data-v041-loading-label="注册中...">注册</button>
         </form>
-        <p class="auth-note">已有账号？<a class="clean-link" href="{{ url_for('auth.login') }}">立即登录</a></p>
-      </div>
-    </div>
-  </section>
+
+        <p class="auth-switch v041-serif">已有账号？<a href="{{ url_for('auth.login') }}">去登录</a></p>
+      </section>
+    </section>
+  </div>
 {% endblock %}
