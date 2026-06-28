@@ -1,0 +1,9 @@
+{% macro flash_toasts(messages) %}
+  {% if messages %}
+    <div class="v041-flash-wrap" aria-live="polite" aria-atomic="true">
+      {% for category, message in messages %}
+        <div class="v041-flash v041-flash-{{ category }}" data-v041-flash role="status">{{ message }}</div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endmacro %}

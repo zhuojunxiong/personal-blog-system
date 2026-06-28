@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% from "shared/_app_topbar.html" import app_topbar %}
+
+{% block title %}{{ article.title }} - 阅读空间{% endblock %}
+{% block site_nav %}{% endblock %}
+{% block site_footer %}{% endblock %}
+
+{% block content %}
+  <div class="article-reading-page" id="article-top">
+    <header class="article-reading-topbar">
+      <a class="v041-brand" href="{{ url_for('public.home') }}" aria-label="稷下">
+        <span>稷下</span>
+        <span class="v041-brand-seal" aria-hidden="true">印</span>
+      </a>
+      <a class="article-back-link" href="{{ back_url }}" data-v041-back-search>
+        <span aria-hidden="true">‹</span>
+        <span>返回搜索界面</span>
+      </a>
+      <div class="article-topbar-user">
+        {% if current_user.is_authenticated %}
+          <a class="v041-avatar" href="{{ url_for('user.center') }}" aria-label="进入个人空间">{{ current_user.nickname[:1] }}</a>
+        {% else %}
+          <a class="v041-btn" href="{{ url_for('auth.login') }}">登录</a>
+        {% endif %}
+      </div>
+    </header>
+
+    <div class="article-reading-shell">
+      <aside class="article-left-panel">
+        <section class="article-side-card">
+          <p class="article-side-kicker">所属专栏</p>
+          {% if article.column %}
+            <a class="article-column-link" href="{{ url_for('column.detail', column_id=article.column.id) }}">{{ article.column.name }}</a>
+          {% else %}
+            <span class="article-column-link">未归属专栏</span>
+          {% endif %}
+        </section>
+        <section class="article-side-card">
+          <h2>目录</h2>
+          <nav class="article-toc" aria-label="文章目录">
+            <a href="#article-head">文章信息</a>
+            {% for item in toc_items %}
+              <a href="#section-{{ loop.index }}">{{ item }}</a>
+            {% else %}
+              <a href="#article-body">正文阅读</a>
+            {% endfor %}
+          </nav>
+        </section>
+      </aside>
+
+      <article class="article-main-paper">
+        <header class="article-reading-head" id="article-head">
+          {% if article.column %}
+            <a class="article-reading-column" href="{{ url_for('column.detail', column_id=article.column.id) }}">{{ article.column.name }}</a>
+          {% endif %}
+          <h1>{{ article.title }}</h1>
+          {% if article.user %}
+            <a class="article-author-line" href="{{ url_for('user.profile', user_id=article.user.id) }}">
+              <span class="article-author-avatar">{{ article.user.nickname[:1] }}</span>
+              <span>
+                <strong>{{ article.user.nickname }}</strong>
+                <small>进入作者主页</small>
+              </span>
+            </a>
+          {% else %}
+            <div class="article-author-line">
+              <span class="article-author-avatar">{{ article.author[:1] }}</span>
+              <span><strong>{{ article.author }}</strong></span>
+            </div>
+          {% endif %}
+          <div class="article-reading-meta">
+            <span>发布于 {{ article.published_at.strftime('%Y-%m-%d') if article.published_at else article.created_at.strftime('%Y-%m-%d') }}</span>
+            <span>约 {{ word_count }} 字</span>
+            <span>阅读约 {{ reading_minutes }} 分钟</span>
+          </div>
+          {% if article.summary %}
+            <blockquote class="article-epigraph">{{ article.summary }}</blockquote>
+          {% endif %}
+        </header>
+
+        <section class="article-reading-body" id="article-body">
+          {% for block in content_blocks %}
+            {% if block.is_heading %}
+              <h2 id="section-{{ block.index }}">{{ block.text }}</h2>
+            {% else %}
+              <p>{{ block.text }}</p>
+            {% endif %}
+          {% endfor %}
+        </section>
+
+        {% if article.column %}
+          <footer class="article-reading-footer">
+            本文收录于
+            <a href="{{ url_for('column.detail', column_id=article.column.id) }}">「{{ article.column.name }}」</a>
+            专栏
+          </footer>
+        {% endif %}
+      </article>
+
+      <aside class="article-right-panel">
+        <section class="article-side-card article-action-card">
+          {% if current_user.is_authenticated %}
+            <form method="post" action="{{ url_for('comment.favorite', slug=article.slug) }}">
+              <button class="article-action-button" type="submit">
+                <span aria-hidden="true">☆</span>
+                <span>{{ "已收藏" if favorited else "收藏" }}</span>
+              </button>
+            </form>
+          {% else %}
+            <a class="article-action-button" href="{{ url_for('auth.login', next=request.path) }}">
+              <span aria-hidden="true">☆</span>
+              <span>收藏</span>
+            </a>
+          {% endif %}
+          <a class="article-action-button" href="#article-top">
+            <span aria-hidden="true">↑</span>
+            <span>回到顶部</span>
+          </a>
+        </section>
+
+        <section class="article-side-card ai-reading-card">
+          <h2>AI 阅读提示</h2>
+          <button type="button" data-v041-ai-unavailable>可为你概括要点</button>
+          <button type="button" data-v041-ai-unavailable>可提炼文章结构</button>
+          <button type="button" data-v041-ai-unavailable>可生成阅读问题</button>
+        </section>
+      </aside>
+    </div>
+  </div>
+{% endblock %}

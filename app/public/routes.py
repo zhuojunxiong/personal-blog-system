@@ -1,11 +1,14 @@
-from flask import Blueprint, abort, render_template, request
+from math import ceil
+
+from flask import Blueprint, abort, render_template, request, url_for
 from flask_login import current_user
 from sqlalchemy import or_
+from sqlalchemy.exc import SQLAlchemyError
 
 from app.article.services import ArticleService
 from app.category.services import CategoryService
 from app.column.services import ColumnService
-from app.comment.services import CommentService
+from app.extensions import db
 from app.models import COMMENT_STATUS_APPROVED, Article, BlogColumn, Comment, User
 from app.tag.services import TagService
 
@@ -14,6 +17,16 @@ public_bp = Blueprint("public", __name__)
 
 @public_bp.route("/")
 def index():
+    return render_template("v041/landing.html")
+
+
+@public_bp.route("/home")
+def home():
+    return render_template("v041/home.html")
+
+
+@public_bp.route("/discover")
+def discover():
     page = request.args.get("page", 1, type=int)
     pagination = ArticleService.list_published(page=page)
     return render_template(
@@ -33,22 +46,42 @@ def article_detail(slug):
     article = ArticleService.get_published_by_slug(slug)
     if not article:
         abort(404)
-    ArticleService.increment_view(article)
-    comments = CommentService.approved_for_article(article.id)
-    related_articles = []
-    if article.column_id:
-        related_articles = [
-            item
-            for item in ArticleService.published_by_column(article.column_id)
-            if item.id != article.id
-        ][:4]
+    try:
+        ArticleService.increment_view(article)
+    except SQLAlchemyError:
+        db.session.rollback()
+    content_lines = [line.strip() for line in article.content.splitlines() if line.strip()]
+    content_blocks = []
+    toc_items = []
+    heading_index = 0
+    for line in content_lines:
+        is_heading = (
+            len(line) <= 32
+            and (
+                line.startswith(("#", "一、", "二、", "三、", "四、", "五、", "六、"))
+                or line.endswith(("：", ":"))
+            )
+        )
+        text = line.lstrip("#").strip() if line.startswith("#") else line
+        if is_heading:
+            heading_index += 1
+            toc_items.append(text.rstrip("：:"))
+            content_blocks.append({"is_heading": True, "index": heading_index, "text": text.rstrip("：:")})
+        else:
+            content_blocks.append({"is_heading": False, "index": None, "text": text})
+    word_count = len(article.content)
+    reading_minutes = max(1, ceil(word_count / 450))
+    referrer = request.referrer or ""
+    back_url = referrer if "/search" in referrer else url_for("public.home")
     return render_template(
-        "public/article_detail.html",
+        "v041/article_reading.html",
         article=article,
-        comments=comments,
-        liked=ArticleService.liked_by(article, current_user),
         favorited=ArticleService.favorited_by(article, current_user),
-        related_articles=related_articles,
+        content_blocks=content_blocks,
+        toc_items=toc_items[:6],
+        word_count=word_count,
+        reading_minutes=reading_minutes,
+        back_url=back_url,
     )
 
 
@@ -94,7 +127,10 @@ def tag_detail(tag_id):
 def search():
     keyword = request.args.get("q", "").strip()
     page = request.args.get("page", 1, type=int)
-    pagination = ArticleService.search_published(keyword, page=page)
+    page_size = request.args.get("pageSize", 5, type=int)
+    if page_size < 1 or page_size > 20:
+        page_size = 5
+    pagination = ArticleService.search_published(keyword, page=page, per_page=page_size)
     columns = []
     users = []
     if keyword:
@@ -124,8 +160,11 @@ def search():
             .limit(6)
             .all()
         )
+    def search_page_url(page_num):
+        return url_for("public.search", q=keyword, page=page_num, pageSize=page_size)
+
     return render_template(
-        "public/search.html",
+        "v041/search_results.html",
         keyword=keyword,
         pagination=pagination,
         articles=pagination.items,
@@ -133,6 +172,8 @@ def search():
         users=users,
         categories=CategoryService.all_ordered(),
         tags=TagService.all_ordered(),
+        page_size=page_size,
+        search_page_url=search_page_url,
     )
 
 

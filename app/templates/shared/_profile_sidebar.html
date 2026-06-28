@@ -1,0 +1,26 @@
+{% macro profile_sidebar(active="profile") %}
+  <aside class="profile-sidebar">
+    <div class="profile-sidebar-user">
+      <span class="v041-avatar">{{ current_user.nickname[:1] if current_user.is_authenticated else "客" }}</span>
+      <strong>{{ current_user.nickname if current_user.is_authenticated else "未登录" }}</strong>
+      <p>{{ current_user.bio if current_user.is_authenticated and current_user.bio else "记录正在形成的想法" }}</p>
+    </div>
+    <div class="profile-sidebar-divider" aria-hidden="true"></div>
+    <nav class="profile-nav" aria-label="个人空间导航">
+      <a class="profile-nav-item {% if active == 'profile' %}is-active{% endif %}" href="{{ url_for('user.center') }}">
+        <span aria-hidden="true">⌂</span>
+        <span>我的书房</span>
+      </a>
+      <a class="profile-nav-item {% if active == 'talk' %}is-active{% endif %}" href="#">
+        <span aria-hidden="true">☷</span>
+        <span>清谈</span>
+      </a>
+    </nav>
+    <div class="profile-sidebar-bottom">
+      <a class="profile-nav-item {% if active == 'settings' %}is-active{% endif %}" href="#" aria-label="个人设置">
+        <span aria-hidden="true">⚙</span>
+        <span>设置</span>
+      </a>
+    </div>
+  </aside>
+{% endmacro %}

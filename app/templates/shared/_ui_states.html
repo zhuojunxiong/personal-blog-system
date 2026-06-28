@@ -1,0 +1,34 @@
+{% macro empty_state(title="暂无内容", message="这里还没有可以展示的内容。", action_label=None, action_href=None) %}
+  <div class="v041-state" role="status">
+    <div class="v041-state-inner">
+      <span class="v041-state-icon" aria-hidden="true">空</span>
+      <h2 class="v041-state-title">{{ title }}</h2>
+      <p class="v041-state-text">{{ message }}</p>
+      {% if action_label and action_href %}
+        <a class="v041-btn" href="{{ action_href }}">{{ action_label }}</a>
+      {% endif %}
+    </div>
+  </div>
+{% endmacro %}
+
+{% macro loading_state(message="正在加载，请稍候。") %}
+  <div class="v041-state" role="status" aria-live="polite">
+    <div class="v041-state-inner">
+      <span class="v041-loading-dot" aria-hidden="true"></span>
+      <p class="v041-state-text">{{ message }}</p>
+    </div>
+  </div>
+{% endmacro %}
+
+{% macro error_state(title="加载失败", message="内容暂时无法显示，请稍后重试。", action_label=None, action_href=None) %}
+  <div class="v041-state" role="alert">
+    <div class="v041-state-inner">
+      <span class="v041-state-icon" aria-hidden="true">!</span>
+      <h2 class="v041-state-title">{{ title }}</h2>
+      <p class="v041-state-text">{{ message }}</p>
+      {% if action_label and action_href %}
+        <a class="v041-btn" href="{{ action_href }}">{{ action_label }}</a>
+      {% endif %}
+    </div>
+  </div>
+{% endmacro %}

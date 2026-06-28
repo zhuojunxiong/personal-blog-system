@@ -1,0 +1,14 @@
+{% from "shared/_app_topbar.html" import app_topbar %}
+{% from "shared/_profile_sidebar.html" import profile_sidebar %}
+
+{% macro profile_shell(active="profile", topbar_label=None, caller=None) %}
+  <div class="profile-shell">
+    {{ app_topbar(topbar_label) }}
+    <div class="profile-shell-body">
+      {{ profile_sidebar(active) }}
+      <main class="profile-main">
+        {{ caller() }}
+      </main>
+    </div>
+  </div>
+{% endmacro %}

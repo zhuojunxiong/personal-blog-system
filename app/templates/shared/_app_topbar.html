@@ -1,0 +1,18 @@
+{% macro app_topbar(active_label=None) %}
+  <header class="v041-app-topbar">
+    <a class="v041-brand" href="{{ url_for('public.index') }}" aria-label="稷下">
+      <span>稷下</span>
+      <span class="v041-brand-seal" aria-hidden="true">印</span>
+    </a>
+    <div class="d-flex align-items-center gap-2">
+      {% if active_label %}
+        <span class="v041-muted">{{ active_label }}</span>
+      {% endif %}
+      {% if current_user.is_authenticated %}
+        <a class="v041-avatar" href="{{ url_for('user.center') }}" aria-label="进入个人空间">{{ current_user.nickname[:1] }}</a>
+      {% else %}
+        <a class="v041-btn" href="{{ url_for('auth.login') }}">登录</a>
+      {% endif %}
+    </div>
+  </header>
+{% endmacro %}
