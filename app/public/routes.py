@@ -1,3 +1,4 @@
+import re
 from math import ceil
 
 from flask import Blueprint, abort, render_template, request, url_for
@@ -11,6 +12,15 @@ from app.column.services import ColumnService
 from app.extensions import db
 from app.models import COMMENT_STATUS_APPROVED, Article, BlogColumn, Comment, User
 from app.tag.services import TagService
+
+# 匹配中文序号标题：一、二、… 十、十一、… 二十
+_CN_NUMBERED = re.compile(
+    r"^(?:一|二|三|四|五|六|七|八|九|十"
+    r"|十一|十二|十三|十四|十五|十六|十七|十八|十九|二十"
+    r")[、．.]"
+)
+# 匹配形如 "关键词：" 的短标题模式（2-8 个汉字后跟中文冒号）
+_CN_LABEL = re.compile(r"^[一-鿿]{2,8}：$")
 
 public_bp = Blueprint("public", __name__)
 
@@ -58,14 +68,15 @@ def article_detail(slug):
         is_heading = (
             len(line) <= 32
             and (
-                line.startswith(("#", "一、", "二、", "三、", "四、", "五、", "六、"))
-                or line.endswith(("：", ":"))
+                line.startswith("#")
+                or _CN_NUMBERED.match(line)
+                or _CN_LABEL.match(line)
             )
         )
         text = line.lstrip("#").strip() if line.startswith("#") else line
         if is_heading:
             heading_index += 1
-            toc_items.append(text.rstrip("：:"))
+            toc_items.append(text.lstrip("一二三四五六七八九十、．. ").rstrip("：:")[:24])
             content_blocks.append({"is_heading": True, "index": heading_index, "text": text.rstrip("：:")})
         else:
             content_blocks.append({"is_heading": False, "index": None, "text": text})

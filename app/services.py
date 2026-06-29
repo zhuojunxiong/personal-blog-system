@@ -1,5 +1,11 @@
+from datetime import datetime, timezone
 from re import sub
 from uuid import uuid4
+
+
+def utcnow():
+    """Return a naive UTC datetime compatible with SQLite, safe for Python \u22653.12."""
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
 def make_slug(text):

@@ -24,7 +24,7 @@ from app.models import (
     Tag,
     User,
 )
-from app.services import make_slug
+from app.services import make_slug, utcnow
 
 
 def user(username, email, nickname, bio, role="user"):
@@ -65,7 +65,7 @@ def create_article(owner, column, category, tags, title, summary, content, days,
         category=category,
         author=owner.nickname,
         view_count=views,
-        published_at=datetime.utcnow() - timedelta(days=days),
+        published_at=utcnow() - timedelta(days=days),
     )
     item.tags = tags
     db.session.add(item)

@@ -10,7 +10,17 @@
 {% block content %}
   <div class="write-page">
     {{ app_topbar("写作空间") }}
-    <main class="write-shell" data-v041-write-page>
+    <main
+      class="write-shell"
+      data-v041-write-page
+      data-ai-summary-url="{{ url_for('ai.summary') }}"
+      data-ai-tags-url="{{ url_for('ai.tags') }}"
+      data-ai-polish-url="{{ url_for('ai.polish') }}"
+      data-ai-chat-url="{{ url_for('ai.chat') }}"
+      data-ai-outline-url="{{ url_for('ai.outline') }}"
+      data-ai-title-url="{{ url_for('ai.suggest_titles') }}"
+      data-ai-article-id="{{ article.id if article else '' }}"
+    >
       <form class="write-editor" method="post" data-v041-write-form data-v041-dirty-form>
         <header class="write-editor-head">
           <a class="v041-btn v041-btn-ghost" href="{{ url_for('user.profile_home') }}" data-v041-safe-leave>返回我的书房</a>
@@ -40,6 +50,7 @@
             name="summary"
             maxlength="500"
             placeholder="题记或摘要，可留空"
+            data-v041-write-summary
           >{{ request.form.get('summary', article.summary if article else '') }}</textarea>
           <textarea
             class="write-content-input"
@@ -94,16 +105,23 @@
             <p class="profile-eyebrow">Assistant</p>
             <h1>AI 问答</h1>
           </div>
-          <span class="study-pill">预留</span>
+          <span class="study-pill">v0.5</span>
+        </div>
+        <div class="write-ai-actions">
+          <button class="v041-btn" type="button" data-v041-ai-action="summary">生成摘要</button>
+          <button class="v041-btn" type="button" data-v041-ai-action="tags">推荐标签</button>
+          <button class="v041-btn" type="button" data-v041-ai-action="polish">润色正文</button>
+          <button class="v041-btn" type="button" data-v041-ai-action="outline">提取大纲</button>
+          <button class="v041-btn" type="button" data-v041-ai-action="title">标题建议</button>
         </div>
         <div class="write-ai-messages" data-v041-ai-messages>
-          <div class="write-ai-message is-ai">可以帮你概括思路、整理结构、提出追问。当前版本仅保留界面。</div>
+          <div class="write-ai-message is-ai">可以帮你概括思路、推荐标签、润色正文，也可以围绕当前文章继续问答。</div>
         </div>
         <form class="write-ai-form" data-v041-ai-chat>
           <input class="v041-input" name="question" placeholder="我想问…" autocomplete="off">
           <button class="v041-btn" type="submit">发送</button>
         </form>
-        <p class="write-ai-note">AI 功能将在后续版本开放。</p>
+        <p class="write-ai-note">需要在环境变量中配置 AI_API_KEY 后才能调用真实接口。</p>
       </aside>
     </main>
   </div>

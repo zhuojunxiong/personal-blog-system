@@ -3,6 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token_value }}">
     <title>{% block title %}后台管理{% endblock %} - 个人博客系统</title>
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
@@ -15,7 +16,7 @@
   <body class="admin-body">
     <div class="admin-shell">
       <aside class="admin-sidebar">
-        <a class="admin-brand" href="{{ url_for('dashboard.index') }}">博客后台 V0.2</a>
+        <a class="admin-brand" href="{{ url_for('dashboard.index') }}">博客后台 V0.5</a>
         <nav class="admin-nav">
           <a href="{{ url_for('dashboard.index') }}">仪表盘</a>
           <a href="{{ url_for('article.index') }}">文章管理</a>
@@ -24,7 +25,7 @@
           <a href="{{ url_for('category.index') }}">分类管理</a>
           <a href="{{ url_for('tag.index') }}">标签管理</a>
           <a href="{{ url_for('comment.admin_index') }}">评论管理</a>
-          <a href="{{ url_for('ai.index') }}">AI 占位</a>
+          <a href="{{ url_for('ai.index') }}">AI 接口</a>
           <a href="{{ url_for('public.index') }}">返回前台</a>
           <a href="{{ url_for('auth.logout') }}">退出登录</a>
         </nav>
@@ -54,5 +55,23 @@
       integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
       crossorigin="anonymous"
     ></script>
+    <script>
+      (function () {
+        var tokenMeta = document.querySelector('meta[name="csrf-token"]');
+        if (!tokenMeta) return;
+        var token = tokenMeta.getAttribute('content');
+        if (!token) return;
+
+        document.querySelectorAll('form[method="post"], form[method="POST"]').forEach(function (form) {
+          if (!form.querySelector('input[name="csrf_token"]')) {
+            var input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'csrf_token';
+            input.value = token;
+            form.appendChild(input);
+          }
+        });
+      })();
+    </script>
   </body>
 </html>

@@ -16,7 +16,7 @@ from app.models import (
     Tag,
     User,
 )
-from app.services import make_slug, normalize_text
+from app.services import make_slug, normalize_text, utcnow
 
 
 class ArticleService:
@@ -154,7 +154,7 @@ class ArticleService:
             column_id=data.get("column_id") or None,
             category_id=int(data.get("category_id")),
             author=author_name or "管理员",
-            published_at=datetime.utcnow() if status == ARTICLE_STATUS_PUBLISHED else None,
+            published_at=utcnow() if status == ARTICLE_STATUS_PUBLISHED else None,
         )
         article.tags = Tag.query.filter(Tag.id.in_(tag_ids)).all() if tag_ids else []
         db.session.add(article)
@@ -179,7 +179,7 @@ class ArticleService:
             article.user.nickname if article.user else "管理员"
         )
         if old_status != ARTICLE_STATUS_PUBLISHED and status == ARTICLE_STATUS_PUBLISHED:
-            article.published_at = datetime.utcnow()
+            article.published_at = utcnow()
         if status == ARTICLE_STATUS_DRAFT:
             article.published_at = None
         article.tags = Tag.query.filter(Tag.id.in_(tag_ids)).all() if tag_ids else []

@@ -1,6 +1,6 @@
 from flask import Flask
 
-from app.extensions import db, login_manager
+from app.extensions import csrf, db, login_manager
 from config import Config
 
 
@@ -13,6 +13,7 @@ def create_app(config_class=Config):
     login_manager.init_app(app)
     login_manager.login_view = "auth.login"
     login_manager.login_message = "请先登录后继续。"
+    csrf.init_app(app)
 
     @login_manager.user_loader
     def load_user(user_id):
@@ -55,14 +56,26 @@ def register_blueprints(app):
 
 def register_error_handlers(app):
     from flask import render_template
+    from werkzeug.exceptions import HTTPException
 
-    @app.errorhandler(404)
-    def page_not_found(error):
-        return render_template("errors/404.html"), 404
+    @app.errorhandler(400)
+    def bad_request(error):
+        # CSRF validation failures are raised as 400 Bad Request
+        desc = error.description if isinstance(error, HTTPException) else ""
+        if desc and ("CSRF" in str(desc) or "csrf" in str(desc)):
+            from flask import flash, redirect, request
+
+            flash("表单验证已过期，请刷新页面后重试。", "warning")
+            return redirect(request.referrer or "/")
+        return render_template("errors/400.html"), 400
 
     @app.errorhandler(403)
     def forbidden(error):
         return render_template("errors/403.html"), 403
+
+    @app.errorhandler(404)
+    def page_not_found(error):
+        return render_template("errors/404.html"), 404
 
     @app.errorhandler(500)
     def internal_error(error):
@@ -72,6 +85,7 @@ def register_error_handlers(app):
 
 def register_template_helpers(app):
     from flask import request, url_for
+    from flask_wtf.csrf import generate_csrf
 
     @app.context_processor
     def inject_helpers():
@@ -81,4 +95,7 @@ def register_template_helpers(app):
             args["page"] = page
             return url_for(request.endpoint, **args)
 
-        return {"page_url": page_url}
+        return {
+            "page_url": page_url,
+            "csrf_token_value": generate_csrf(),
+        }

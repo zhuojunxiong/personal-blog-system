@@ -4,6 +4,7 @@ from flask_login import UserMixin
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from app.extensions import db
+from app.services import utcnow
 
 
 ARTICLE_STATUS_DRAFT = "draft"
@@ -25,7 +26,7 @@ class ArticleTag(db.Model):
 
     article_id = db.Column(db.Integer, db.ForeignKey("articles.id"), primary_key=True)
     tag_id = db.Column(db.Integer, db.ForeignKey("tags.id"), primary_key=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    created_at = db.Column(db.DateTime, default=utcnow, nullable=False)
 
 
 class User(UserMixin, db.Model):
@@ -40,16 +41,16 @@ class User(UserMixin, db.Model):
     status = db.Column(db.String(32), nullable=False, default="active")
     bio = db.Column(db.String(500), default="")
     avatar = db.Column(db.String(255), default="")
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    created_at = db.Column(db.DateTime, default=utcnow, nullable=False)
     updated_at = db.Column(
         db.DateTime,
-        default=datetime.utcnow,
-        onupdate=datetime.utcnow,
+        default=utcnow,
+        onupdate=utcnow,
         nullable=False,
     )
 
     def set_password(self, password):
-        self.password_hash = generate_password_hash(password)
+        self.password_hash = generate_password_hash(password, method="pbkdf2:sha256")
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
@@ -71,11 +72,11 @@ class BlogColumn(db.Model):
     name = db.Column(db.String(120), nullable=False)
     description = db.Column(db.String(500), default="")
     status = db.Column(db.String(32), nullable=False, default="active")
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    created_at = db.Column(db.DateTime, default=utcnow, nullable=False)
     updated_at = db.Column(
         db.DateTime,
-        default=datetime.utcnow,
-        onupdate=datetime.utcnow,
+        default=utcnow,
+        onupdate=utcnow,
         nullable=False,
     )
 
@@ -90,11 +91,11 @@ class Category(db.Model):
     name = db.Column(db.String(80), unique=True, nullable=False, index=True)
     description = db.Column(db.String(255), default="")
     sort_order = db.Column(db.Integer, default=0, nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    created_at = db.Column(db.DateTime, default=utcnow, nullable=False)
     updated_at = db.Column(
         db.DateTime,
-        default=datetime.utcnow,
-        onupdate=datetime.utcnow,
+        default=utcnow,
+        onupdate=utcnow,
         nullable=False,
     )
 
@@ -106,11 +107,11 @@ class Tag(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80), unique=True, nullable=False, index=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    created_at = db.Column(db.DateTime, default=utcnow, nullable=False)
     updated_at = db.Column(
         db.DateTime,
-        default=datetime.utcnow,
-        onupdate=datetime.utcnow,
+        default=utcnow,
+        onupdate=utcnow,
         nullable=False,
     )
 
@@ -137,11 +138,11 @@ class Article(db.Model):
     view_count = db.Column(db.Integer, nullable=False, default=0)
     like_count = db.Column(db.Integer, nullable=False, default=0)
     favorite_count = db.Column(db.Integer, nullable=False, default=0)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    created_at = db.Column(db.DateTime, default=utcnow, nullable=False)
     updated_at = db.Column(
         db.DateTime,
-        default=datetime.utcnow,
-        onupdate=datetime.utcnow,
+        default=utcnow,
+        onupdate=utcnow,
         nullable=False,
     )
     published_at = db.Column(db.DateTime)
@@ -180,11 +181,11 @@ class Comment(db.Model):
     email = db.Column(db.String(120), nullable=False)
     content = db.Column(db.Text, nullable=False)
     status = db.Column(db.String(32), nullable=False, default=COMMENT_STATUS_PENDING)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    created_at = db.Column(db.DateTime, default=utcnow, nullable=False)
     updated_at = db.Column(
         db.DateTime,
-        default=datetime.utcnow,
-        onupdate=datetime.utcnow,
+        default=utcnow,
+        onupdate=utcnow,
         nullable=False,
     )
 
@@ -198,7 +199,7 @@ class Like(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     article_id = db.Column(db.Integer, db.ForeignKey("articles.id"), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    created_at = db.Column(db.DateTime, default=utcnow, nullable=False)
 
     user = db.relationship("User", backref=db.backref("likes", lazy=True))
     article = db.relationship("Article", backref=db.backref("likes", lazy=True, cascade="all, delete-orphan"))
@@ -214,7 +215,7 @@ class Favorite(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     article_id = db.Column(db.Integer, db.ForeignKey("articles.id"), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    created_at = db.Column(db.DateTime, default=utcnow, nullable=False)
 
     user = db.relationship("User", backref=db.backref("favorites", lazy=True))
     article = db.relationship("Article", backref=db.backref("favorites", lazy=True, cascade="all, delete-orphan"))
@@ -235,6 +236,6 @@ class AiLog(db.Model):
     adopted_result = db.Column(db.Text, default="")
     is_adopted = db.Column(db.Boolean, default=False, nullable=False)
     problem_found = db.Column(db.String(255), default="")
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    created_at = db.Column(db.DateTime, default=utcnow, nullable=False)
 
     article = db.relationship("Article", back_populates="ai_logs")

@@ -1006,10 +1006,25 @@
   position: sticky;
   top: 92px;
   display: grid;
-  grid-template-rows: auto minmax(260px, 1fr) auto auto;
+  grid-template-rows: auto auto minmax(260px, 1fr) auto auto;
   align-self: start;
-  min-height: calc(100vh - 120px);
+  height: calc(100vh - 120px);
+  min-height: 560px;
+  max-height: calc(100vh - 120px);
   padding: 1rem;
+  overflow: hidden;
+}
+
+.write-ai-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin-top: 0.85rem;
+}
+
+.write-ai-actions .v041-btn {
+  min-width: 0;
+  padding-inline: 0.7rem;
 }
 
 .write-ai-head h1 {
@@ -1022,12 +1037,16 @@
   display: grid;
   align-content: start;
   gap: 0.65rem;
+  min-height: 0;
+  max-height: 100%;
   overflow: auto;
   padding: 0.9rem 0;
+  overscroll-behavior: contain;
 }
 
 .write-ai-message {
   max-width: 92%;
+  overflow-wrap: anywhere;
   padding: 0.75rem 0.85rem;
   border: 1px solid var(--v041-line);
   border-radius: var(--v041-radius-sm);
@@ -2247,7 +2266,9 @@
 
   .write-ai-panel {
     position: static;
+    height: auto;
     min-height: 480px;
+    max-height: none;
   }
 }
 
@@ -2284,6 +2305,7 @@
 
   .write-editor-head,
   .write-actions,
+  .write-ai-actions,
   .write-ai-head,
   .write-ai-form,
   .write-meta-grid {

@@ -1,20 +1,21 @@
 {% extends "admin/base.html" %}
 
-{% block title %}AI 占位{% endblock %}
-{% block page_title %}AI 功能占位{% endblock %}
+{% block title %}AI 接口{% endblock %}
+{% block page_title %}AI 接口{% endblock %}
 
 {% block content %}
   <section class="admin-panel">
     <p class="eyebrow">AI Extension Point</p>
-    <h2>AI 功能将在后续版本开放</h2>
+    <h2>v0.5 AI 能力已接入</h2>
     <p class="text-secondary">
-      V0.2 暂不接入任何真实 AI 接口，也不需要 API Key。当前仅保留摘要生成、标签推荐、文章润色和文章问答的服务函数占位。
+      {{ status_message }} 当前支持 OpenAI 兼容接口，可通过环境变量 AI_API_KEY、AI_BASE_URL、AI_MODEL 和 AI_TIMEOUT 配置。
     </p>
     <div class="d-flex gap-2 flex-wrap">
-      <button class="btn btn-outline-secondary" disabled>AI 生成摘要</button>
-      <button class="btn btn-outline-secondary" disabled>AI 推荐标签</button>
-      <button class="btn btn-outline-secondary" disabled>AI 润色文章</button>
-      <button class="btn btn-outline-secondary" disabled>AI 文章问答</button>
+      <span class="badge {{ 'text-bg-success' if is_configured else 'text-bg-secondary' }}">{{ '已配置' if is_configured else '待配置' }}</span>
+      <span class="badge text-bg-light">摘要生成</span>
+      <span class="badge text-bg-light">标签推荐</span>
+      <span class="badge text-bg-light">文章润色</span>
+      <span class="badge text-bg-light">文章问答</span>
     </div>
   </section>
 {% endblock %}
