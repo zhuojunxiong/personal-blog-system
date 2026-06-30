@@ -1,76 +1,107 @@
 # AGENTS.md
 
-## Project Background
+## 项目治理章程
 
-This project is a course practice project named "AI-assisted Personal Blog System Design and Implementation".
+本文件是 `personal-blog-system` 当前主仓库的项目治理章程，用于约束后续需求、设计、开发、测试、Review、AI 协作和交付材料维护。
 
-The first version should be a runnable, demo-friendly, and extensible V0.1 system. It should prioritize a complete core workflow over many loosely connected features.
+## 1. 当前项目状态
 
-## Core Principles
+- 项目名称：`zjx` / 多用户知识专栏博客系统。
+- 当前项目已经发展到 `v0.5.1` 阶段。
+- `V0.1` 阶段旧版 `AGENTS.md` 已归档到 `archive/old_prompts/AGENTS_v0.1_legacy.md`。
+- 归档的旧 `AGENTS.md` 只作为历史资料，不再代表当前项目事实、当前需求范围或当前开发约束。
+- 当前事实必须以本仓库当前代码和正式文档为准；不允许继续把旧 `V0.1 Scope` 当成当前项目状态。
 
-1. Build the runnable main workflow first, then extend features.
-2. Keep code modular. Do not put all functionality in one file.
-3. Route modules receive requests, call services, and return responses.
-4. Service modules hold business logic.
-5. Model modules hold database structures.
-6. AI features must be isolated behind an AI service interface.
-7. Comments, search, dashboard statistics, and AI behavior should be replaceable independently.
-8. Keep the implementation easy to explain in reports and presentations.
+## 2. 当前阶段定位
 
-## Tech Stack
+- `v0.1` 到 `v0.5` 属于需求驱动的快速原型阶段，重点是让系统可运行、可演示、可迭代。
+- `v0.5.1` 属于统一主仓库和工程化治理阶段，重点是统一事实源、补齐文档链路、明确变更规则、建立可追溯的协作流程。
+- 不默认已经完成老师教程中的 `Agent`、`Skill`、`ADR`、测试报告、AI 协作记录等工程化治理内容。
+- 如果仓库中没有对应文件、记录或可验证证据，只能标注为“待建立”或“需人工确认”，不得写成已经完成。
 
-- Python
-- Flask
-- Flask-Login
-- Flask-SQLAlchemy
-- SQLite first, MySQL later
-- Jinja2
-- Bootstrap
+## 3. 统一主仓库规则
 
-## V0.1 Scope
+- 从 `v0.5.1` 开始，`personal-blog-system` 作为唯一主仓库。
+- 代码、需求、设计、测试、UML、AI 协作记录和交付材料统一维护在当前仓库中。
+- `software-practice-records` 暂不作为当前事实源，只作为历史归档或 Windows 后续备份参考。
+- 不允许自动同步、覆盖或迁移 `software-practice-records` 中的内容，除非用户明确提出并确认迁移范围。
+- 当前仓库中不存在或尚未建立的材料，不得仅凭外部目录或后续计划推断为已完成。
 
-Must support:
+## 4. 信息可信度优先级
 
-- Public article list
-- Article detail page
-- Category browsing
-- Tag browsing
-- Keyword search
-- Admin login and logout
-- Article CRUD
-- Category management
-- Tag management
-- Visitor comments
-- Comment review
-- Mock AI summary generation
-- Mock AI tag recommendation
-- AI operation logs
+判断当前项目事实时，按以下优先级处理：
 
-Do not implement yet:
+1. 当前代码实现最高，包括 `app/`、`config.py`、`run.py`、`scripts/`、`requirements.txt`、测试文件等。
+2. `docs/` 中的正式文档第二。
+3. `README.md`、`CHANGELOG.md`、`DESIGN_SPEC.md` 第三。
+4. `archive/` 只作为历史资料，不直接代表当前事实。
+5. 外部 `software-practice-records` 不直接作为当前事实源。
 
-- Normal user registration
-- Multi-user community features
-- Likes, favorites, follows, private messages
-- Frontend-backend separation
-- Real AI API dependency
-- Cloud deployment
+如果不同来源互相冲突，应优先相信更高优先级来源，并在文档中标注冲突和“需人工确认”。
 
-## Database Requirements
+## 5. 当前需要逐步建立的正式文档路径
 
-The database must include at least:
+以下路径是 `v0.5.1` 阶段需要逐步建立或补齐的正式文档结构：
 
-- User
-- Article
-- Category
-- Tag
-- ArticleTag
-- Comment
-- AiLog
+- `docs/00_项目背景与开发方法说明.md`
+- `docs/01_v0.5.1现状盘点.md`
+- `docs/02_v0.5.1需求追溯.md`
+- `docs/03_v0.5.1架构追溯.md`
+- `docs/04_未来需求与产品方向.md`
+- `docs/05_技术路线决策报告.md`
+- `docs/06_ADR/`
+- `docs/07_需求规格说明书.md`
+- `docs/08_概要设计说明书.md`
+- `docs/09_测试报告.md`
+- `docs/10_代码Review记录.md`
+- `docs/11_AI协作记录.md`
+- `docs/12_项目总结.md`
 
-Tags must use a many-to-many relationship with articles. Do not store tags as a plain string on the article table.
+这些文件或目录如果尚未存在，不代表对应工作已经完成。后续创建这些文件时，必须基于当前代码和已有文档追溯事实，不得把未来计划写成当前实现。
 
-Comments must have a review status and must not appear publicly before approval.
+## 6. 开发规则
 
-Passwords must be stored as hashes, never plaintext.
+- 修改代码前必须先明确对应需求。
+- 新功能必须先写需求，再写设计，再编码。
+- 架构变更必须先写 `ADR`，说明背景、备选方案、决策、影响和回滚方式。
+- 不允许把未实现功能写成已实现。
+- 不允许未经确认更换技术栈。
+- 不允许无关重构。
+- 不允许破坏 `v0.5.1` 已有功能。
+- 修改后必须补测试记录或 Review 记录。
+- 大改前必须建议先进行 Git 提交，保留可回退版本。
+- 如果需求、设计、实现和测试之间存在缺口，必须在对应文档中明确标注“需人工确认”或“待补齐”。
 
-AI outputs must be logged with input, output, adoption status, and room for manual correction notes.
+## 7. 当前禁止事项
+
+在当前任务或未获明确授权的情况下，禁止：
+
+- 修改 `app/`、`templates/`、`static/`、`models/`、`routes/` 等业务代码。
+- 重构。
+- 更换技术栈。
+- 删除旧文档。
+- 自动同步 `software-practice-records`。
+- 把 `V0.1` 旧 `AGENTS.md` 当成当前事实。
+- 把后续计划写成当前实现。
+- 安装依赖。
+- 删除文件。
+- 伪造测试结果、Review 记录、ADR、AI 协作记录或教程治理成果。
+
+## 8. AI 协作规则
+
+后续如果建立多 Agent 或 Skill 工作流，应遵守以下边界：
+
+- `requirement Agent` 只做需求分析、需求拆解、需求追溯，不写代码。
+- `architect Agent` 只做架构分析、架构追溯、方案比较和 ADR 建议，不新增需求。
+- `frontend Agent` 只处理页面、交互和样式一致性，不改后端业务逻辑。
+- `tester Agent` 只做测试计划、测试用例、测试执行记录和缺陷描述，不修改代码。
+- `reviewer Agent` 只做代码审查、风险识别和改进建议，不直接重构。
+- 如果 `agent-prompts/` 或 `.skills/` 尚未建立，不得假设它们已经存在或已经完成。
+- AI 生成的内容必须接受当前代码和正式文档校验；不能用 AI 输出替代事实源。
+
+## 9. 当前仓库维护原则
+
+- 保留已有可运行能力，先追溯和治理，再扩展和重构。
+- 文档应区分“已实现”“已设计未实现”“计划中”“需人工确认”。
+- 代码事实、需求文档、设计说明、测试记录和 Review 记录应逐步形成闭环。
+- 所有面向交付的说明必须能被当前仓库中的代码或文档追溯。
