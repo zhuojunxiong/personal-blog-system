@@ -1,0 +1,108 @@
+@startuml
+title v0.5.1 主要业务流程图
+
+skinparam conditionStyle diamond
+
+start
+
+partition "用户登录流程" {
+  :访问 /login 或 /admin/login;
+  :提交用户名/邮箱和密码;
+  :查询 users 并校验密码哈希与账号状态;
+  if (凭据有效?) then (是)
+    if (管理员入口且非管理员?) then (是)
+      :提示普通用户不能登录后台;
+    else (否)
+      :login_user 建立登录态;
+      if (管理员?) then (是)
+        :跳转后台仪表盘;
+      else (否)
+        :跳转个人中心;
+      endif
+    endif
+  else (否)
+    :提示用户名或密码错误，或账号已禁用;
+  endif
+}
+
+partition "文章发布流程" {
+  :注册用户访问 /write 或编辑自己的文章;
+  :加载分类、标签、本人专栏;
+  :提交文章表单;
+  :ArticleService.validate 校验标题/正文/状态/分类/专栏;
+  if (校验通过?) then (是)
+    :创建或更新 articles;
+    :保存 article_tags 关联;
+    if (状态为 published?) then (是)
+      :设置 published_at;
+      :跳转文章详情页;
+    else (否)
+      :保存为 draft;
+      :回到编辑页;
+    endif
+  else (否)
+    :展示表单错误;
+  endif
+}
+
+partition "评论审核流程" {
+  :登录用户在已发布文章提交评论;
+  :写入 comments，默认 status=pending;
+  :提示等待管理员审核;
+  :管理员访问 /admin/comments;
+  if (管理员选择审核通过?) then (是)
+    :status=approved;
+  elseif (选择隐藏?) then (是)
+    :status=hidden;
+  else (删除)
+    :删除 comments 记录;
+  endif
+}
+
+partition "AI 辅助调用流程" {
+  :登录用户在写作页调用 AI 摘要/标签/润色/问答/大纲/标题;
+  :POST /ai/* JSON 接口;
+  :检查 AI 配置;
+  if (已配置 API Key?) then (是)
+    :AIService 调用 OpenAI 兼容 Chat Completions API;
+    if (远程调用成功?) then (是)
+      :返回 AI 结果;
+      :写入 ai_logs 基础日志;
+    else (否)
+      :转换为可读错误;
+      :写入 ai_logs 基础日志;
+    endif
+  else (否)
+    :返回“AI 接口未配置”提示;
+    :写入 ai_logs 基础日志;
+  endif
+}
+
+partition "搜索流程" {
+  :游客或用户输入搜索词;
+  if (传统搜索 /search?) then (是)
+    :ArticleService.search_published 匹配文章标题/摘要/正文/作者/标签/用户;
+    :补充匹配 active 专栏与 active 普通用户;
+    :渲染 v041/search_results.html;
+  else (AI 搜索 /ai/search)
+    :AI 意图理解和关键词扩展;
+    :SQL 多关键词检索已发布文章候选;
+    if (AI 重排序成功?) then (是)
+      :返回排序结果和推荐理由;
+    else (否)
+      :降级返回 SQL 候选结果;
+    endif
+    :写入 ai_logs 基础日志;
+  endif
+}
+
+stop
+
+note bottom
+  当前分支：process/unified-main-repo（工程治理分支）。
+  ADR-002：方案 B，保留当前 Flask + Jinja2 + SQLAlchemy + SQLite 技术栈，
+  在测试保护、需求确认和 ADR 约束下做受控局部重构。
+  AI API：需配置 API Key 后验证。
+  本图只覆盖当前实现流程，不把未来计划画成当前实现。
+end note
+@enduml

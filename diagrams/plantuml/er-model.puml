@@ -1,0 +1,145 @@
+@startuml
+title v0.5.1 当前 SQLAlchemy 模型 ER 图
+
+hide circle
+skinparam linetype ortho
+
+entity "users" as users {
+  * id : Integer <<PK>>
+  --
+  username : String(64) <<unique, index>>
+  email : String(120) <<unique, index>>
+  password_hash : String(255)
+  nickname : String(64)
+  role : String(32)
+  status : String(32)
+  bio : String(500)
+  avatar : String(255)
+  created_at : DateTime
+  updated_at : DateTime
+}
+
+entity "blog_columns" as blog_columns {
+  * id : Integer <<PK>>
+  --
+  user_id : Integer <<FK users.id>>
+  name : String(120)
+  description : String(500)
+  status : String(32)
+  created_at : DateTime
+  updated_at : DateTime
+}
+
+entity "categories" as categories {
+  * id : Integer <<PK>>
+  --
+  name : String(80) <<unique, index>>
+  description : String(255)
+  sort_order : Integer
+  created_at : DateTime
+  updated_at : DateTime
+}
+
+entity "tags" as tags {
+  * id : Integer <<PK>>
+  --
+  name : String(80) <<unique, index>>
+  created_at : DateTime
+  updated_at : DateTime
+}
+
+entity "article_tags" as article_tags {
+  * article_id : Integer <<PK, FK articles.id>>
+  * tag_id : Integer <<PK, FK tags.id>>
+  --
+  created_at : DateTime
+}
+
+entity "articles" as articles {
+  * id : Integer <<PK>>
+  --
+  title : String(160) <<index>>
+  slug : String(180) <<unique, index>>
+  summary : String(500)
+  content : Text
+  status : String(32)
+  user_id : Integer <<FK users.id>>
+  column_id : Integer <<FK blog_columns.id>>
+  category_id : Integer <<FK categories.id>>
+  author : String(80)
+  view_count : Integer
+  like_count : Integer
+  favorite_count : Integer
+  created_at : DateTime
+  updated_at : DateTime
+  published_at : DateTime
+}
+
+entity "comments" as comments {
+  * id : Integer <<PK>>
+  --
+  article_id : Integer <<FK articles.id>>
+  user_id : Integer <<FK users.id>>
+  nickname : String(80)
+  email : String(120)
+  content : Text
+  status : String(32)
+  created_at : DateTime
+  updated_at : DateTime
+}
+
+entity "likes" as likes {
+  * id : Integer <<PK>>
+  --
+  user_id : Integer <<FK users.id>>
+  article_id : Integer <<FK articles.id>>
+  created_at : DateTime
+  --
+  uq_user_article_like
+}
+
+entity "favorites" as favorites {
+  * id : Integer <<PK>>
+  --
+  user_id : Integer <<FK users.id>>
+  article_id : Integer <<FK articles.id>>
+  created_at : DateTime
+  --
+  uq_user_article_favorite
+}
+
+entity "ai_logs" as ai_logs {
+  * id : Integer <<PK>>
+  --
+  article_id : Integer <<FK articles.id>>
+  scene : String(80)
+  input_text : Text
+  ai_output : Text
+  adopted_result : Text
+  is_adopted : Boolean
+  problem_found : String(255)
+  created_at : DateTime
+}
+
+users ||--o{ blog_columns : owns
+users ||--o{ articles : writes
+blog_columns ||--o{ articles : contains
+categories ||--o{ articles : classifies
+articles ||--o{ article_tags : has
+tags ||--o{ article_tags : labels
+articles ||--o{ comments : receives
+users ||--o{ comments : submits
+users ||--o{ likes : creates
+articles ||--o{ likes : liked_by
+users ||--o{ favorites : creates
+articles ||--o{ favorites : favorited_by
+articles ||--o{ ai_logs : records
+
+note bottom
+  当前分支：process/unified-main-repo（工程治理分支）。
+  ADR-002：方案 B，保留当前技术栈，受控局部重构。
+  本图仅基于 app/models.py 当前 SQLAlchemy 模型；
+  不包含 ReadingHistory、关注、私信、付费、热榜、问答等不存在的表。
+  AI API 相关能力需配置 API Key 后验证。
+end note
+@enduml

@@ -1,0 +1,100 @@
+@startuml
+title v0.5.1 当前架构图
+
+skinparam componentStyle rectangle
+skinparam packageStyle rectangle
+
+actor "浏览器\n游客/注册用户/管理员" as Browser
+cloud "AI API\nOpenAI 兼容 Chat Completions\n需配置 API Key 后验证" as AIAPI
+database "SQLite\n本地开发/课程演示数据库" as SQLite
+
+rectangle "personal-blog-system\n当前分支：process/unified-main-repo（工程治理分支）" {
+  component "run.py" as Run
+  component "config.py\n环境变量配置" as Config
+
+  package "Flask App\napp/__init__.py" as FlaskApp {
+    component "create_app()" as CreateApp
+    component "extensions.py\ndb / login_manager / csrf" as Extensions
+    component "错误处理\n400 / 403 / 404 / 500" as Errors
+  }
+
+  package "Blueprint 路由层\napp/*/routes.py" as Routes {
+    component "public" as Public
+    component "auth" as Auth
+    component "user" as UserBP
+    component "article" as ArticleBP
+    component "comment" as CommentBP
+    component "column" as ColumnBP
+    component "category" as CategoryBP
+    component "tag" as TagBP
+    component "dashboard / admin" as AdminBP
+    component "ai" as AiBP
+  }
+
+  package "Service 层\napp/*/services.py" as Services {
+    component "AuthService" as AuthService
+    component "UserService" as UserService
+    component "ArticleService" as ArticleService
+    component "CommentService" as CommentService
+    component "Column/Category/Tag Service" as TaxonomyService
+    component "AIService" as AIService
+  }
+
+  package "Model 层\napp/models.py" as Models {
+    component "User / BlogColumn / Article" as CoreModels
+    component "Category / Tag / ArticleTag" as TaxonomyModels
+    component "Comment / Like / Favorite" as InteractionModels
+    component "AiLog" as AiLogModel
+  }
+
+  package "Template 层\napp/templates/" as Templates {
+    component "base.html / admin/base.html" as BaseTemplates
+    component "public / v041 / user / auth / admin / errors / shared" as PageTemplates
+  }
+
+  package "Static 层\napp/static/" as Static {
+    component "css/main.css\ncss/v041.css" as CSS
+    component "js/v041.js" as JS
+  }
+}
+
+Browser --> Public : HTML GET/POST
+Browser --> Auth
+Browser --> UserBP
+Browser --> CommentBP
+Browser --> AiBP : AI JSON / 搜索增强
+Browser <-- Templates : 服务端渲染 HTML
+Browser <-- Static : CSS / JS
+
+Run --> CreateApp
+CreateApp --> Config
+CreateApp --> Extensions
+CreateApp --> Routes : 注册 Blueprint
+CreateApp --> Errors
+
+Routes --> Services : 调用业务逻辑
+Routes --> Models : 少量直接查询
+Services --> Models : ORM 查询/事务
+Models --> Extensions : SQLAlchemy db
+Extensions --> SQLite
+
+Routes --> Templates : render_template()
+Templates --> Static : 引用静态资源
+JS --> AiBP : fetch /ai/search 等
+
+AIService --> AIAPI : requests.post()
+AiBP --> AIService
+AIService --> AiLogModel : 基础日志
+AIService --> ArticleService : SQL 候选检索
+
+note right of AIAPI
+  真实 AI 调用需配置 AI_API_KEY 后验证；
+  未配置时返回友好提示，不应视为远程调用已验收。
+end note
+
+note bottom
+  ADR-002：方案 B，保留当前技术栈，受控局部重构。
+  当前架构是 Flask 服务端渲染单体应用；
+  不是微服务，不是前后端完全分离，不引入未来计划架构。
+end note
+@enduml
