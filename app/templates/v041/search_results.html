@@ -8,60 +8,76 @@
 {% block content %}
   <div class="search-results-page">
     <section class="search-results-shell">
-      <form class="search-results-bar" action="{{ url_for('public.search') }}" method="get" data-v041-search-form>
-        <input class="v041-input search-results-input" name="q" type="search" value="{{ keyword }}" placeholder="请输入文本" data-v041-search-input>
+      <form class="search-results-bar"
+            action="{{ url_for('ai.smart_search') }}"
+            method="post"
+            data-v041-ai-search-form
+            data-v041-ai-search-url="{{ url_for('ai.smart_search') }}">
+        <input class="v041-input search-results-input" name="q" type="search"
+               value="{{ keyword }}" placeholder="描述你想找的内容，例如'想学Flask部署'"
+               data-v041-search-input>
         <input type="hidden" name="page" value="1">
         <input type="hidden" name="pageSize" value="{{ page_size }}">
-        <button class="v041-btn v041-btn-primary search-results-submit" type="submit">搜索</button>
+        <button class="v041-btn v041-btn-primary search-results-submit"
+                type="submit" data-v041-loading-label="AI 思考中…">
+          AI 搜索
+        </button>
       </form>
 
-      <div class="search-results-meta">
+      {# AI 理解区域（初始隐藏，JS 动态填充） #}
+      <div class="ai-search-understanding" data-v041-ai-understanding style="display:none;"></div>
+
+      {# 结果统计 #}
+      <div class="search-results-meta" data-v041-ai-search-meta>
         {% if keyword %}
           <p>关于「{{ keyword }}」共找到 {{ pagination.total }} 篇文字。</p>
         {% else %}
-          <p>输入一个问题，开始在文字中寻找回声。</p>
+          <p>描述你的困惑或需求，AI 帮你找到最相关的文章。</p>
         {% endif %}
       </div>
 
-      {% if keyword %}
-        {% if articles %}
-          <section class="search-result-list" aria-label="搜索结果列表">
-            {% for article in articles %}
-              {% set author = article.user %}
-              {% set summary = article.summary or article.content[:140] %}
-              <article class="search-result-card">
-                <a class="search-result-author" href="{{ url_for('user.profile', user_id=author.id) if author else '#' }}">
-                  <span class="search-author-avatar">{{ author.nickname[:1] if author else article.author[:1] }}</span>
-                  <span>作者 {{ author.nickname if author else article.author }}</span>
-                </a>
-                <a class="search-result-body" href="{{ url_for('public.article_detail', slug=article.slug) }}">
-                  <h2>{{ article.title }}</h2>
-                  <span class="search-ai-label">AI 总结</span>
-                  <p>{{ summary }}{% if summary|length >= 140 %}...{% endif %}</p>
-                </a>
-              </article>
-            {% endfor %}
-          </section>
-
-          {% if pagination.pages > 1 %}
-            <nav class="v041-pagination" aria-label="搜索结果分页">
-              <a class="v041-page-link {% if not pagination.has_prev %}is-disabled{% endif %}" href="{{ search_page_url(pagination.prev_num) if pagination.has_prev else '#' }}">上一页</a>
-              {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
-                {% if page_num %}
-                  <a class="v041-page-link {% if page_num == pagination.page %}is-active{% endif %}" href="{{ search_page_url(page_num) }}">{{ page_num }}</a>
-                {% else %}
-                  <span class="v041-page-link is-disabled">...</span>
-                {% endif %}
+      {# AI 搜索结果容器（JS 动态渲染 / 服务端传统渲染共用） #}
+      <div class="ai-search-results" data-v041-ai-search-results>
+        {% if keyword %}
+          {% if articles %}
+            <section class="search-result-list" aria-label="搜索结果列表">
+              {% for article in articles %}
+                {% set author = article.user %}
+                {% set summary = article.summary or article.content[:140] %}
+                <article class="search-result-card">
+                  <a class="search-result-author" href="{{ url_for('user.profile', user_id=author.id) if author else '#' }}">
+                    <span class="search-author-avatar">{{ author.nickname[:1] if author else article.author[:1] }}</span>
+                    <span>作者 {{ author.nickname if author else article.author }}</span>
+                  </a>
+                  <a class="search-result-body" href="{{ url_for('public.article_detail', slug=article.slug) }}">
+                    <h2>{{ article.title }}</h2>
+                    <span class="search-ai-label">AI 总结</span>
+                    <p>{{ summary }}{% if summary|length >= 140 %}...{% endif %}</p>
+                  </a>
+                </article>
               {% endfor %}
-              <a class="v041-page-link {% if not pagination.has_next %}is-disabled{% endif %}" href="{{ search_page_url(pagination.next_num) if pagination.has_next else '#' }}">下一页</a>
-            </nav>
+            </section>
+
+            {% if pagination.pages > 1 %}
+              <nav class="v041-pagination" aria-label="搜索结果分页" data-v041-ai-pagination>
+                <a class="v041-page-link {% if not pagination.has_prev %}is-disabled{% endif %}" href="{{ search_page_url(pagination.prev_num) if pagination.has_prev else '#' }}">上一页</a>
+                {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                  {% if page_num %}
+                    <a class="v041-page-link {% if page_num == pagination.page %}is-active{% endif %}" href="{{ search_page_url(page_num) }}">{{ page_num }}</a>
+                  {% else %}
+                    <span class="v041-page-link is-disabled">...</span>
+                  {% endif %}
+                {% endfor %}
+                <a class="v041-page-link {% if not pagination.has_next %}is-disabled{% endif %}" href="{{ search_page_url(pagination.next_num) if pagination.has_next else '#' }}">下一页</a>
+              </nav>
+            {% endif %}
+          {% else %}
+            {{ empty_state("没有找到相关内容", "换一个问题再试试。", "回到首页", url_for('public.home')) }}
           {% endif %}
         {% else %}
-          {{ empty_state("没有找到相关内容", "换一个问题再试试。", "回到首页", url_for('public.home')) }}
+          {{ empty_state("还没有搜索内容", "在上方输入你的需求，AI 帮你寻找文章。") }}
         {% endif %}
-      {% else %}
-        {{ empty_state("还没有搜索内容", "在上方输入问题，开始寻找文章。") }}
-      {% endif %}
+      </div>
     </section>
   </div>
 {% endblock %}

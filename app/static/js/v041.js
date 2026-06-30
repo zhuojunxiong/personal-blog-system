@@ -88,6 +88,12 @@
     }, 3200);
   }
 
+  function escapeHtml(text) {
+    var div = document.createElement("div");
+    div.appendChild(document.createTextNode(text));
+    return div.innerHTML;
+  }
+
   function initSearchForms() {
     document.querySelectorAll("[data-v041-search-form]").forEach(function (form) {
       form.addEventListener("submit", function (event) {
@@ -107,6 +113,171 @@
         }
       });
     });
+  }
+
+  function initAiSearch() {
+    document.querySelectorAll("[data-v041-ai-search-form]").forEach(function (form) {
+      form.addEventListener("submit", function (event) {
+        event.preventDefault();
+        var input = form.querySelector("[data-v041-search-input]");
+        var query = input ? input.value.trim() : "";
+        if (!query) {
+          showMessage("请输入搜索内容。");
+          if (input) input.focus();
+          return;
+        }
+
+        var resultsContainer = document.querySelector("[data-v041-ai-search-results]");
+        var understandingEl = document.querySelector("[data-v041-ai-understanding]");
+        var metaEl = document.querySelector("[data-v041-ai-search-meta]");
+        var paginationEl = document.querySelector("[data-v041-ai-pagination]");
+        var button = form.querySelector("[data-v041-loading-label]");
+
+        if (resultsContainer) {
+          resultsContainer.innerHTML =
+            '<div class="v041-state" role="status"><div class="v041-state-inner">' +
+            '<span class="v041-loading-dot" aria-hidden="true"></span>' +
+            '<p class="v041-state-text">AI 正在理解你的问题并搜索相关内容…</p></div></div>';
+        }
+        if (understandingEl) understandingEl.style.display = "none";
+        if (metaEl) metaEl.style.display = "none";
+        if (paginationEl) paginationEl.innerHTML = "";
+
+        if (button) {
+          button.dataset.v041OriginalLabel = button.textContent;
+          button.textContent = button.getAttribute("data-v041-loading-label") || "AI 思考中…";
+          button.disabled = true;
+        }
+
+        var csrfMeta = document.querySelector('meta[name="csrf-token"]');
+        var url = form.getAttribute("action") || form.dataset.v041AiSearchUrl || "/ai/search";
+        var page = parseInt((form.querySelector('[name="page"]') || {}).value || "1", 10) || 1;
+        var pageSize = parseInt((form.querySelector('[name="pageSize"]') || {}).value || "5", 10) || 5;
+
+        fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": csrfMeta ? csrfMeta.getAttribute("content") : ""
+          },
+          body: JSON.stringify({ query: query, page: page, page_size: pageSize })
+        })
+          .then(function (response) {
+            return response.json().then(function (data) {
+              if (!response.ok || !data.ok) {
+                throw new Error(data.message || "AI 搜索请求失败。");
+              }
+              return data;
+            });
+          })
+          .then(function (data) {
+            // 首页没有结果展示区，跳转到搜索页展示结果
+            if (!document.querySelector("[data-v041-ai-search-results]")) {
+              window.location.href = "/search?q=" + encodeURIComponent(query) + "&ai=1";
+              return;
+            }
+            renderAiSearchResults(data, query, form);
+          })
+          .catch(function () {
+            showMessage("AI 搜索暂时不可用，已切换为普通搜索。");
+            var traditionalUrl = "/search?q=" + encodeURIComponent(query) +
+              "&page=" + page + "&pageSize=" + pageSize;
+            window.location.href = traditionalUrl;
+          })
+          .finally(function () {
+            if (button) {
+              button.textContent = button.dataset.v041OriginalLabel || "AI 搜索";
+              button.disabled = false;
+            }
+          });
+      });
+    });
+
+    // 搜索页自动触发：URL 带 ai=1 且已有 q 参数
+    if (window.location.search.indexOf("ai=1") !== -1) {
+      var params = new URLSearchParams(window.location.search);
+      var autoQuery = params.get("q");
+      if (autoQuery && autoQuery.trim()) {
+        var form = document.querySelector("[data-v041-ai-search-form]");
+        if (form) {
+          var input = form.querySelector("[data-v041-search-input]");
+          if (input) input.value = autoQuery.trim();
+          form.dispatchEvent(new Event("submit", { cancelable: true }));
+        }
+      }
+    }
+  }
+
+  function renderAiSearchResults(data, query, form) {
+    var understandingEl = document.querySelector("[data-v041-ai-understanding]");
+    var metaEl = document.querySelector("[data-v041-ai-search-meta]");
+    var resultsContainer = document.querySelector("[data-v041-ai-search-results]");
+    var paginationEl = document.querySelector("[data-v041-ai-pagination]");
+
+    if (window.history && window.history.replaceState) {
+      var newUrl = window.location.pathname + "?q=" + encodeURIComponent(query) + "&ai=1";
+      window.history.replaceState({}, "", newUrl);
+    }
+
+    if (understandingEl && data.understanding) {
+      understandingEl.textContent = data.understanding;
+      understandingEl.style.display = "block";
+    }
+
+    if (metaEl) {
+      metaEl.innerHTML = "<p>关于「" + escapeHtml(query) + "」共找到 " + data.total + " 篇相关内容。";
+      if (data.fallback) {
+        metaEl.innerHTML += " <small>（AI 重排序暂不可用，显示关键词匹配结果）</small>";
+      }
+      metaEl.innerHTML += "</p>";
+      metaEl.style.display = "block";
+    }
+
+    if (resultsContainer) {
+      if (data.results && data.results.length > 0) {
+        var html = '<section class="search-result-list" aria-label="搜索结果列表">';
+        data.results.forEach(function (item) {
+          var article = item.article;
+          var summary = article.summary || "";
+          if (summary.length >= 140) summary = summary.substring(0, 137) + "...";
+          var authorName = article.author || "";
+          var avatarText = article.author_avatar || (authorName ? authorName.charAt(0) : "?");
+          var profileUrl = article.user_id ? "/user/" + article.user_id : "#";
+          var articleUrl = "/articles/" + (article.slug || "");
+
+          html +=
+            '<article class="search-result-card">' +
+              '<a class="search-result-author" href="' + profileUrl + '">' +
+                '<span class="search-author-avatar">' + escapeHtml(avatarText) + '</span>' +
+                '<span>作者 ' + escapeHtml(authorName) + '</span>' +
+              '</a>' +
+              '<a class="search-result-body" href="' + articleUrl + '">' +
+                '<h2>' + escapeHtml(article.title) + '</h2>' +
+                '<span class="search-ai-label">AI 总结</span>';
+          if (item.reason) {
+            html += '<span class="ai-search-reason">' + escapeHtml(item.reason) + '</span>';
+          }
+          if (item.relevance > 0) {
+            html += '<span class="ai-search-relevance">相关性 ' + Math.round(item.relevance * 100) + '%</span>';
+          }
+          html += '<p>' + escapeHtml(summary) + '</p>' +
+              '</a>' +
+            '</article>';
+        });
+        html += '</section>';
+        resultsContainer.innerHTML = html;
+      } else {
+        resultsContainer.innerHTML =
+          '<div class="v041-state" role="status"><div class="v041-state-inner">' +
+          '<span class="v041-state-icon" aria-hidden="true">空</span>' +
+          '<h2 class="v041-state-title">没有找到相关内容</h2>' +
+          '<p class="v041-state-text">试试用其他方式描述你的需求。</p></div></div>';
+      }
+    }
+
+    if (paginationEl) {
+      paginationEl.innerHTML = "";
+    }
   }
 
   function initAuthForms() {
@@ -455,6 +626,7 @@
     initFlashAutoDismiss();
     initConfirmDialog();
     initSearchForms();
+    initAiSearch();
     initAuthForms();
     initAiPlaceholders();
     initBackToSearch();

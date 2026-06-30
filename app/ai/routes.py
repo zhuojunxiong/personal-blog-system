@@ -102,6 +102,45 @@ def suggest_titles():
     return _run_ai("title", content, article, lambda: ai_service.suggest_titles(content))
 
 
+@ai_bp.route("/ai/search", methods=["POST"])
+@csrf.exempt
+def smart_search():
+    """AI 智能搜索 JSON API（公开端点）。
+    请求体: {query: str, page: int(1), page_size: int(5)}
+    响应: {ok: bool, understanding: str, results: [...], total: int, fallback: bool}
+    """
+    data = _request_data()
+    query = (data.get("query") or data.get("q") or "").strip()
+    if not query:
+        return jsonify({"ok": False, "message": "请输入搜索内容。"}), 400
+
+    page = max(1, int(data.get("page") or 1))
+    page_size = min(max(1, int(data.get("page_size") or data.get("pageSize") or 5)), 20)
+
+    try:
+        result = ai_service.smart_search(query, page=page, per_page=page_size)
+    except AIServiceError as exc:
+        _log("smart_search", query, str(exc))
+        return jsonify({"ok": False, "message": str(exc)}), 503
+
+    _log(
+        "smart_search",
+        query,
+        f"理解: {result.get('understanding', '')}; "
+        f"结果数: {result.get('total', 0)}; "
+        f"降级: {result.get('fallback', False)}",
+    )
+    return jsonify(
+        {
+            "ok": True,
+            "understanding": result.get("understanding", ""),
+            "results": result.get("results", []),
+            "total": result.get("total", 0),
+            "fallback": result.get("fallback", False),
+        }
+    )
+
+
 def _request_data():
     if request.is_json:
         return request.get_json(silent=True) or {}

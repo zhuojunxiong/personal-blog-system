@@ -22,11 +22,17 @@
 
     <section class="home-search-stage" aria-labelledby="home-search-title">
       <h1 id="home-search-title" class="visually-hidden">内容搜索</h1>
-      <form class="home-search-box" action="{{ url_for('public.search') }}" method="get" data-v041-search-form>
-        <input class="home-search-input" name="q" type="search" placeholder="请输入文本" autocomplete="off" data-v041-search-input>
+      <form class="home-search-box"
+            action="{{ url_for('ai.smart_search') }}"
+            method="post"
+            data-v041-ai-search-form
+            data-v041-ai-search-url="{{ url_for('ai.smart_search') }}">
+        <input class="home-search-input" name="q" type="search"
+               placeholder="描述你想找的内容，例如'想学Flask部署'"
+               autocomplete="off" data-v041-search-input>
         <input type="hidden" name="page" value="1">
         <input type="hidden" name="pageSize" value="5">
-        <button class="home-search-submit" type="submit" data-v041-loading-label="搜索中...">
+        <button class="home-search-submit" type="submit" data-v041-loading-label="AI 思考中…">
           <span class="home-search-icon" aria-hidden="true">⌕</span>
           <span>AI 搜索</span>
         </button>

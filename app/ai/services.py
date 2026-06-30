@@ -27,7 +27,9 @@ class AIService:
         "polish":   (3000, 0.7),   # 润色：高温度增加表达多样性
         "chat":     (2000, 0.5),   # 问答：中等温度平衡准确与灵活
         "outline":  (2000, 0.3),   # 大纲：低温度保证结构准确
-        "title":    (800,  0.7),   # 标题：高温度增加创意
+        "title":          (800,  0.7),   # 标题：高温度增加创意
+        "search_intent":  (800,  0.3),   # 搜索意图：低温度保证准确
+        "search_rerank":  (2000, 0.3),   # 搜索重排：低温度保证一致性
     }
 
     def is_configured(self):
@@ -122,6 +124,167 @@ class AIService:
         )
         return self._call("title", system, content).text
 
+    def search_intent_and_expand(self, query):
+        """阶段1: 理解用户搜索意图并扩展关键词。
+        返回 dict: {intent: str, keywords: [str], understanding: str}
+        """
+        system = (
+            "你是一个知识博客搜索引擎的查询理解模块。你的任务是分析用户的搜索输入，"
+            "理解其真实意图，并生成扩展搜索关键词。\n\n"
+            "规则：\n"
+            "1. 判断用户意图类型：技术学习、问题解决、经验分享、概念理解、工具推荐、其他。\n"
+            "2. 提取核心概念，生成 3-8 个扩展关键词（同义词、相关术语、中英文对照）。\n"
+            "3. 用一句自然语言描述你对用户查询的理解（20-50字），像是\"你想了解...\"句式。\n"
+            "4. 即使用户输入不精确（如\"想学部署\"），也要推断出可能的技术方向（如 Flask 部署、云服务器部署）。\n"
+            "5. 如果你不确定用户的意图，请倾向于最可能的技术方向，并在理解描述中说明你的推测。\n\n"
+            "严格只返回 JSON 对象，格式：\n"
+            '{"intent": "意图类型", "keywords": ["关键词1", "关键词2", ...], "understanding": "理解描述"}'
+        )
+        result = self._call("search_intent", system, query).text
+        return self._parse_json_dict(result)
+
+    def rerank_with_reasons(self, query, understanding, candidates):
+        """阶段3: 对候选文章进行语义重排序并生成推荐理由。
+        candidates: [{id, title, summary, author, tags}]
+        返回: [{article_id, rank, reason, relevance}]
+        """
+        import json as _json
+        # 精简候选数据以减少 token 消耗
+        slim = []
+        for c in candidates:
+            slim.append({
+                "id": c["id"],
+                "title": c.get("title", ""),
+                "summary": (c.get("summary", "") or "")[:200],
+                "author": c.get("author", ""),
+                "tags": (c.get("tags") or [])[:5],
+            })
+        candidates_text = _json.dumps(slim, ensure_ascii=False, indent=2)
+        system = (
+            "你是一个知识博客的智能搜索排序助手。用户输入了搜索查询，"
+            "系统根据关键词匹配找到了一些候选文章。"
+            "你的任务是根据语义相关性对候选文章重新排序，并为每篇相关文章撰写推荐理由。\n\n"
+            "规则：\n"
+            "1. 仔细阅读用户查询和 AI 理解，判断每篇文章与用户真实需求的相关性。\n"
+            "2. 只返回你认为有相关性的文章（相关性 >= 60%），无关的文章直接排除。\n"
+            "3. 对每篇相关文章，按相关性从高到低排列。\n"
+            "4. 为每篇文章写一句推荐理由（20-40字），说明\"为什么这篇文章可能满足你的需求\"。"
+            "理由要具体，不能泛泛而谈（如\"涵盖相关主题\"太模糊，应该说\"手把手教你 Flask 部署到云服务器\"）。\n"
+            "5. relevance 评分为 0.0-1.0 的浮点数。\n\n"
+            "严格只返回 JSON 数组，格式：\n"
+            '[{"article_id": 1, "rank": 1, "reason": "推荐理由", "relevance": 0.95}, ...]'
+        )
+        user_content = (
+            f"用户查询：{query}\n"
+            f"AI 理解：{understanding}\n"
+            f"候选文章列表：\n{candidates_text}"
+        )
+        result = self._call("search_rerank", system, user_content).text
+        return self._parse_json_list_of_dicts(result)
+
+    def smart_search(self, query, page=1, per_page=5):
+        """AI 智能搜索主入口。编排三个阶段并处理降级。
+        返回: {understanding, results: [{article, reason, relevance}], total, fallback}
+        """
+        # 阶段1: AI 理解意图并扩展关键词
+        try:
+            intent_data = self.search_intent_and_expand(query)
+            keywords = intent_data.get("keywords", [query])
+            understanding = intent_data.get("understanding", f"您搜索了「{query}」")
+        except AIServiceError:
+            keywords = [query]
+            understanding = f"您搜索了「{query}」"
+
+        # 阶段2: 多关键词 SQL 搜索（最多取 20 篇候选）
+        candidates = self._sql_multi_keyword_search(keywords, limit=20)
+
+        if not candidates:
+            return {"understanding": understanding, "results": [], "total": 0, "fallback": False}
+
+        # 阶段3: AI 重排序
+        try:
+            ranked = self.rerank_with_reasons(query, understanding, candidates)
+        except AIServiceError:
+            # 降级：保持原始顺序，不加推荐理由
+            paged = candidates[(page - 1) * per_page : page * per_page]
+            return {
+                "understanding": understanding,
+                "results": [
+                    {"article": c, "reason": "", "relevance": 0}
+                    for c in paged
+                ],
+                "total": len(candidates),
+                "fallback": True,
+            }
+
+        # 按 AI 排序组装结果
+        ranked_map = {item["article_id"]: item for item in ranked if isinstance(item, dict)}
+        final_results = []
+        for c in candidates:
+            if c["id"] in ranked_map:
+                r = ranked_map[c["id"]]
+                final_results.append({
+                    "article": c,
+                    "reason": r.get("reason", ""),
+                    "relevance": r.get("relevance", 0),
+                })
+
+        total = len(final_results)
+        paged = final_results[(page - 1) * per_page : page * per_page]
+        return {
+            "understanding": understanding,
+            "results": paged,
+            "total": total,
+            "fallback": False,
+        }
+
+    @staticmethod
+    def _sql_multi_keyword_search(keywords, limit=20):
+        """使用多个扩展关键词进行 SQL ILIKE 搜索，合并去重。"""
+        from app.models import ARTICLE_STATUS_PUBLISHED, Article, Tag, User
+        from sqlalchemy import or_
+
+        if not keywords:
+            return []
+
+        base = Article.query.filter_by(status=ARTICLE_STATUS_PUBLISHED)
+        conditions = []
+        for kw in keywords:
+            like = f"%{kw}%"
+            conditions.append(
+                or_(
+                    Article.title.ilike(like),
+                    Article.summary.ilike(like),
+                    Article.content.ilike(like),
+                    Article.author.ilike(like),
+                    Article.tags.any(Tag.name.ilike(like)),
+                    Article.user.has(User.username.ilike(like)),
+                    Article.user.has(User.nickname.ilike(like)),
+                )
+            )
+
+        articles = (
+            base.filter(or_(*conditions))
+            .order_by(Article.published_at.desc())
+            .limit(limit)
+            .all()
+        )
+
+        return [
+            {
+                "id": a.id,
+                "title": a.title,
+                "slug": a.slug,
+                "summary": a.summary or (a.content[:140] if a.content else ""),
+                "author": a.author or "",
+                "author_avatar": (a.user.nickname[:1] if a.user and a.user.nickname else (a.author[:1] if a.author else "?")),
+                "user_id": a.user_id,
+                "tags": [t.name for t in a.tags] if a.tags else [],
+                "published_at": a.published_at.isoformat() if a.published_at else "",
+            }
+            for a in articles
+        ]
+
     # =================================================================
     # 内部实现
     # =================================================================
@@ -210,6 +373,52 @@ class AIService:
         if not isinstance(data, list):
             return []
         return [str(item).strip() for item in data if str(item).strip()][:8]
+
+    @staticmethod
+    def _parse_json_dict(text):
+        """Parse a JSON object from model output, with markdown fence handling."""
+        clean_text = text.strip()
+        if clean_text.startswith("```"):
+            lines = clean_text.split("\n")
+            if lines and lines[0].startswith("```"):
+                lines = lines[1:]
+            if lines and lines[-1].strip() == "```":
+                lines = lines[:-1]
+            clean_text = "\n".join(lines).strip()
+        try:
+            data = json.loads(clean_text)
+            if isinstance(data, dict):
+                return data
+        except json.JSONDecodeError:
+            import re
+            match = re.search(r"\{.*\}", clean_text, re.DOTALL)
+            if match:
+                try:
+                    data = json.loads(match.group(0))
+                    if isinstance(data, dict):
+                        return data
+                except json.JSONDecodeError:
+                    pass
+        return {}
+
+    @staticmethod
+    def _parse_json_list_of_dicts(text):
+        """Parse a JSON array of objects from model output, with fallback."""
+        clean_text = text.strip()
+        if clean_text.startswith("```"):
+            lines = clean_text.split("\n")
+            if lines and lines[0].startswith("```"):
+                lines = lines[1:]
+            if lines and lines[-1].strip() == "```":
+                lines = lines[:-1]
+            clean_text = "\n".join(lines).strip()
+        try:
+            data = json.loads(clean_text)
+            if isinstance(data, list):
+                return [item for item in data if isinstance(item, dict)]
+        except json.JSONDecodeError:
+            pass
+        return []
 
 
 ai_service = AIService()

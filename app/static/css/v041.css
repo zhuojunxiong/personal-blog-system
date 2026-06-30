@@ -1623,6 +1623,86 @@
   font-size: 0.92rem;
 }
 
+/* ---------- AI 智能搜索 ---------- */
+
+.ai-search-understanding {
+  display: block;
+  max-width: 680px;
+  margin: 0 auto 1.5rem;
+  padding: 1rem 1.5rem;
+  border-left: 3px solid var(--v041-accent-dark);
+  border-radius: 0 var(--v041-radius) var(--v041-radius) 0;
+  background: rgba(234, 223, 206, 0.35);
+  color: var(--v041-ink);
+  font-family: var(--v041-font-serif);
+  font-size: 1.05rem;
+  line-height: 1.7;
+}
+
+.ai-search-understanding::before {
+  content: "AI 理解";
+  display: block;
+  margin-bottom: 0.45rem;
+  color: var(--v041-accent-dark);
+  font-size: 0.82rem;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+}
+
+.ai-search-reason {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 0.35rem;
+  margin-top: 0.5rem;
+  padding: 0.4rem 0.75rem;
+  border-radius: 8px;
+  background: rgba(180, 210, 170, 0.28);
+  color: #2d5a27;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.ai-search-reason::before {
+  content: "推荐理由";
+  display: inline;
+  font-weight: 650;
+  font-size: 0.8rem;
+  white-space: nowrap;
+  color: #4a7a3f;
+}
+
+.ai-search-relevance {
+  display: inline-flex;
+  margin-left: 0.5rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  background: var(--v041-accent-soft);
+  color: var(--v041-accent-dark);
+  font-size: 0.78rem;
+  font-weight: 600;
+  vertical-align: middle;
+}
+
+.ai-search-results {
+  min-height: 120px;
+}
+
+/* AI 搜索 loading 小动画 */
+.v041-loading-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-bottom: 0.8rem;
+  border-radius: 50%;
+  background: var(--v041-accent-dark);
+  animation: v041-loading-dot-pulse 1.4s ease-in-out infinite alternate;
+}
+
+@keyframes v041-loading-dot-pulse {
+  from { opacity: 0.35; transform: scale(0.85); }
+  to   { opacity: 1;    transform: scale(1); }
+}
+
 .v041-pagination {
   display: flex;
   flex-wrap: wrap;
