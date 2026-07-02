@@ -15,12 +15,19 @@
 | 2026-07-02 | `work/v1.0-course-delivery` | `md-to-srs-docx` | 计划使用 | `docs/skills-usage/skill_mapping.md` | 后续可将需求规格说明书导出为 docx。 | 导出后需人工确认格式和内容。 |
 | 2026-07-02 | `work/v1.0-course-delivery` | `md-to-sd-docx` | 计划使用 | `docs/skills-usage/skill_mapping.md` | 后续可将概要设计说明书导出为 docx。 | 导出后需人工确认格式和内容。 |
 | 2026-07-02 | `work/v1.0-course-delivery` | `uml-generator` | 计划使用 | `docs/skills-usage/skill_mapping.md` | 后续可生成或维护 PlantUML 源文件。 | 生成后需人工确认图与设计一致。 |
+| 2026-07-03 | `work/v1.0-course-delivery` | Requirements Analyst Agent | 已用于系统理解和需求分流辅助 | `docs/change-requests/CR-003-需求澄清与新增功能评估.md`、`docs/system-understanding/06_需求-模块-代码追踪表.md`、本文 | 辅助反向阅读当前需求状态，区分已实现、部分实现、接口存在需验证、后续计划和 v1.0/v1.1/v2.0 分流。 | 项目负责人负责阅读、理解、人工确认和后续决策。 |
+| 2026-07-03 | `work/v1.0-course-delivery` | System Design Agent | 已用于系统架构理解辅助 | `docs/system-understanding/01_当前系统总览.md`、`docs/system-understanding/02_目录结构与模块说明.md`、`docs/system-understanding/03_技术架构通俗解释.md`、本文 | 辅助整理 Flask、Blueprint、Service、Model、Template、配置和目录边界，不改变 ADR-002 技术路线。 | 项目负责人负责确认架构理解和后续 CR 是否进入设计或代码。 |
+| 2026-07-03 | `work/v1.0-course-delivery` | DBA Agent | 已用于数据模型理解辅助 | `docs/system-understanding/05_数据模型与数据库关系.md`、`docs/system-understanding/07_当前系统风险与不确定项.md`、本文 | 辅助整理用户、文章、专栏、分类、标签、评论、点赞、收藏、AI 日志等数据关系和 ReadingHistory 候选风险。 | 项目负责人确认本轮不新增表、不新增字段、不修改数据库。 |
+| 2026-07-03 | `work/v1.0-course-delivery` | Frontend Developer Agent | 已用于页面和视觉风险理解辅助 | `docs/system-understanding/04_路由-页面-模板映射.md`、`docs/system-understanding/07_当前系统风险与不确定项.md`、本文 | 辅助整理路由、页面、模板、角色、演示路径和视觉一致性待验收事项。 | 项目负责人确认本轮不修改模板、CSS、JS 或页面实现。 |
+| 2026-07-03 | `work/v1.0-course-delivery` | Test Engineer Agent | 已用于测试与验收风险理解辅助 | `docs/system-understanding/07_当前系统风险与不确定项.md`、`docs/change-requests/CR-003-需求澄清与新增功能评估.md`、本文 | 辅助整理启动、初始化、E2E、AI、错误路径、权限路径和视觉验收缺口。 | 项目负责人确认测试脚本存在不等于测试通过，真实执行进入后续 CR。 |
+| 2026-07-03 | `work/v1.0-course-delivery` | `requirements-clarity` | 已参考 | `docs/change-requests/CR-003-需求澄清与新增功能评估.md`、本文 | 辅助需求澄清、范围收敛、v1.0 必做/可选和未来版本边界判断。 | 结论需项目负责人确认，不自动授权代码修改。 |
+| 2026-07-03 | `work/v1.0-course-delivery` | `project-requirements` | 已参考 | `docs/system-understanding/06_需求-模块-代码追踪表.md`、本文 | 辅助把 F001-F050 与模块、路由、模板、脚本和文档建立追踪关系。 | 追踪状态以当前仓库事实和人工阅读为准。 |
+| 2026-07-03 | `work/v1.0-course-delivery` | `system-designer` | 已参考 | `docs/system-understanding/01_当前系统总览.md` 至 `docs/system-understanding/07_当前系统风险与不确定项.md`、本文 | 辅助整理架构、模块、数据模型、路由页面映射和风险说明。 | 不夸大为自动完成系统设计，不替代人工确认。 |
 
-## 本轮未执行事项
+## 本轮仍未执行事项
 
-本轮没有执行以下操作：
+本轮 Agent / Skill 只用于反向阅读、整理和记录当前系统理解，没有执行以下操作：
 
-- 未运行教师 Skill 工具链。
 - 未生成 docx。
 - 未生成或渲染 UML 图片。
 - 未执行浏览器视觉验收。
