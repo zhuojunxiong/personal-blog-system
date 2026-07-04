@@ -1,27 +1,80 @@
 {% extends "base.html" %}
 
 {% block title %}编辑资料{% endblock %}
+{% block site_nav %}
+  <header class="profile-edit-minimal-nav">
+    <a class="profile-edit-minimal-brand" href="{{ url_for('user.profile_home') }}" aria-label="返回我的书房">
+      <span class="brand-mark">知</span>
+      <span>稷下</span>
+    </a>
+  </header>
+{% endblock %}
+{% block site_footer %}{% endblock %}
 
 {% block content %}
-  <section class="content-section">
-    <div class="container narrow-container">
-      <form class="admin-panel" method="post">
-        <h1>编辑资料</h1>
-        <label class="form-label">昵称</label>
-        <input class="form-control mb-3" name="nickname" required maxlength="64" value="{{ current_user.nickname }}">
-        <label class="form-label">邮箱</label>
-        <input class="form-control mb-3" name="email" type="email" required maxlength="120" value="{{ current_user.email }}">
-        <label class="form-label">个人简介</label>
-        <textarea class="form-control mb-3" name="bio" rows="5" maxlength="500">{{ current_user.bio }}</textarea>
-        <label class="form-label">Markdown 知识主页</label>
-        <textarea
-          class="form-control mb-3"
-          name="profile_markdown"
-          rows="12"
-          placeholder="# 关于我&#10;&#10;## 研究方向&#10;- Flask 项目实践&#10;- AI 协作开发&#10;&#10;## 代表文章&#10;- 写下你最想展示的内容"
-        >{{ current_user.profile_markdown or "" }}</textarea>
-        <button class="btn btn-dark" type="submit">保存</button>
-        <a class="btn btn-outline-dark" href="{{ url_for('user.center') }}">返回</a>
+  <section class="profile-edit-page">
+    <div class="profile-edit-shell">
+      <form class="profile-edit-card" method="post">
+        <div class="profile-edit-head">
+          <div>
+            <p class="profile-eyebrow">Profile Settings</p>
+            <h1>编辑资料</h1>
+            <p>完善公开作者主页会展示的信息，让别人更快了解你的方向、经历和代表内容。</p>
+          </div>
+          <div class="profile-edit-avatar" aria-hidden="true">{{ current_user.nickname[:1] }}</div>
+        </div>
+
+        <div class="profile-edit-grid">
+          <section class="profile-edit-section">
+            <div class="profile-edit-section-head">
+              <span>01</span>
+              <div>
+                <h2>基础信息</h2>
+                <p>这些信息会显示在公开作者主页中。</p>
+              </div>
+            </div>
+
+            <div class="profile-edit-fields">
+              <label class="profile-edit-field">
+                <span>昵称</span>
+                <input class="form-control" name="nickname" required maxlength="64" value="{{ current_user.nickname }}">
+              </label>
+              <label class="profile-edit-field">
+                <span>邮箱</span>
+                <input class="form-control" name="email" type="email" required maxlength="120" value="{{ current_user.email }}">
+              </label>
+              <label class="profile-edit-field profile-edit-field-full">
+                <span>个人简介</span>
+                <textarea class="form-control" name="bio" rows="7" maxlength="500">{{ current_user.bio }}</textarea>
+              </label>
+            </div>
+          </section>
+
+          <section class="profile-edit-section profile-edit-section-markdown">
+            <div class="profile-edit-section-head">
+              <span>02</span>
+              <div>
+                <h2>Markdown 知识主页</h2>
+                <p>建议写研究方向、项目经历、代表文章和学习路线。</p>
+              </div>
+            </div>
+
+            <label class="profile-edit-field profile-edit-field-full">
+              <span>主页内容</span>
+              <textarea
+                class="form-control profile-markdown-input"
+                name="profile_markdown"
+                rows="14"
+                placeholder="# 关于我&#10;&#10;## 研究方向&#10;- Flask 项目实践&#10;- AI 协作开发&#10;&#10;## 代表文章&#10;- 写下你最想展示的内容"
+              >{{ current_user.profile_markdown or "" }}</textarea>
+            </label>
+          </section>
+        </div>
+
+        <div class="profile-edit-actions">
+          <a class="btn btn-outline-dark" href="{{ url_for('user.center') }}">返回</a>
+          <button class="btn btn-dark" type="submit">保存资料</button>
+        </div>
       </form>
     </div>
   </section>

@@ -31,7 +31,7 @@
 
         <form class="auth-form" method="post" data-v041-auth-form>
           <label class="auth-input-wrap">
-            <span aria-hidden="true">人</span>
+            <span aria-hidden="true">用户名</span>
             <input name="username" type="text" value="{{ request.form.get('username', '') }}" required maxlength="64" placeholder="真实姓名 / 用户名" data-v041-required="请输入用户名。">
           </label>
 
@@ -41,15 +41,9 @@
           </label>
 
           <label class="auth-input-wrap">
-            <span aria-hidden="true">锁</span>
+            <span aria-hidden="true">密码</span>
             <input name="password" type="password" required minlength="6" placeholder="密码" data-v041-required="请输入密码。">
           </label>
-
-          <label class="auth-input-wrap">
-            <span aria-hidden="true">令</span>
-            <input name="passcode" type="text" value="{{ request.form.get('passcode', '') }}" placeholder="通行证">
-          </label>
-          <p class="auth-form-note">通行证为后续版本预留，当前可以留空。</p>
 
           <button class="auth-submit" type="submit" data-v041-loading-label="注册中...">注册</button>
         </form>

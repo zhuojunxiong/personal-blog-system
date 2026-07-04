@@ -52,6 +52,12 @@ class TestPersonalCenter:
         login_alice(client)
         r = client.get("/me/profile")
         assert r.status_code == 200
+        data = r.data.decode()
+        assert "profile-edit-card" in data
+        assert "AI 搜索" not in data
+        assert "像提问一样搜索知识" not in data
+        assert "写文章" not in data
+        assert "退出" not in data
 
 
 class TestProfileEditing:

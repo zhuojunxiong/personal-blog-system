@@ -19,7 +19,6 @@
           </a>
         {% else %}
           <a class="home-login-button" href="{{ url_for('auth.login') }}">
-            <span aria-hidden="true">人</span>
             <span>登录</span>
           </a>
         {% endif %}
@@ -27,7 +26,7 @@
     </header>
 
     <section class="home-search-stage" aria-labelledby="home-search-title">
-      <h1 id="home-search-title" class="visually-hidden">稷下搜索入口</h1>
+      <h1 id="home-search-title" class="visually-hidden">搜索</h1>
       <form class="home-search-box"
             action="{{ url_for('ai.smart_search') }}"
             method="post"

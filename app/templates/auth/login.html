@@ -31,12 +31,12 @@
 
         <form class="auth-form" method="post" data-v041-auth-form>
           <label class="auth-input-wrap">
-            <span aria-hidden="true">人</span>
+            <span aria-hidden="true">用户名</span>
             <input name="username" type="text" value="{{ request.form.get('username', '') }}" required autofocus placeholder="账号 / 用户名 / 邮箱" data-v041-required="请输入账号。">
           </label>
 
           <label class="auth-input-wrap">
-            <span aria-hidden="true">锁</span>
+            <span aria-hidden="true">密码</span>
             <input name="password" type="password" required placeholder="密码" data-v041-required="请输入密码。">
           </label>
 

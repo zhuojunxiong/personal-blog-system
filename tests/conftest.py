@@ -26,23 +26,22 @@ from app.models import (
     User,
 )
 from app.services import make_slug, utcnow
+from config import Config
+
+
+class TestConfig(Config):
+    TESTING = True
+    SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
+    SQLALCHEMY_ENGINE_OPTIONS = {"connect_args": {"check_same_thread": False}}
+    WTF_CSRF_ENABLED = False
+    SERVER_NAME = "localhost"
+    AI_ENABLED = False
 
 
 @pytest.fixture(scope="function")
 def app():
     """Create a fresh app with an in-memory SQLite database for each test."""
-    test_app = create_app()
-    test_app.config["TESTING"] = True
-    test_app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
-    test_app.config["WTF_CSRF_ENABLED"] = False
-    test_app.config["SERVER_NAME"] = "localhost"
-    test_app.config["AI_ENABLED"] = False  # Disable AI for tests
-
-    # Prevent objects from being expired after commit so they can be
-    # shared across fixtures without DetachedInstanceError.
-    test_app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
-        "connect_args": {"check_same_thread": False}
-    }
+    test_app = create_app(TestConfig)
 
     with test_app.app_context():
         db.create_all()

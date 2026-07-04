@@ -65,13 +65,17 @@
         <section class="write-meta-panel" aria-label="发布设置">
           <div class="write-meta-grid">
             <label class="v041-field">
-              <span class="v041-label">后台分类</span>
-              <select class="v041-select" name="category_id" data-v041-write-category>
-                <option value="">请选择分类</option>
-                {% for category in categories %}
-                  <option value="{{ category.id }}" {% if (article and article.category_id == category.id) or (request.form.get('category_id') == (category.id|string)) %}selected{% endif %}>{{ category.name }}</option>
-                {% endfor %}
-              </select>
+              <span class="v041-label">分类</span>
+              <div style="display:flex;gap:8px;">
+                <select class="v041-select" name="category_id" data-v041-write-category style="flex:1;">
+                  <option value="">请选择分类</option>
+                  {% for category in categories %}
+                    <option value="{{ category.id }}" {% if (article and article.category_id == category.id) or (request.form.get('category_id') == (category.id|string)) %}selected{% endif %}>{{ category.name }}</option>
+                  {% endfor %}
+                </select>
+                <button class="v041-btn" type="button" data-v041-ai-action="tags" data-v041-loading-label="分析中...">AI 推荐</button>
+              </div>
+              <span class="v041-muted" style="font-size:0.75rem;">可手动选择，也可让 AI 根据文章内容推荐分类和标签</span>
             </label>
             <label class="v041-field">
               <span class="v041-label">知识合集</span>
@@ -83,14 +87,14 @@
               </select>
             </label>
           </div>
-          <div class="write-tag-list" aria-label="搜索辅助标签">
+          <div class="write-tag-list" aria-label="标签" data-v041-write-tags>
             {% for tag in tags %}
               <label class="write-tag">
                 <input type="checkbox" name="tag_ids" value="{{ tag.id }}" {% if (article and tag in article.tags) or ((tag.id|string) in request.form.getlist('tag_ids')) %}checked{% endif %}>
                 <span>{{ tag.name }}</span>
               </label>
             {% else %}
-              <span class="v041-muted">暂无标签</span>
+              <span class="v041-muted">暂无标签，可手动创建或由 AI 推荐</span>
             {% endfor %}
           </div>
         </section>
@@ -107,7 +111,6 @@
             <p class="profile-eyebrow">Assistant</p>
             <h1>AI 写作助手</h1>
           </div>
-          <span class="study-pill">搜索闭环</span>
         </div>
         <div class="write-ai-actions">
           <button class="v041-btn" type="button" data-v041-ai-action="research">搜资料</button>
@@ -116,13 +119,12 @@
           <button class="v041-btn" type="button" data-v041-ai-action="searchSummary">搜索摘要</button>
         </div>
         <div class="write-ai-messages" data-v041-ai-messages>
-          <div class="write-ai-message is-ai">可以帮你搜索资料、整理大纲、润色正文，并在文章完成后生成用于检索的搜索摘要。</div>
+          <div class="write-ai-message is-ai">可以帮你搜索资料、整理大纲、润色正文，并自动推荐分类和标签。</div>
         </div>
         <form class="write-ai-form" data-v041-ai-chat>
           <input class="v041-input" name="question" placeholder="输入资料主题，例如 Flask 登录权限" autocomplete="off">
           <button class="v041-btn" type="submit">搜资料</button>
         </form>
-        <p class="write-ai-note">发布文章时系统会自动生成搜索摘要；未配置 AI 时会使用本地降级摘要，不影响保存。</p>
       </aside>
     </main>
   </div>
