@@ -67,15 +67,15 @@
             <label class="v041-field">
               <span class="v041-label">分类</span>
               <div style="display:flex;gap:8px;">
-                <select class="v041-select" name="category_id" data-v041-write-category style="flex:1;">
-                  <option value="">请选择分类</option>
+                <input class="v041-input" list="category-list" name="category_id" value="{{ request.form.get('category_id', article.category_id if article else '') }}" placeholder="输入或选择分类" style="flex:1;">
+                <datalist id="category-list">
                   {% for category in categories %}
-                    <option value="{{ category.id }}" {% if (article and article.category_id == category.id) or (request.form.get('category_id') == (category.id|string)) %}selected{% endif %}>{{ category.name }}</option>
+                    <option value="{{ category.id }}">{{ category.name }}</option>
                   {% endfor %}
-                </select>
+                </datalist>
                 <button class="v041-btn" type="button" data-v041-ai-action="tags" data-v041-loading-label="分析中...">AI 推荐</button>
               </div>
-              <span class="v041-muted" style="font-size:0.75rem;">可手动选择，也可让 AI 根据文章内容推荐分类和标签</span>
+              <span class="v041-muted" style="font-size:0.75rem;">可手动填写，也可让 AI 根据文章内容推荐</span>
             </label>
             <label class="v041-field">
               <span class="v041-label">知识合集</span>
@@ -87,15 +87,19 @@
               </select>
             </label>
           </div>
-          <div class="write-tag-list" aria-label="标签" data-v041-write-tags>
-            {% for tag in tags %}
-              <label class="write-tag">
-                <input type="checkbox" name="tag_ids" value="{{ tag.id }}" {% if (article and tag in article.tags) or ((tag.id|string) in request.form.getlist('tag_ids')) %}checked{% endif %}>
-                <span>{{ tag.name }}</span>
-              </label>
-            {% else %}
-              <span class="v041-muted">暂无标签，可手动创建或由 AI 推荐</span>
-            {% endfor %}
+          <div class="write-tag-section">
+            <div class="write-tag-list" aria-label="已有标签" data-v041-write-tags>
+              {% for tag in tags %}
+                <label class="write-tag">
+                  <input type="checkbox" name="tag_ids" value="{{ tag.id }}" {% if (article and tag in article.tags) or ((tag.id|string) in request.form.getlist('tag_ids')) %}checked{% endif %}>
+                  <span>{{ tag.name }}</span>
+                </label>
+              {% endfor %}
+            </div>
+            <label class="v041-field" style="margin-top:8px;">
+              <span class="v041-label">新建标签</span>
+              <input class="v041-input" name="new_tags" value="{{ request.form.get('new_tags', '') }}" placeholder="多个标签用逗号分隔，如：Python, 机器学习" style="width:100%;">
+            </label>
           </div>
         </section>
 

@@ -10,11 +10,13 @@ from app.extensions import db
 from app.models import (
     ARTICLE_STATUS_DRAFT,
     ARTICLE_STATUS_PUBLISHED,
+    Category,
     COMMENT_STATUS_APPROVED,
     COMMENT_STATUS_PENDING,
     Article,
     Comment,
     Favorite,
+    Tag,
 )
 from app.services import parse_int_list
 from app.tag.services import TagService
@@ -151,14 +153,47 @@ def _write_article_form(article=None):
     if request.method == "POST":
         status = request.form.get("status") or ARTICLE_STATUS_DRAFT
         try:
+            # Resolve category: accept ID or new name
+            form_data = request.form.copy()
+            category_input = request.form.get("category_id", "").strip()
+            if category_input:
+                if category_input.isdigit():
+                    form_data = dict(form_data)
+                    form_data["category_id"] = int(category_input)
+                else:
+                    existing = Category.query.filter_by(name=category_input).first()
+                    if existing:
+                        form_data = dict(form_data)
+                        form_data["category_id"] = existing.id
+                    else:
+                        new_cat = Category(name=category_input)
+                        db.session.add(new_cat)
+                        db.session.flush()
+                        form_data = dict(form_data)
+                        form_data["category_id"] = new_cat.id
+
+            # Resolve tags: merge selected + new comma-separated tags
+            tag_ids = parse_int_list(request.form.getlist("tag_ids"))
+            new_tags_str = request.form.get("new_tags", "").strip()
+            if new_tags_str:
+                for name in new_tags_str.split(","):
+                    name = name.strip()
+                    if not name:
+                        continue
+                    existing_tag = Tag.query.filter_by(name=name).first()
+                    if existing_tag:
+                        if existing_tag.id not in tag_ids:
+                            tag_ids.append(existing_tag.id)
+                    else:
+                        new_tag = Tag(name=name)
+                        db.session.add(new_tag)
+                        db.session.flush()
+                        tag_ids.append(new_tag.id)
+
             if article:
-                errors = ArticleService.update(article, request.form, parse_int_list(request.form.getlist("tag_ids")))
+                errors = ArticleService.update(article, form_data, tag_ids)
             else:
-                article, errors = ArticleService.create(
-                    request.form,
-                    parse_int_list(request.form.getlist("tag_ids")),
-                    user=current_user,
-                )
+                article, errors = ArticleService.create(form_data, tag_ids, user=current_user)
         except SQLAlchemyError:
             db.session.rollback()
             errors = ["文章保存失败，请稍后重试。"]
