@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""V5.1 丰富演示数据"""
+"""V0.5.1 丰富演示数据"""
 from datetime import datetime, timedelta
 from pathlib import Path
 import sys, random
@@ -470,14 +470,14 @@ def create_demo_data():
 
         if not AiLog.query.first():
             db.session.add(AiLog(article=articles[0], scene="placeholder",
-                input_text="V5.1 AI 智能搜索和六大写作功能已就绪。",
+                input_text="V0.5.1 AI 智能搜索和六大写作功能已就绪。",
                 ai_output="AI 功能已开放。"))
 
         db.session.commit()
         ac = Article.query.count()
         cc = Comment.query.count()
         print("=" * 60)
-        print(f"V5.1 演示数据写入完成！")
+        print(f"V0.5.1 演示数据写入完成！")
         print(f"  {len(users)} 位用户  {len(cats)} 个分类  {len(TAGS)} 个标签")
         print(f"  {ac} 篇文章  {cc} 条评论  {like_count} 点赞  {fav_count} 收藏")
         print("=" * 60)
