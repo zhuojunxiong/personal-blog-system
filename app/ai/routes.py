@@ -20,6 +20,7 @@ def index():
     )
 
 
+# DEPRECATED: placeholder route, retained for backward compatibility
 @ai_bp.route("/admin/ai/placeholder", methods=["POST"])
 @admin_required
 def placeholder():
@@ -130,6 +131,7 @@ def suggest_titles():
 
 
 @ai_bp.route("/ai/search", methods=["POST"])
+# CSRF exempt: this is a public read-only search endpoint. Rate limiting should be considered for production.
 @csrf.exempt
 def smart_search():
     """AI 智能搜索 JSON API（公开端点）。

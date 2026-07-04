@@ -1,6 +1,7 @@
 # 项目启动与 DeepSeek AI 接入完整教程
 
-当前版本：**V5.1** — 多用户知识专栏博客系统「稷下」，已集成 AI 智能搜索。
+当前版本：**v1.0（课程交付阶段）** — AI 驱动的知识写作与搜索平台「稷下」。
+当前分支：`work/v1.0-course-delivery`
 
 ---
 
@@ -226,12 +227,10 @@ export AI_MODEL="deepseek-v4-pro[1m]"
 | 功能 | 说明 | 使用位置 |
 |------|------|----------|
 | 🔍 **AI 智能搜索** | 理解自然语言搜索意图，即使搜索词不精确也能找到相关文章 | 首页 / 搜索页 |
-| 📝 **生成摘要** | 分析文章内容，生成结构化摘要（200 字以内，含要点列表） | 写文章页 AI 面板 |
-| 🏷️ **推荐标签** | 自动推荐 3-8 个精准中文标签 | 写文章页 AI 面板 |
+| 📚 **搜资料** | 联网搜索写作参考资料，辅助内容创作 | 写文章页 AI 面板 |
+| 📋 **整理大纲** | 分析文章结构，提取或归纳章节标题 | 写文章页 AI 面板 |
 | ✨ **润色正文** | 逐段润色，修正语病、调整结构、解释术语 | 写文章页 AI 面板 |
-| 📋 **提取大纲** | 分析文章结构，提取或归纳章节标题 | 写文章页 AI 面板 |
-| ✏️ **标题建议** | 生成 5 个候选标题（3 务实型 + 2 吸引型） | 写文章页 AI 面板 |
-| 💬 **文章问答** | 基于文章内容回答写作问题，支持改进建议、结构分析 | 写文章页 AI 面板问答框 |
+| 📝 **生成搜索摘要** | 提取文章特征生成搜索用摘要，提升搜索召回效果 | 写文章页 AI 面板（发布时自动调用） |
 
 ### AI 智能搜索使用示例
 
@@ -259,7 +258,7 @@ export AI_MODEL="deepseek-v4-pro[1m]"
 1. 用 `alice / user123456` 登录
 2. 首页搜索框输入"想学部署" → 验证 AI 智能搜索
 3. 点击「写文章」，输入标题和正文（至少 200 字）
-4. 依次点击 AI 按钮：生成摘要 → 推荐标签 → 润色正文 → 提取大纲 → 标题建议
+4. 依次点击 AI 按钮：搜资料 → 整理大纲 → 润色正文 → 生成搜索摘要
 5. 在问答框输入"这篇文章可以如何改进？"并发送
 6. 发布文章后，切换到其他账号登录，点赞、收藏、评论
 7. 查看个人中心的互动记录
@@ -316,12 +315,12 @@ export AI_API_KEY="sk-你的Key"
 ### 端口 5000 被占用
 ```bash
 # Windows
-.venv\Scripts\python -c "from app import create_app; app=create_app(); app.run(debug=True, port=5001)"
+.venv\Scripts\python -c "from app import create_app; app=create_app(); app.run(debug=True, port=5011)"
 
 # Mac
-.venv/bin/python -c "from app import create_app; app=create_app(); app.run(debug=True, port=5001)"
+.venv/bin/python -c "from app import create_app; app=create_app(); app.run(debug=True, port=5011)"
 ```
-然后访问 `http://127.0.0.1:5001/`
+然后访问 `http://127.0.0.1:5011/`
 
 ### 缺少依赖
 ```bash

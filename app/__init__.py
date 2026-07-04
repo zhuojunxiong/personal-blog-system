@@ -30,21 +30,31 @@ def create_app(config_class=Config):
 
 
 def ensure_sqlite_schema(app):
-    """Add small v0.5.1+ columns for existing local SQLite databases."""
+    """Auto-create tables on first run; add migration columns for existing databases."""
     if not app.config.get("SQLALCHEMY_DATABASE_URI", "").startswith("sqlite:///"):
         return
     from sqlalchemy import text
 
-    required_columns = {
-        "users": {
-            "profile_markdown": "TEXT DEFAULT ''",
-        },
-        "articles": {
-            "ai_search_summary": "TEXT DEFAULT ''",
-            "ai_search_generated_at": "DATETIME",
-        },
-    }
     with app.app_context():
+        # Check if core tables exist; if not, create all tables from models
+        with db.engine.connect() as conn:
+            users_exists = conn.execute(
+                text("SELECT name FROM sqlite_master WHERE type='table' AND name='users'")
+            ).first()
+        if not users_exists:
+            db.create_all()
+            app.logger.info("Database tables created automatically (first run).")
+
+        # Add new columns for schema evolution (v0.5.1+ migrations)
+        required_columns = {
+            "users": {
+                "profile_markdown": "TEXT DEFAULT ''",
+            },
+            "articles": {
+                "ai_search_summary": "TEXT DEFAULT ''",
+                "ai_search_generated_at": "DATETIME",
+            },
+        }
         try:
             with db.engine.begin() as conn:
                 for table, columns in required_columns.items():
@@ -60,6 +70,7 @@ def ensure_sqlite_schema(app):
                     }
                     for column, definition in columns.items():
                         if column not in existing:
+                            # SAFETY: table and column names come from hardcoded dict, not user input
                             conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {column} {definition}"))
         except Exception:
             app.logger.exception("Failed to ensure SQLite compatibility columns.")

@@ -20,6 +20,7 @@
 | `README.md` | 说明本项目如何使用教师 Skill，以及使用边界。 |
 | `skill_mapping.md` | 建立教师 Skill、Vibe Coding 工作流与项目交付物的映射。 |
 | `skill_usage_log.md` | 记录哪些 Skill 已纳入哪些文档，哪些只是计划使用或待验证。 |
+| `../14_最终交付检查清单.md` | 检查 Agent/Skill 是否形成可交付、可追溯、可答辩的证据链。 |
 
 ## 当前状态说明
 
@@ -34,3 +35,5 @@
 - `docs/change-requests/CR-002-教师Agent与Skill融入交付流程.md`
 
 本目录中的“已纳入文档”表示已经被作为交付流程说明、映射或索引记录，不等同于已经运行外部 Skill 工具链。
+
+2026-07-04 更新：`agent-prompts/` 和 `.skills/` 中的待填写骨架已补充为项目化入口；这表示本项目已经具备按 Agent/Skill 方式组织需求、设计、测试、Review 和文档交付的流程入口，但不表示 docx、UML、浏览器验收或自动化测试已经全部执行。

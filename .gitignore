@@ -4,6 +4,8 @@ __pycache__/
 
 instance/*.sqlite
 instance/*.db
+instance/.secret_key
+instance/.csrf_secret_key
 
 .pytest_cache/
 .coverage

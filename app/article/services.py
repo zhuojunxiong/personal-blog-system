@@ -255,6 +255,7 @@ class ArticleService:
             slug = f"{base}-{index}"
             index += 1
 
+    # DEPRECATED: unused; use Article.approved_comment_count instead
     @staticmethod
     def admin_comment_count(article):
         return Comment.query.filter_by(article_id=article.id).count()
@@ -283,5 +284,6 @@ class ArticleService:
             db.session.commit()
         except AIServiceError:
             db.session.rollback()
+        # Catch-all fallback to prevent AI failures from breaking article publishing
         except Exception:
             db.session.rollback()

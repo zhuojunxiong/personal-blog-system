@@ -1,4 +1,15 @@
-"""Pytest fixtures for the blog system test suite."""
+"""Pytest fixtures for the blog system test suite.
+
+Test database strategy:
+  - Each test function receives a fresh app using in-memory SQLite
+    (sqlite:///:memory:), ensuring complete isolation between tests.
+  - The database is created before each test (db.create_all) and torn down
+    after each test (db.session.rollback + db.drop_all), so no test data
+    ever touches the production or development database.
+  - AI features are disabled (AI_ENABLED=False) and CSRF is turned off
+    (WTF_CSRF_ENABLED=False) for clean, deterministic test runs.
+  - Use `pytest tests/` to run this isolated suite.
+"""
 import pytest
 from app import create_app
 from app.extensions import db

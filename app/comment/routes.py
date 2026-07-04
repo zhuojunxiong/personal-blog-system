@@ -54,6 +54,7 @@ def favorite(slug):
 
 @comment_bp.route("/admin/comments")
 @admin_required
+# TODO: implement pagination with .paginate() and update template to include pagination controls
 def admin_index():
     status = request.args.get("status")
     if status not in COMMENT_STATUSES:

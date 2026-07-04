@@ -16,6 +16,7 @@ class AuthService:
             errors.append("用户名不能超过 64 个字符。")
         if not email or "@" not in email:
             errors.append("邮箱格式不正确。")
+        # Current policy: minimum 6 characters. For production, add complexity requirements (uppercase, digit, special char).
         if len(password) < 6:
             errors.append("密码至少需要 6 位。")
         if username and User.query.filter_by(username=username).first():

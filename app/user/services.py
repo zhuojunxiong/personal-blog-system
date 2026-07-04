@@ -58,6 +58,7 @@ class UserService:
             errors.append("请输入当前密码。")
         if not new_password:
             errors.append("请输入新密码。")
+        # Current policy: minimum 6 characters. For production, add complexity requirements (uppercase, digit, special char).
         elif len(new_password) < 6:
             errors.append("新密码至少需要 6 位。")
         if new_password != confirm_password:

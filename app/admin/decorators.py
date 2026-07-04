@@ -13,6 +13,9 @@ def admin_required(view):
         if not current_user.is_admin:
             flash("普通用户不能访问后台管理。", "danger")
             return redirect(url_for("public.index"))
+        if not current_user.is_active:
+            flash("您的账号已被禁用，无法访问后台。", "danger")
+            return redirect(url_for("auth.admin_login"))
         return view(*args, **kwargs)
 
     return wrapped

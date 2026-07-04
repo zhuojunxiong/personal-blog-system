@@ -23,6 +23,9 @@
 | 2026-07-03 | `work/v1.0-course-delivery` | `requirements-clarity` | 已参考 | `docs/change-requests/CR-003-需求澄清与新增功能评估.md`、本文 | 辅助需求澄清、范围收敛、v1.0 必做/可选和未来版本边界判断。 | 结论需项目负责人确认，不自动授权代码修改。 |
 | 2026-07-03 | `work/v1.0-course-delivery` | `project-requirements` | 已参考 | `docs/system-understanding/06_需求-模块-代码追踪表.md`、本文 | 辅助把 F001-F050 与模块、路由、模板、脚本和文档建立追踪关系。 | 追踪状态以当前仓库事实和人工阅读为准。 |
 | 2026-07-03 | `work/v1.0-course-delivery` | `system-designer` | 已参考 | `docs/system-understanding/01_当前系统总览.md` 至 `docs/system-understanding/07_当前系统风险与不确定项.md`、本文 | 辅助整理架构、模块、数据模型、路由页面映射和风险说明。 | 不夸大为自动完成系统设计，不替代人工确认。 |
+| 2026-07-04 | `work/v1.0-course-delivery` | Requirement / Architect / Frontend / Tester / Reviewer Agent | 已建立项目化主入口 | `agent-prompts/requirement_agent.md`、`agent-prompts/architect_agent.md`、`agent-prompts/frontend_agent.md`、`agent-prompts/tester_agent.md`、`agent-prompts/reviewer_agent.md` | 将待填写骨架补充为本项目可直接使用的 Agent prompt，明确输入、输出、禁止事项和标准提示词。 | 仅表示流程入口已建立；后续每次实际使用仍需按任务记录。 |
+| 2026-07-04 | `work/v1.0-course-delivery` | `requirements-clarity` / `md-to-srs-docx` / `md-to-sd-docx` / `uml-generator` / `code-review` | 已建立项目化 Skill 规程 | `.skills/requirement-clarify/SKILL.md`、`.skills/docx-requirement/SKILL.md`、`.skills/docx-design/SKILL.md`、`.skills/uml-generate/SKILL.md`、`.skills/code-review/SKILL.md` | 将待填写骨架补充为可执行的使用规程，明确触发场景、输入材料、步骤、输出和禁止事项。 | 本轮未生成 docx、未渲染 UML、未运行外部教师工具链。 |
+| 2026-07-04 | `work/v1.0-course-delivery` | Vibe Coding 工作流 | 已用于交付检查收束 | `docs/14_最终交付检查清单.md`、本文 | 建立课程交付前检查清单，串联需求、设计、测试、Review、AI 协作、Agent/Skill 使用记录和项目总结。 | 交付前仍需根据真实测试、AI 调用、视觉验收和人工确认更新状态。 |
 
 ## 本轮仍未执行事项
 

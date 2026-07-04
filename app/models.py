@@ -38,7 +38,7 @@ class User(UserMixin, db.Model):
     password_hash = db.Column(db.String(255), nullable=False)
     nickname = db.Column(db.String(64), nullable=False, default="知识创作者")
     role = db.Column(db.String(32), nullable=False, default="user")
-    status = db.Column(db.String(32), nullable=False, default="active")
+    status = db.Column(db.String(32), nullable=False, default="active", index=True)
     bio = db.Column(db.String(500), default="")
     profile_markdown = db.Column(db.Text, default="")
     avatar = db.Column(db.String(255), default="")
@@ -69,7 +69,7 @@ class BlogColumn(db.Model):
     __tablename__ = "blog_columns"
 
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, index=True)
     name = db.Column(db.String(120), nullable=False)
     description = db.Column(db.String(500), default="")
     status = db.Column(db.String(32), nullable=False, default="active")
@@ -82,6 +82,7 @@ class BlogColumn(db.Model):
     )
 
     user = db.relationship("User", backref=db.backref("columns", lazy=True))
+    # Note: When a column is deleted, articles have column_id set to NULL (nullable=True)
     articles = db.relationship("Article", back_populates="column")
 
 
@@ -100,6 +101,7 @@ class Category(db.Model):
         nullable=False,
     )
 
+    # Note: Category deletion should check for existing articles first (nullable=False on Article.category_id)
     articles = db.relationship("Article", back_populates="category")
 
 
@@ -133,10 +135,10 @@ class Article(db.Model):
     ai_search_summary = db.Column(db.Text, default="")
     ai_search_generated_at = db.Column(db.DateTime)
     content = db.Column(db.Text, nullable=False)
-    status = db.Column(db.String(32), nullable=False, default=ARTICLE_STATUS_DRAFT)
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
-    column_id = db.Column(db.Integer, db.ForeignKey("blog_columns.id"))
-    category_id = db.Column(db.Integer, db.ForeignKey("categories.id"), nullable=False)
+    status = db.Column(db.String(32), nullable=False, default=ARTICLE_STATUS_DRAFT, index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), index=True)
+    column_id = db.Column(db.Integer, db.ForeignKey("blog_columns.id"), index=True)
+    category_id = db.Column(db.Integer, db.ForeignKey("categories.id"), nullable=False, index=True)
     author = db.Column(db.String(80), nullable=False, default="管理员")
     view_count = db.Column(db.Integer, nullable=False, default=0)
     like_count = db.Column(db.Integer, nullable=False, default=0)
@@ -171,15 +173,21 @@ class Article(db.Model):
 
     @property
     def approved_comment_count(self):
-        return len([c for c in self.comments if c.status == COMMENT_STATUS_APPROVED])
+        from app.extensions import db
+        from app.models import Comment, COMMENT_STATUS_APPROVED
+
+        return db.session.query(db.func.count(Comment.id)).filter(
+            Comment.article_id == self.id,
+            Comment.status == COMMENT_STATUS_APPROVED,
+        ).scalar() or 0
 
 
 class Comment(db.Model):
     __tablename__ = "comments"
 
     id = db.Column(db.Integer, primary_key=True)
-    article_id = db.Column(db.Integer, db.ForeignKey("articles.id"), nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
+    article_id = db.Column(db.Integer, db.ForeignKey("articles.id"), nullable=False, index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), index=True)
     nickname = db.Column(db.String(80), nullable=False)
     email = db.Column(db.String(120), nullable=False)
     content = db.Column(db.Text, nullable=False)
@@ -200,8 +208,8 @@ class Like(db.Model):
     __tablename__ = "likes"
 
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
-    article_id = db.Column(db.Integer, db.ForeignKey("articles.id"), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, index=True)
+    article_id = db.Column(db.Integer, db.ForeignKey("articles.id"), nullable=False, index=True)
     created_at = db.Column(db.DateTime, default=utcnow, nullable=False)
 
     user = db.relationship("User", backref=db.backref("likes", lazy=True))
@@ -216,8 +224,8 @@ class Favorite(db.Model):
     __tablename__ = "favorites"
 
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
-    article_id = db.Column(db.Integer, db.ForeignKey("articles.id"), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, index=True)
+    article_id = db.Column(db.Integer, db.ForeignKey("articles.id"), nullable=False, index=True)
     created_at = db.Column(db.DateTime, default=utcnow, nullable=False)
 
     user = db.relationship("User", backref=db.backref("favorites", lazy=True))
@@ -232,7 +240,7 @@ class AiLog(db.Model):
     __tablename__ = "ai_logs"
 
     id = db.Column(db.Integer, primary_key=True)
-    article_id = db.Column(db.Integer, db.ForeignKey("articles.id"))
+    article_id = db.Column(db.Integer, db.ForeignKey("articles.id"), index=True)
     scene = db.Column(db.String(80), nullable=False)
     input_text = db.Column(db.Text, default="")
     ai_output = db.Column(db.Text, default="")
