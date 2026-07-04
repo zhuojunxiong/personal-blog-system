@@ -1,66 +1,75 @@
 {% extends "base.html" %}
+{% from "shared/_app_topbar.html" import app_topbar with context %}
 
-{% block title %}文章 - 知识专栏{% endblock %}
+{% block title %}文章 - 稷下{% endblock %}
+{% block site_nav %}{% endblock %}
+{% block site_footer %}{% endblock %}
 
 {% block content %}
-  <section class="page-hero">
-    <div class="container page-hero-grid">
-      <div>
-        <p class="eyebrow">Articles</p>
+  <div class="v041-public-page">
+    {{ app_topbar("公开文章") }}
+    <main class="v041-public-shell">
+      <section class="profile-page-head">
+        <p class="profile-eyebrow">Articles</p>
         <h1>公开文章</h1>
-        <p>浏览平台中已经发布的知识文章，按分类、标签、作者和专栏继续深入阅读。</p>
-        <form class="page-search page-toolbar" action="{{ url_for('public.search') }}" method="get">
-          <input class="form-control" name="q" type="search" placeholder="搜索标题、摘要、作者或标签">
-          <button class="btn btn-primary" type="submit">搜索</button>
-        </form>
-      </div>
-      <a class="btn btn-primary" href="{{ url_for('user.write_article') }}">写文章</a>
-    </div>
-  </section>
+        <p>这里保留全部公开文章；更推荐回到搜索首页，用自然语言直接描述你想解决的问题。</p>
+      </section>
 
-  <section class="content-section">
-    <div class="container content-layout">
-      <div class="list-stack">
-        {% if articles %}
-          {% for article in articles %}
-            {% set article_card_variant = 'horizontal' %}
-            {% include "public/_article_card.html" %}
-          {% endfor %}
-          {% include "public/_pagination.html" %}
-        {% else %}
-          <div class="empty-state">暂无公开文章。</div>
-        {% endif %}
-      </div>
+      <div class="v041-public-grid">
+        <section class="study-panel study-panel-large">
+          <div class="study-panel-head">
+            <div>
+              <p class="profile-eyebrow">Reading Desk</p>
+              <h2>文章列表</h2>
+            </div>
+            <a class="v041-btn v041-btn-primary" href="{{ url_for('user.write_article') }}">写文章</a>
+          </div>
+          {% if articles %}
+            <div class="list-stack">
+              {% for article in articles %}
+                {% set article_card_variant = 'horizontal' %}
+                {% include "public/_article_card.html" %}
+              {% endfor %}
+            </div>
+            {% include "public/_pagination.html" %}
+          {% else %}
+            <div class="v041-state">暂无公开文章。</div>
+          {% endif %}
+        </section>
 
-      <aside class="sidebar-stack">
-        <div class="info-panel">
-          <h3>热门分类</h3>
-          <div class="sidebar-list">
-            {% for category in categories %}
-              <a class="sidebar-row" href="{{ url_for('public.category_detail', category_id=category.id) }}">
-                <strong>{{ category.name }}</strong>
-                <span>{{ category.description or '继续浏览这个方向的文章。' }}</span>
-              </a>
-            {% else %}
-              <div class="empty-state compact">暂无分类</div>
-            {% endfor %}
-          </div>
-        </div>
-        <div class="info-panel">
-          <h3>热门标签</h3>
-          <div class="tag-cloud">
-            {% for tag in tags %}
-              <a class="pill" href="{{ url_for('public.tag_detail', tag_id=tag.id) }}">{{ tag.name }}</a>
-            {% else %}
-              <span class="muted">暂无标签</span>
-            {% endfor %}
-          </div>
-        </div>
-        <div class="info-panel">
-          <h3>阅读提示</h3>
-          <p>文章卡片展示摘要、作者、分类、标签、阅读数和评论数，方便在列表中快速判断内容价值。</p>
-        </div>
-      </aside>
-    </div>
-  </section>
+        <aside class="v041-side-stack">
+          <section class="study-panel">
+            <h2>检索</h2>
+            <form class="v041-search-form" action="{{ url_for('public.search') }}" method="get">
+              <input class="v041-input" name="q" type="search" placeholder="像提问一样搜索知识">
+              <button class="v041-btn" type="submit">搜索</button>
+            </form>
+          </section>
+          <section class="study-panel">
+            <h2>后台分类</h2>
+            <div class="quiet-list">
+              {% for category in categories %}
+                <a class="quiet-list-item" href="{{ url_for('public.category_detail', category_id=category.id) }}">
+                  <span>{{ category.name }}</span>
+                  <small>{{ category.description or '继续浏览这个方向的文章。' }}</small>
+                </a>
+              {% else %}
+                <p class="study-note">暂无分类</p>
+              {% endfor %}
+            </div>
+          </section>
+          <section class="study-panel">
+            <h2>搜索辅助标签</h2>
+            <div class="v041-tag-cloud">
+              {% for tag in tags %}
+                <a class="study-pill" href="{{ url_for('public.tag_detail', tag_id=tag.id) }}">{{ tag.name }}</a>
+              {% else %}
+                <p class="study-note">暂无标签</p>
+              {% endfor %}
+            </div>
+          </section>
+        </aside>
+      </div>
+    </main>
+  </div>
 {% endblock %}

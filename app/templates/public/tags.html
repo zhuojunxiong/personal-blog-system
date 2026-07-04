@@ -1,29 +1,30 @@
 {% extends "base.html" %}
+{% from "shared/_app_topbar.html" import app_topbar with context %}
 
 {% block title %}标签 - 知识专栏{% endblock %}
+{% block site_nav %}{% endblock %}
+{% block site_footer %}{% endblock %}
 
 {% block content %}
-  <section class="page-hero">
-    <div class="container">
-      <p class="eyebrow">Tags</p>
-      <h1>标签浏览</h1>
-      <p>通过标签找到同一知识点下的文章，适合在课程复盘和项目实践中快速检索。</p>
-    </div>
-  </section>
-
-  <section class="content-section">
-    <div class="container">
-      <div class="info-panel">
-        <div class="tag-cloud">
+  <div class="v041-public-page">
+    {{ app_topbar("标签浏览") }}
+    <main class="v041-public-shell">
+      <section class="profile-page-head">
+        <p class="profile-eyebrow">Tags</p>
+        <h1>标签浏览</h1>
+        <p>通过标签找到同一知识点下的文章，适合在课程复盘和项目实践中快速检索。</p>
+      </section>
+      <section class="study-panel">
+        <div class="v041-tag-cloud">
           {% for tag in tags %}
-            <a class="pill pill-large" href="{{ url_for('public.tag_detail', tag_id=tag.id) }}">
+            <a class="study-pill" href="{{ url_for('public.tag_detail', tag_id=tag.id) }}">
               {{ tag.name }} · {{ tag.articles|selectattr('status', 'equalto', 'published')|list|length }}
             </a>
           {% else %}
             <div class="empty-state">暂无标签。</div>
           {% endfor %}
         </div>
-      </div>
-    </div>
-  </section>
+      </section>
+    </main>
+  </div>
 {% endblock %}

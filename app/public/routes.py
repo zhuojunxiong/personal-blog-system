@@ -1,7 +1,7 @@
 import re
 from math import ceil
 
-from flask import Blueprint, abort, render_template, request, url_for
+from flask import Blueprint, abort, make_response, redirect, render_template, request, url_for
 from flask_login import current_user
 from sqlalchemy import or_
 from sqlalchemy.exc import SQLAlchemyError
@@ -27,7 +27,11 @@ public_bp = Blueprint("public", __name__)
 
 @public_bp.route("/")
 def index():
-    return render_template("v041/landing.html")
+    if request.cookies.get("zjx_seen_landing") == "1":
+        return redirect(url_for("public.home"))
+    response = make_response(render_template("v041/landing.html"))
+    response.set_cookie("zjx_seen_landing", "1", max_age=60 * 60 * 24 * 365, samesite="Lax")
+    return response
 
 
 @public_bp.route("/home")
@@ -88,6 +92,7 @@ def article_detail(slug):
         "v041/article_reading.html",
         article=article,
         favorited=ArticleService.favorited_by(article, current_user),
+        liked=ArticleService.liked_by(article, current_user),
         content_blocks=content_blocks,
         toc_items=toc_items[:6],
         word_count=word_count,

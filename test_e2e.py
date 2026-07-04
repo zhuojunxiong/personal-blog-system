@@ -12,6 +12,13 @@ app = create_app()
 app.config["SERVER_NAME"] = "localhost"
 app.config["WTF_CSRF_ENABLED"] = False  # disable CSRF for testing
 
+
+@app.route("/__test_bad_request")
+def test_bad_request():
+    from flask import abort
+
+    abort(400)
+
 passed = 0
 failed = 0
 errors = []
@@ -451,6 +458,10 @@ def run():
     # 7. ERROR PAGES
     # ============================================================
     print("\n=== 七、错误页面 ===")
+
+    r = c.get("/__test_bad_request")
+    check("400 页面", r.status_code == 400, f"status={r.status_code}")
+    check("400 页面含提示", "请求无效" in r.data.decode(), "400 template not rendered")
 
     r = c.get("/articles/nonexistent-slug-xyz")
     check("404 页面", r.status_code == 404, f"status={r.status_code}")

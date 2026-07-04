@@ -10,6 +10,28 @@ Review 范围：当前 `personal-blog-system` 仓库中的 `AGENTS.md`、`docs/0
 
 本次只生成工程记录文档，未修改 `app/`、`templates/`、`static/`、`models/`、`routes/`、`run.py`、`config.py`、`requirements.txt` 等业务代码；未读取或修改 `software-practice-records`；未安装依赖；未执行会写入数据库的脚本。
 
+2026-07-03 追加 Review：
+
+本轮根据 CR-009 和 ADR-005 进入受控实现调整，已经修改业务代码和文档。变更范围包括：
+
+1. 首页入口：`/` 首次进入页，后续回到 `/home`。
+2. 写作闭环：写作页 AI 助手收束为搜资料、大纲、润色、搜索摘要。
+3. 搜索闭环：`Article` 增加 `ai_search_summary` 和 `ai_search_generated_at`，普通搜索和 AI 搜索候选召回纳入搜索摘要。
+4. 发布闭环：文章发布时生成搜索用摘要；无 AI Key 时使用本地降级摘要。
+5. 作者主页：`User` 增加 `profile_markdown`，公开作者主页支持基础 Markdown 渲染。
+6. 文档同步：新增 CR-009、ADR-005，并更新 README、需求、概要设计、未来方向、需求追溯、测试报告和 AI 协作记录。
+
+本轮 Review 关注点：
+
+| 关注点 | 判断 |
+| --- | --- |
+| 技术栈 | 未更换技术栈，仍为 Flask + Jinja2 + SQLAlchemy + SQLite。 |
+| 数据库兼容 | 增加 SQLite 字段补齐逻辑，避免旧本地库缺列。 |
+| AI 可用性 | AI 不可用时不阻断发布，搜索摘要使用本地降级。 |
+| 安全边界 | Markdown 渲染使用转义后再转换基础语法，不直接信任原始 HTML。 |
+| 风险 | 资料搜索依赖外部网页和 AI Key，真实效果需后续验证。 |
+| 测试 | 已完成编译、应用创建、页面烟测和内存库发布摘要测试；未完成完整 E2E、真实 AI 和浏览器视觉验收。 |
+
 说明：
 
 - 本文是工程治理阶段的阶段性 Review 记录，不等同于完整安全审计或完整测试报告。

@@ -30,6 +30,7 @@ def init_database():
                 role="admin",
                 status="active",
                 bio="平台管理员，负责内容和用户管理。",
+                profile_markdown="# 系统管理员\n\n负责平台内容、用户与 AI 配置治理。",
             )
             admin.set_password("admin123456")
             db.session.add(admin)

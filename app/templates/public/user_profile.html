@@ -22,7 +22,7 @@
           {% endif %}
           <div class="public-hero-meta">
             <span>{{ articles|length }} 篇文章</span>
-            <span>{{ columns|length }} 个专栏</span>
+            <span>{{ columns|length }} 个知识合集</span>
             <span>加入于 {{ profile_user.created_at.strftime("%Y-%m-%d") }}</span>
           </div>
         </div>
@@ -34,6 +34,11 @@
 
       <div class="public-content-grid">
         <section class="public-panel public-panel-large">
+          {% if profile_user.profile_markdown %}
+            <div class="public-markdown-profile">
+              {{ profile_user.profile_markdown|markdown }}
+            </div>
+          {% endif %}
           <div class="study-panel-head">
             <div>
               <p class="profile-eyebrow">Articles</p>
@@ -59,7 +64,7 @@
           <div class="study-panel-head">
             <div>
               <p class="profile-eyebrow">Columns</p>
-              <h2>TA 的专栏</h2>
+              <h2>TA 的知识合集</h2>
             </div>
           </div>
           {% if columns %}
@@ -67,12 +72,12 @@
               {% for column in columns %}
                 <a class="public-column-item" href="{{ url_for('column.detail', column_id=column.id) }}">
                   <strong>{{ column.name }}</strong>
-                  <span>{{ column.description or "进入专栏查看作者整理的主题内容。" }}</span>
+                  <span>{{ column.description or "进入合集查看作者整理的主题内容。" }}</span>
                 </a>
               {% endfor %}
             </div>
           {% else %}
-            {{ empty_state("暂无专栏", "作者还没有建立公开专栏。") }}
+            {{ empty_state("暂无知识合集", "作者还没有建立公开知识合集。") }}
           {% endif %}
         </aside>
       </div>

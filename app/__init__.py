@@ -24,8 +24,45 @@ def create_app(config_class=Config):
     register_blueprints(app)
     register_error_handlers(app)
     register_template_helpers(app)
+    ensure_sqlite_schema(app)
 
     return app
+
+
+def ensure_sqlite_schema(app):
+    """Add small v0.5.1+ columns for existing local SQLite databases."""
+    if not app.config.get("SQLALCHEMY_DATABASE_URI", "").startswith("sqlite:///"):
+        return
+    from sqlalchemy import text
+
+    required_columns = {
+        "users": {
+            "profile_markdown": "TEXT DEFAULT ''",
+        },
+        "articles": {
+            "ai_search_summary": "TEXT DEFAULT ''",
+            "ai_search_generated_at": "DATETIME",
+        },
+    }
+    with app.app_context():
+        try:
+            with db.engine.begin() as conn:
+                for table, columns in required_columns.items():
+                    table_exists = conn.execute(
+                        text("SELECT name FROM sqlite_master WHERE type='table' AND name=:name"),
+                        {"name": table},
+                    ).first()
+                    if not table_exists:
+                        continue
+                    existing = {
+                        row[1]
+                        for row in conn.execute(text(f"PRAGMA table_info({table})")).fetchall()
+                    }
+                    for column, definition in columns.items():
+                        if column not in existing:
+                            conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {column} {definition}"))
+        except Exception:
+            app.logger.exception("Failed to ensure SQLite compatibility columns.")
 
 
 def register_blueprints(app):
@@ -86,6 +123,77 @@ def register_error_handlers(app):
 def register_template_helpers(app):
     from flask import request, url_for
     from flask_wtf.csrf import generate_csrf
+    from markupsafe import Markup, escape
+    import re
+
+    def render_markdown(text):
+        text = text or ""
+        lines = text.replace("\r\n", "\n").replace("\r", "\n").split("\n")
+        html = []
+        in_list = False
+        in_code = False
+        code_lines = []
+
+        def close_list():
+            nonlocal in_list
+            if in_list:
+                html.append("</ul>")
+                in_list = False
+
+        def inline(value):
+            safe = escape(value)
+            safe = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", str(safe))
+            safe = re.sub(r"`([^`]+)`", r"<code>\1</code>", safe)
+            safe = re.sub(
+                r"\[([^\]]+)\]\((https?://[^)]+)\)",
+                r'<a href="\2" target="_blank" rel="noopener noreferrer">\1</a>',
+                safe,
+            )
+            return safe
+
+        for raw_line in lines:
+            line = raw_line.rstrip()
+            if line.strip().startswith("```"):
+                if in_code:
+                    html.append(f"<pre><code>{escape(chr(10).join(code_lines))}</code></pre>")
+                    code_lines = []
+                    in_code = False
+                else:
+                    close_list()
+                    in_code = True
+                continue
+            if in_code:
+                code_lines.append(line)
+                continue
+
+            stripped = line.strip()
+            if not stripped:
+                close_list()
+                continue
+            if stripped.startswith("### "):
+                close_list()
+                html.append(f"<h3>{inline(stripped[4:])}</h3>")
+            elif stripped.startswith("## "):
+                close_list()
+                html.append(f"<h2>{inline(stripped[3:])}</h2>")
+            elif stripped.startswith("# "):
+                close_list()
+                html.append(f"<h1>{inline(stripped[2:])}</h1>")
+            elif stripped.startswith(("- ", "* ")):
+                if not in_list:
+                    html.append("<ul>")
+                    in_list = True
+                html.append(f"<li>{inline(stripped[2:])}</li>")
+            else:
+                close_list()
+                html.append(f"<p>{inline(stripped)}</p>")
+
+        close_list()
+        if in_code:
+            html.append(f"<pre><code>{escape(chr(10).join(code_lines))}</code></pre>")
+        return Markup("\n".join(html))
+
+    app.add_template_filter(render_markdown, "markdown")
 
     @app.context_processor
     def inject_helpers():

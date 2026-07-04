@@ -238,11 +238,11 @@
         var html = '<section class="search-result-list" aria-label="搜索结果列表">';
         data.results.forEach(function (item) {
           var article = item.article;
-          var summary = article.summary || "";
+          var summary = article.ai_search_summary || article.summary || "";
           if (summary.length >= 140) summary = summary.substring(0, 137) + "...";
           var authorName = article.author || "";
           var avatarText = article.author_avatar || (authorName ? authorName.charAt(0) : "?");
-          var profileUrl = article.user_id ? "/user/" + article.user_id : "#";
+          var profileUrl = article.user_id ? "/users/" + article.user_id : "#";
           var articleUrl = "/articles/" + (article.slug || "");
 
           html +=
@@ -253,7 +253,7 @@
               '</a>' +
               '<a class="search-result-body" href="' + articleUrl + '">' +
                 '<h2>' + escapeHtml(article.title) + '</h2>' +
-                '<span class="search-ai-label">AI 总结</span>';
+                '<span class="search-ai-label">搜索摘要</span>';
           if (item.reason) {
             html += '<span class="ai-search-reason">' + escapeHtml(item.reason) + '</span>';
           }
@@ -513,10 +513,7 @@
         var originalText = button.textContent;
         button.disabled = true;
         button.textContent = "处理中...";
-        requestAi(url, {
-          content: getWriteContent(),
-          article_id: shell ? shell.dataset.aiArticleId : ""
-        }).then(function (data) {
+        requestAi(url, getAiPayload(action, shell)).then(function (data) {
           applyAiResult(action, data.result);
           showMessage("AI 处理完成。");
         }).catch(function (error) {
@@ -560,6 +557,25 @@
     ].filter(Boolean).join("\n\n");
   }
 
+  function getAiPayload(action, shell) {
+    var title = document.querySelector("[data-v041-write-title]");
+    var summary = document.querySelector("[data-v041-write-summary]");
+    var content = document.querySelector("[data-v041-write-content]");
+    var titleText = title && title.value ? title.value.trim() : "";
+    var summaryText = summary && summary.value ? summary.value.trim() : "";
+    var contentText = content && content.value ? content.value.trim() : "";
+    var payload = {
+      title: titleText,
+      summary: summaryText,
+      content: action === "research" ? (titleText || contentText || summaryText) : contentText,
+      article_id: shell ? shell.dataset.aiArticleId : ""
+    };
+    if (action === "research") {
+      payload.query = titleText || summaryText || contentText;
+    }
+    return payload;
+  }
+
   function applyAiResult(action, result) {
     if (action === "summary") {
       var summary = document.querySelector("[data-v041-write-summary]");
@@ -568,6 +584,19 @@
         summary.dispatchEvent(new Event("input", { bubbles: true }));
       }
       appendAiMessage("已生成摘要");
+      return;
+    }
+    if (action === "searchSummary") {
+      var summary = document.querySelector("[data-v041-write-summary]");
+      if (summary) {
+        summary.value = String(result).slice(0, 500);
+        summary.dispatchEvent(new Event("input", { bubbles: true }));
+      }
+      appendAiMessage("搜索摘要已生成。发布后系统会继续刷新文章的搜索摘要。");
+      return;
+    }
+    if (action === "research") {
+      appendAiMessage("资料搜索结果：\n" + String(result));
       return;
     }
     if (action === "polish") {
@@ -584,11 +613,11 @@
       return;
     }
     if (action === "outline") {
-      appendAiMessage("📋 文章大纲：\n" + String(result));
+      appendAiMessage("文章大纲：\n" + String(result));
       return;
     }
     if (action === "title") {
-      appendAiMessage("✏️ 标题建议：\n" + String(result));
+      appendAiMessage("标题建议：\n" + String(result));
       return;
     }
   }

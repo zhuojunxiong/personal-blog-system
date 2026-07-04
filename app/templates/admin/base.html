@@ -12,21 +12,25 @@
       crossorigin="anonymous"
     >
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/v041.css') }}">
   </head>
-  <body class="admin-body">
+  <body class="admin-body admin-modern">
     <div class="admin-shell">
       <aside class="admin-sidebar">
-        <a class="admin-brand" href="{{ url_for('dashboard.index') }}">博客后台 V0.5</a>
+        <a class="admin-brand" href="{{ url_for('dashboard.index') }}">
+          <span class="v041-brand">稷下</span>
+          <span class="v041-brand-seal" aria-hidden="true">管</span>
+        </a>
         <nav class="admin-nav">
-          <a href="{{ url_for('dashboard.index') }}">仪表盘</a>
-          <a href="{{ url_for('article.index') }}">文章管理</a>
-          <a href="{{ url_for('user.admin_users') }}">用户管理</a>
-          <a href="{{ url_for('column.admin_index') }}">专栏管理</a>
-          <a href="{{ url_for('category.index') }}">分类管理</a>
-          <a href="{{ url_for('tag.index') }}">标签管理</a>
-          <a href="{{ url_for('comment.admin_index') }}">评论管理</a>
-          <a href="{{ url_for('ai.index') }}">AI 接口</a>
-          <a href="{{ url_for('public.index') }}">返回前台</a>
+          <a class="{% if request.endpoint == 'dashboard.index' %}is-active{% endif %}" href="{{ url_for('dashboard.index') }}">仪表盘</a>
+          <a class="{% if request.endpoint in ['article.index', 'article.create', 'article.edit'] %}is-active{% endif %}" href="{{ url_for('article.index') }}">文章管理</a>
+          <a class="{% if request.endpoint == 'user.admin_users' %}is-active{% endif %}" href="{{ url_for('user.admin_users') }}">用户管理</a>
+          <a class="{% if request.endpoint == 'column.admin_index' %}is-active{% endif %}" href="{{ url_for('column.admin_index') }}">专栏管理</a>
+          <a class="{% if request.endpoint in ['category.index', 'category.create', 'category.edit'] %}is-active{% endif %}" href="{{ url_for('category.index') }}">分类管理</a>
+          <a class="{% if request.endpoint in ['tag.index', 'tag.create', 'tag.edit'] %}is-active{% endif %}" href="{{ url_for('tag.index') }}">标签管理</a>
+          <a class="{% if request.endpoint == 'comment.admin_index' %}is-active{% endif %}" href="{{ url_for('comment.admin_index') }}">评论管理</a>
+          <a class="{% if request.endpoint == 'ai.index' %}is-active{% endif %}" href="{{ url_for('ai.index') }}">AI 接口</a>
+          <a href="{{ url_for('public.home') }}">返回前台</a>
           <a href="{{ url_for('auth.logout') }}">退出登录</a>
         </nav>
       </aside>
@@ -36,7 +40,7 @@
             <p class="eyebrow mb-1">Admin Console</p>
             <h1>{% block page_title %}后台管理{% endblock %}</h1>
           </div>
-          <span class="text-secondary">当前管理员：{{ current_user.nickname }}</span>
+          <span class="admin-user-pill">当前管理员：{{ current_user.nickname }}</span>
         </header>
 
         {% with messages = get_flashed_messages(with_categories=true) %}

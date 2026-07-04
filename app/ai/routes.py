@@ -58,6 +58,33 @@ def tags():
     return _run_ai("tags", content, article, lambda: ai_service.recommend_tags(content))
 
 
+@ai_bp.route("/ai/research", methods=["POST"])
+@csrf.exempt
+@login_required
+def research():
+    data = _request_data()
+    query = data.get("query") or data.get("question") or data.get("content") or ""
+    return _run_ai("research", query, None, lambda: ai_service.research_online(query))
+
+
+@ai_bp.route("/ai/search-summary", methods=["POST"])
+@csrf.exempt
+@login_required
+def search_summary():
+    data = _request_data()
+    title = data.get("title", "")
+    summary_text = data.get("summary", "")
+    content = data.get("content", "")
+    article = _get_accessible_article(data.get("article_id"))
+    input_text = f"标题：{title}\n\n摘要：{summary_text}\n\n正文：\n{content}"
+    return _run_ai(
+        "search_summary",
+        input_text,
+        article,
+        lambda: ai_service.generate_search_summary(title, summary_text, content),
+    )
+
+
 @ai_bp.route("/ai/polish", methods=["POST"])
 @csrf.exempt
 @login_required

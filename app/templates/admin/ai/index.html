@@ -6,16 +6,17 @@
 {% block content %}
   <section class="admin-panel">
     <p class="eyebrow">AI Extension Point</p>
-    <h2>v0.5 AI 能力已接入</h2>
+    <h2>AI 写作与搜索能力已接入</h2>
     <p class="text-secondary">
       {{ status_message }} 当前支持 OpenAI 兼容接口，可通过环境变量 AI_API_KEY、AI_BASE_URL、AI_MODEL 和 AI_TIMEOUT 配置。
     </p>
     <div class="d-flex gap-2 flex-wrap">
       <span class="badge {{ 'text-bg-success' if is_configured else 'text-bg-secondary' }}">{{ '已配置' if is_configured else '待配置' }}</span>
-      <span class="badge text-bg-light">摘要生成</span>
-      <span class="badge text-bg-light">标签推荐</span>
+      <span class="badge text-bg-light">资料搜索</span>
+      <span class="badge text-bg-light">搜索摘要</span>
+      <span class="badge text-bg-light">大纲整理</span>
       <span class="badge text-bg-light">文章润色</span>
-      <span class="badge text-bg-light">文章问答</span>
+      <span class="badge text-bg-light">AI 搜索</span>
     </div>
   </section>
 {% endblock %}

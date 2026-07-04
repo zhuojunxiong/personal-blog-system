@@ -1,19 +1,21 @@
 {% extends "base.html" %}
+{% from "shared/_app_topbar.html" import app_topbar with context %}
 
 {% block title %}分类 - 知识专栏{% endblock %}
+{% block site_nav %}{% endblock %}
+{% block site_footer %}{% endblock %}
 
 {% block content %}
-  <section class="page-hero">
-    <div class="container">
-      <p class="eyebrow">Categories</p>
-      <h1>分类浏览</h1>
-      <p>按知识方向浏览文章，快速进入技术实践、学习记录、产品设计等主题。</p>
-    </div>
-  </section>
-
-  <section class="content-section">
-    <div class="container">
-      <div class="taxonomy-grid">
+  <div class="v041-public-page">
+    {{ app_topbar("分类浏览") }}
+    <main class="v041-public-shell">
+      <section class="profile-page-head">
+        <p class="profile-eyebrow">Categories</p>
+        <h1>分类浏览</h1>
+        <p>按知识方向浏览文章，快速进入技术实践、学习记录、产品设计等主题。</p>
+      </section>
+      <section class="study-panel">
+        <div class="v041-card-grid">
         {% for category in categories %}
           <a class="taxonomy-card" href="{{ url_for('public.category_detail', category_id=category.id) }}">
             <span class="category-icon">{{ category.name[:1] }}</span>
@@ -26,7 +28,8 @@
         {% else %}
           <div class="empty-state">暂无分类。</div>
         {% endfor %}
-      </div>
-    </div>
-  </section>
+        </div>
+      </section>
+    </main>
+  </div>
 {% endblock %}

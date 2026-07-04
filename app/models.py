@@ -40,6 +40,7 @@ class User(UserMixin, db.Model):
     role = db.Column(db.String(32), nullable=False, default="user")
     status = db.Column(db.String(32), nullable=False, default="active")
     bio = db.Column(db.String(500), default="")
+    profile_markdown = db.Column(db.Text, default="")
     avatar = db.Column(db.String(255), default="")
     created_at = db.Column(db.DateTime, default=utcnow, nullable=False)
     updated_at = db.Column(
@@ -129,6 +130,8 @@ class Article(db.Model):
     title = db.Column(db.String(160), nullable=False, index=True)
     slug = db.Column(db.String(180), unique=True, nullable=False, index=True)
     summary = db.Column(db.String(500), default="")
+    ai_search_summary = db.Column(db.Text, default="")
+    ai_search_generated_at = db.Column(db.DateTime)
     content = db.Column(db.Text, nullable=False)
     status = db.Column(db.String(32), nullable=False, default=ARTICLE_STATUS_DRAFT)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"))

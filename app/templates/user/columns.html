@@ -1,48 +1,72 @@
 {% extends "base.html" %}
+{% from "shared/_profile_layout.html" import profile_shell with context %}
+{% from "shared/_ui_states.html" import empty_state %}
+{% from "shared/_flash_messages.html" import flash_toasts %}
 
-{% block title %}我的专栏{% endblock %}
+{% block title %}我的知识合集 - 稷下{% endblock %}
+{% block site_nav %}{% endblock %}
+{% block site_footer %}{% endblock %}
+{% block flash_area %}{{ flash_toasts(flash_messages) }}{% endblock %}
 
 {% block content %}
-  <section class="content-section">
-    <div class="container">
-      <div class="section-heading">
-        <div>
-          <p class="eyebrow">My Columns</p>
-          <h1>我的专栏</h1>
+  {% call profile_shell(active="profile", topbar_label="我的知识合集") %}
+    <section class="profile-page-head">
+      <p class="profile-eyebrow">My Collections</p>
+      <h1>我的知识合集</h1>
+      <p>把文章按主题收进长期更新的容器里，创建、编辑和整理都在这里完成。</p>
+    </section>
+
+    <div class="my-columns-grid">
+      <form class="study-panel my-column-form" method="post">
+        <div class="study-panel-head">
+          <div>
+            <p class="profile-eyebrow">Create</p>
+            <h2>创建知识合集</h2>
+          </div>
+          <span class="study-pill">{{ columns|length }} 个已有合集</span>
         </div>
-        <a class="btn btn-outline-dark" href="{{ url_for('user.center') }}">返回个人中心</a>
-      </div>
-      <div class="row g-4">
-        <div class="col-lg-4">
-          <form class="admin-panel" method="post">
-            <h2>创建专栏</h2>
-            <label class="form-label">专栏名称</label>
-            <input class="form-control mb-3" name="name" required maxlength="120">
-            <label class="form-label">专栏简介</label>
-            <textarea class="form-control mb-3" name="description" rows="4"></textarea>
-            <button class="btn btn-dark" type="submit">创建</button>
-          </form>
+        <label class="v041-field">
+          <span class="v041-label">合集名称</span>
+          <input class="v041-input" name="name" required maxlength="120" placeholder="例如：课程实践复盘">
+        </label>
+        <label class="v041-field">
+          <span class="v041-label">合集简介</span>
+          <textarea class="v041-textarea" name="description" rows="4" placeholder="写下这个知识合集准备长期整理的方向。"></textarea>
+        </label>
+        <button class="v041-btn v041-btn-primary" type="submit">创建知识合集</button>
+      </form>
+
+      <section class="study-panel my-column-list-panel">
+        <div class="study-panel-head">
+          <div>
+            <p class="profile-eyebrow">Manage</p>
+            <h2>知识合集列表</h2>
+          </div>
+          <a class="v041-btn" href="{{ url_for('user.center') }}">返回个人中心</a>
         </div>
-        <div class="col-lg-8">
-          <div class="taxonomy-grid">
+
+        {% if columns %}
+          <div class="my-column-card-grid">
             {% for column in columns %}
-              <div class="taxonomy-card">
-                <h2>{{ column.name }}</h2>
-                <p>{{ column.description }}</p>
-                <span>{{ column.articles|length }} 篇文章</span>
-                <div class="d-flex gap-2 mt-3">
-                  <a class="btn btn-sm btn-outline-dark" href="{{ url_for('column.edit', column_id=column.id) }}">编辑</a>
-                  <form method="post" action="{{ url_for('column.delete', column_id=column.id) }}" onsubmit="return confirm('确定删除该专栏吗？');">
-                    <button class="btn btn-sm btn-outline-danger" type="submit">删除</button>
+              <article class="my-column-card">
+                <div>
+                  <span class="study-pill">{{ column.articles|length }} 篇文章</span>
+                  <h3>{{ column.name }}</h3>
+                  <p>{{ column.description or "这个知识合集还没有简介。" }}</p>
+                </div>
+                <div class="my-column-actions">
+                  <a class="v041-btn" href="{{ url_for('column.edit', column_id=column.id) }}">编辑</a>
+                  <form method="post" action="{{ url_for('column.delete', column_id=column.id) }}" onsubmit="return confirm('确定删除该知识合集吗？');">
+                    <button class="v041-btn v041-btn-danger" type="submit">删除</button>
                   </form>
                 </div>
-              </div>
-            {% else %}
-              <div class="empty-state">暂无专栏</div>
+              </article>
             {% endfor %}
           </div>
-        </div>
-      </div>
+        {% else %}
+          {{ empty_state("暂无知识合集", "先创建一个主题空间，再把文章慢慢放进去。") }}
+        {% endif %}
+      </section>
     </div>
-  </section>
+  {% endcall %}
 {% endblock %}

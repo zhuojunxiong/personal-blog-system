@@ -1,45 +1,45 @@
 {% extends "base.html" %}
+{% from "shared/_app_topbar.html" import app_topbar with context %}
 
-{% block title %}专栏 - 知识专栏{% endblock %}
+{% block title %}知识合集 - 稷下{% endblock %}
+{% block site_nav %}{% endblock %}
+{% block site_footer %}{% endblock %}
 
 {% block content %}
-  <section class="page-hero">
-    <div class="container page-hero-grid">
-      <div>
-        <p class="eyebrow">Columns</p>
-        <h1>每个人都可以建立自己的知识专栏</h1>
-        <p>专栏是普通用户沉淀知识的空间。无论是课程实践、技术学习还是读书笔记，都可以整理成持续更新的主题栏目。</p>
-      </div>
-      <a class="btn btn-primary" href="{{ url_for('column.my_columns') }}">创建专栏</a>
-    </div>
-  </section>
-
-  <section class="content-section">
-    <div class="container">
-      <div class="section-heading">
-        <div>
-          <p class="eyebrow">Creator Spaces</p>
-          <h2>推荐专栏</h2>
+  <div class="v041-public-page">
+    {{ app_topbar("知识合集") }}
+    <main class="v041-public-shell">
+      <section class="profile-page-head">
+        <p class="profile-eyebrow">Collections</p>
+        <h1>每个人都可以整理自己的知识合集</h1>
+        <p>知识合集是作者主页里的长期主题空间，用来收纳课程实践、技术学习和项目复盘。</p>
+      </section>
+      <section class="study-panel">
+        <div class="study-panel-head">
+          <div>
+            <p class="profile-eyebrow">Creator Spaces</p>
+            <h2>推荐知识合集</h2>
+          </div>
+          <a class="v041-btn v041-btn-primary" href="{{ url_for('column.my_columns') }}">创建知识合集</a>
         </div>
-        <span class="muted">普通用户和管理员在创作入口上保持平等。</span>
-      </div>
-      <div class="column-grid">
+        <div class="v041-card-grid">
         {% for column in columns %}
           <a class="column-card" href="{{ url_for('column.detail', column_id=column.id) }}">
             <span class="column-icon">{{ column.name[:1] }}</span>
             <h2>{{ column.name }}</h2>
-            <p>{{ column.description or "这个专栏还没有简介。" }}</p>
+            <p>{{ column.description or "这个知识合集还没有简介。" }}</p>
             <div class="card-stats">
               <span>创建者 {{ column.user.nickname }}</span>
               <span>{{ column.articles|length }} 篇文章</span>
               <span>{{ 96 + column.id * 11 }} 关注</span>
             </div>
-            <span class="btn btn-secondary btn-sm mt-3">进入专栏</span>
+            <span class="btn btn-secondary btn-sm mt-3">进入合集</span>
           </a>
         {% else %}
-          <div class="empty-state">暂无专栏。登录后可以创建第一个知识专栏。</div>
+          <div class="empty-state">暂无知识合集。登录后可以创建第一个知识合集。</div>
         {% endfor %}
-      </div>
-    </div>
-  </section>
+        </div>
+      </section>
+    </main>
+  </div>
 {% endblock %}

@@ -17,6 +17,7 @@ class UserService:
         nickname = normalize_text(data.get("nickname"))
         email = normalize_text(data.get("email"))
         bio = normalize_text(data.get("bio"))
+        profile_markdown = (data.get("profile_markdown") or "").strip()
         errors = []
         if not nickname:
             errors.append("昵称不能为空。")
@@ -30,6 +31,7 @@ class UserService:
         user.nickname = nickname
         user.email = email
         user.bio = bio
+        user.profile_markdown = profile_markdown
         db.session.commit()
         return []
 

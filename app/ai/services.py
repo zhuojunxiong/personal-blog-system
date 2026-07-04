@@ -1,5 +1,8 @@
 import json
+import re
 from dataclasses import dataclass
+from html import unescape
+from urllib.parse import parse_qs, unquote, urlparse
 
 import requests
 from flask import current_app
@@ -21,15 +24,18 @@ class AIService:
     unavailable_message = "AI 接口未配置，请先设置 AI_API_KEY。"
 
     # ---- 每个场景的参数： (max_tokens, temperature) ----
+    # DeepSeek-V3 支持最大 8K 输出，各场景按需分配以充分利用模型能力
     _scene_config = {
-        "summary":  (1500, 0.3),   # 摘要：低温度保证准确性
-        "tags":     (800,  0.3),   # 标签：低温度保证一致性
-        "polish":   (3000, 0.7),   # 润色：高温度增加表达多样性
-        "chat":     (2000, 0.5),   # 问答：中等温度平衡准确与灵活
-        "outline":  (2000, 0.3),   # 大纲：低温度保证结构准确
-        "title":          (800,  0.7),   # 标题：高温度增加创意
-        "search_intent":  (800,  0.3),   # 搜索意图：低温度保证准确
-        "search_rerank":  (2000, 0.3),   # 搜索重排：低温度保证一致性
+        "summary":  (2000, 0.3),   # 摘要：更长的摘要容纳更多要点
+        "tags":     (1200, 0.3),   # 标签：更多 token 容纳更多标签候选
+        "polish":   (4096, 0.7),   # 润色：长文润色需要足够输出空间
+        "chat":     (3000, 0.5),   # 问答：更详细的回答
+        "outline":  (3000, 0.3),   # 大纲：复杂文章需要更多层级
+        "title":          (1200, 0.7),   # 标题：更多候选供选择
+        "research":       (4096, 0.4),   # 资料整理：充分展开来源信息
+        "search_summary": (3000, 0.3),   # 搜索摘要：更详细的文章特征提取
+        "search_intent":  (1200, 0.3),   # 搜索意图：更多扩展关键词
+        "search_rerank":  (3000, 0.3),   # 搜索重排：更多候选文章可处理
     }
 
     def is_configured(self):
@@ -59,6 +65,22 @@ class AIService:
         )
         return self._call("summary", system, content).text
 
+    def generate_search_summary(self, title, summary, content):
+        system = (
+            "你是知识写作平台的搜索摘要生成器。你的任务不是写广告文案，"
+            "而是提取文章特征，帮助 AI 搜索在用户用自然语言提问时找到这篇文章。\n\n"
+            "请按以下结构返回，语言简洁准确：\n"
+            "核心主题：一句话说明文章讲什么。\n"
+            "解决的问题：列出 2-4 个读者可能想解决的问题。\n"
+            "关键知识点：列出 3-6 个具体知识点。\n"
+            "可能的搜索问题：列出 3-6 个用户可能输入的问题。\n"
+            "相关术语：列出有助于检索的术语，但不要做传统标签推荐。\n"
+            "推荐理由：一句话说明这篇文章为什么值得读。\n\n"
+            "不要夸大文章没有覆盖的内容。"
+        )
+        user_content = f"标题：{title}\n\n人工摘要：{summary or '无'}\n\n正文：\n{content}"
+        return self._call("search_summary", system, user_content).text
+
     def recommend_tags(self, content):
         system = (
             "你是知识博客平台的标签专家。你的任务是阅读文章后推荐精准的标签。\n\n"
@@ -86,6 +108,28 @@ class AIService:
             "直接返回润色后的全文，不要加「以下是润色后的文章」之类的说明。"
         )
         return self._call("polish", system, content).text
+
+    def research_online(self, query):
+        if not query or not query.strip():
+            raise AIServiceError("请输入需要搜索的资料主题。")
+        sources = self._web_search(query, limit=5)
+        if not sources:
+            raise AIServiceError("暂时没有获取到可用的网页资料，请换个关键词再试。")
+        source_text = "\n".join(
+            f"{index}. {item['title']}\n链接：{item['url']}\n摘要：{item['snippet']}"
+            for index, item in enumerate(sources, start=1)
+        )
+        system = (
+            "你是写作资料整理助手。请基于给定网页搜索结果，为作者整理可用于写文章的资料。\n\n"
+            "要求：\n"
+            "1. 先用 3-5 条要点总结资料共识。\n"
+            "2. 再列出可写入文章的事实或角度。\n"
+            "3. 保留来源链接，便于作者继续查看。\n"
+            "4. 不要编造搜索结果中没有的信息。\n"
+            "5. 如果来源质量参差不齐，要提醒作者继续核实。"
+        )
+        user_content = f"作者想查：{query}\n\n网页搜索结果：\n{source_text}"
+        return self._call("research", system, user_content).text
 
     def chat_with_article(self, article_text, question):
         system = (
@@ -155,7 +199,7 @@ class AIService:
             slim.append({
                 "id": c["id"],
                 "title": c.get("title", ""),
-                "summary": (c.get("summary", "") or "")[:200],
+                "summary": (c.get("ai_search_summary") or c.get("summary", "") or "")[:240],
                 "author": c.get("author", ""),
                 "tags": (c.get("tags") or [])[:5],
             })
@@ -255,6 +299,7 @@ class AIService:
                 or_(
                     Article.title.ilike(like),
                     Article.summary.ilike(like),
+                    Article.ai_search_summary.ilike(like),
                     Article.content.ilike(like),
                     Article.author.ilike(like),
                     Article.tags.any(Tag.name.ilike(like)),
@@ -276,6 +321,7 @@ class AIService:
                 "title": a.title,
                 "slug": a.slug,
                 "summary": a.summary or (a.content[:140] if a.content else ""),
+                "ai_search_summary": a.ai_search_summary or "",
                 "author": a.author or "",
                 "author_avatar": (a.user.nickname[:1] if a.user and a.user.nickname else (a.author[:1] if a.author else "?")),
                 "user_id": a.user_id,
@@ -284,6 +330,49 @@ class AIService:
             }
             for a in articles
         ]
+
+    @staticmethod
+    def build_local_search_summary(title, summary, content):
+        content = content or ""
+        compact = " ".join(content.split())
+        excerpt = compact[:420]
+        parts = [
+            f"核心主题：{title or '未命名文章'}",
+            f"文章摘要：{summary or excerpt}",
+            f"正文特征：{excerpt}",
+        ]
+        return "\n".join(part for part in parts if part.strip())
+
+    @staticmethod
+    def _web_search(query, limit=5):
+        try:
+            response = requests.get(
+                "https://duckduckgo.com/html/",
+                params={"q": query},
+                headers={"User-Agent": "Mozilla/5.0"},
+                timeout=12,
+            )
+            response.raise_for_status()
+        except requests.exceptions.RequestException as exc:
+            raise AIServiceError(f"资料搜索暂时不可用：{exc}") from exc
+
+        html = response.text
+        items = []
+        blocks = re.findall(r'<a rel="nofollow" class="result__a" href="(.*?)">(.*?)</a>', html, re.S)
+        snippets = re.findall(r'<a class="result__snippet".*?>(.*?)</a>', html, re.S)
+        for index, (raw_url, raw_title) in enumerate(blocks[:limit]):
+            url = unescape(raw_url)
+            parsed = urlparse(url)
+            if parsed.path.startswith("/l/"):
+                target = parse_qs(parsed.query).get("uddg", [""])[0]
+                url = unquote(target) if target else url
+            title = re.sub(r"<.*?>", "", unescape(raw_title)).strip()
+            snippet = ""
+            if index < len(snippets):
+                snippet = re.sub(r"<.*?>", "", unescape(snippets[index])).strip()
+            if title and url:
+                items.append({"title": title, "url": url, "snippet": snippet})
+        return items[:limit]
 
     # =================================================================
     # 内部实现

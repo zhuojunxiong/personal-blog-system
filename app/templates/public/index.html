@@ -1,189 +1,98 @@
 {% extends "base.html" %}
+{% from "shared/_app_topbar.html" import app_topbar with context %}
 
-{% block title %}首页 - 知识专栏{% endblock %}
+{% block title %}发现 - 稷下{% endblock %}
+{% block site_nav %}{% endblock %}
+{% block site_footer %}{% endblock %}
 
 {% block content %}
-  <section class="hero-section">
-    <div class="container-wide hero-grid">
-      <div class="hero-copy">
-        <p class="eyebrow">Knowledge Columns · V0.4</p>
-        <h1>每个用户都能建立自己的<span>知识专栏</span></h1>
-        <p class="hero-desc">在这里，作者可以把课程实践、技术笔记和阅读复盘整理成专栏；读者可以按文章、分类、标签和作者快速找到有价值的内容。</p>
-        <form class="hero-search" action="{{ url_for('public.search') }}" method="get">
-          <input class="form-control" name="q" type="search" placeholder="搜索文章、专栏、作者或标签">
-          <button class="btn btn-primary" type="submit">搜索</button>
-        </form>
-        <div class="hero-actions">
-          <a class="btn btn-primary btn-lg" href="#latest">开始阅读</a>
-          <a class="btn btn-secondary btn-lg" href="{{ url_for('auth.register') if not current_user.is_authenticated else url_for('column.my_columns') }}">成为创作者</a>
-        </div>
-      </div>
-      <div class="hero-visual" aria-hidden="true">
-        <div class="hero-board">
-          <div class="visual-toolbar">
-            <span></span>
-            <span></span>
-            <span></span>
-          </div>
-          <div class="visual-card-stack">
-            <div class="visual-card">
-              <span class="visual-thumb"></span>
-              <span class="visual-lines"><span></span><span></span><span></span></span>
+  <div class="v041-public-page">
+    {{ app_topbar("发现") }}
+    <main class="v041-public-shell">
+      <section class="profile-page-head">
+        <p class="profile-eyebrow">Discover</p>
+        <h1>发现新的知识沉淀</h1>
+        <p>这里是补充发现页；主要入口仍是 `/home` 的自然语言搜索。</p>
+      </section>
+
+      <div class="v041-public-grid">
+        <section class="study-panel study-panel-large">
+          <div class="study-panel-head">
+            <div>
+              <p class="profile-eyebrow">Latest Articles</p>
+              <h2>最新文章</h2>
             </div>
-            <div class="visual-card">
-              <span class="visual-thumb thumb-4"></span>
-              <span class="visual-lines"><span></span><span></span><span></span></span>
-            </div>
-            <div class="visual-card">
-              <span class="visual-thumb thumb-3"></span>
-              <span class="visual-lines"><span></span><span></span><span></span></span>
-            </div>
+            <a class="v041-btn v041-btn-primary" href="{{ url_for('user.write_article') }}">写文章</a>
           </div>
-        </div>
-        <div class="floating-note">
-          <strong>多人专栏平台</strong>
-          <span>文章、专栏、评论和作者主页形成完整阅读创作闭环。</span>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section class="content-section compact">
-    <div class="container">
-      <div class="feature-grid">
-        <div class="feature-card">
-          <span class="feature-icon">专</span>
-          <h3>创建个人专栏</h3>
-          <p>每位普通用户都能拥有自己的知识空间，沉淀课程和项目经验。</p>
-        </div>
-        <div class="feature-card">
-          <span class="feature-icon">写</span>
-          <h3>持续发布文章</h3>
-          <p>围绕摘要、分类、标签和正文组织内容，让写作过程更清晰。</p>
-        </div>
-        <div class="feature-card">
-          <span class="feature-icon">读</span>
-          <h3>按主题阅读</h3>
-          <p>通过搜索、分类、标签和专栏入口，快速找到需要的知识。</p>
-        </div>
-        <div class="feature-card">
-          <span class="feature-icon">评</span>
-          <h3>审核后评论</h3>
-          <p>评论经过审核再公开展示，保持内容社区的秩序和质量。</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section class="content-section" id="latest">
-    <div class="container">
-      <div class="section-heading">
-        <div>
-          <p class="eyebrow">Latest Articles</p>
-          <h2>最新文章</h2>
-        </div>
-        <a class="btn btn-secondary" href="{{ url_for('public.articles') }}">查看全部</a>
-      </div>
-
-      {% if articles %}
-        <div class="article-grid">
-          {% for article in articles %}
-            {% include "public/_article_card.html" %}
-          {% endfor %}
-        </div>
-      {% else %}
-        <div class="empty-state">还没有已发布文章，请先创建演示内容。</div>
-      {% endif %}
-    </div>
-  </section>
-
-  <section class="content-section compact">
-    <div class="container home-columns">
-      <div>
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">Recommended Columns</p>
-            <h2>推荐专栏</h2>
-          </div>
-          <a class="btn btn-secondary" href="{{ url_for('column.index') }}">全部专栏</a>
-        </div>
-        <div class="column-grid">
-          {% for column in columns %}
-            <a class="column-card" href="{{ url_for('column.detail', column_id=column.id) }}">
-              <span class="column-icon">{{ column.name[:1] }}</span>
-              <h2>{{ column.name }}</h2>
-              <p>{{ column.description or "这个专栏正在整理自己的知识方向。" }}</p>
-              <div class="card-stats">
-                <span>{{ column.user.nickname }}</span>
-                <span>{{ column.articles|length }} 篇文章</span>
-                <span>{{ 80 + column.id * 7 }} 关注</span>
-              </div>
-            </a>
+          {% if articles %}
+            <div class="list-stack">
+              {% for article in articles %}
+                {% set article_card_variant = 'horizontal' %}
+                {% include "public/_article_card.html" %}
+              {% endfor %}
+            </div>
+            {% include "public/_pagination.html" %}
           {% else %}
-            <div class="empty-state">暂无专栏。</div>
-          {% endfor %}
-        </div>
-      </div>
+            <div class="v041-state">还没有已发布文章。</div>
+          {% endif %}
+        </section>
 
-      <aside class="sidebar-stack">
-        <div class="info-panel">
-          <h3>热门分类</h3>
-          <div class="tag-cloud">
-            {% for category in categories %}
-              <a class="pill pill-large pill-soft" href="{{ url_for('public.category_detail', category_id=category.id) }}">{{ category.name }}</a>
-            {% else %}
-              <span class="muted">暂无分类</span>
-            {% endfor %}
-          </div>
-        </div>
-        <div class="info-panel">
-          <h3>热门标签</h3>
-          <div class="tag-cloud">
-            {% for tag in tags %}
-              <a class="pill pill-large" href="{{ url_for('public.tag_detail', tag_id=tag.id) }}">{{ tag.name }}</a>
-            {% else %}
-              <span class="muted">暂无标签</span>
-            {% endfor %}
-          </div>
-        </div>
-        <div class="info-panel">
-          <h3>活跃作者</h3>
-          <div class="sidebar-list">
-            {% for author in active_authors %}
-              <a class="author-row" href="{{ url_for('user.profile', user_id=author.id) }}">
-                <strong>{{ author.nickname }}</strong>
-                <span>{{ author.bio or '这个作者还没有填写简介。' }}</span>
-              </a>
-            {% else %}
-              <div class="empty-state compact">暂无作者</div>
-            {% endfor %}
-          </div>
-        </div>
-      </aside>
-    </div>
-  </section>
+        <aside class="v041-side-stack">
+          <section class="study-panel">
+            <h2>搜索</h2>
+            <form class="v041-search-form" action="{{ url_for('public.search') }}" method="get">
+              <input class="v041-input" name="q" type="search" placeholder="像提问一样搜索知识">
+              <button class="v041-btn" type="submit">搜索</button>
+            </form>
+          </section>
 
-  <section class="content-section philosophy-band">
-    <div class="container philosophy-grid">
-      <div>
-        <p class="eyebrow">Platform Philosophy</p>
-        <h2>让课程项目看起来像一个真正可用的产品</h2>
-        <p class="hero-desc">V0.4 不追求复杂功能堆叠，而是把已有文章、专栏、评论、搜索和个人主页组织成一个清晰的知识社区体验。</p>
+          <section class="study-panel">
+            <div class="study-panel-head">
+              <div>
+                <p class="profile-eyebrow">Collections</p>
+                <h2>知识合集</h2>
+              </div>
+              <a class="v041-btn" href="{{ url_for('column.index') }}">全部</a>
+            </div>
+            <div class="quiet-list">
+              {% for column in columns %}
+                <a class="quiet-list-item" href="{{ url_for('column.detail', column_id=column.id) }}">
+                  <span>{{ column.name }}</span>
+                  <small>{{ column.user.nickname }} · {{ column.articles|length }} 篇文章</small>
+                </a>
+              {% else %}
+                <p class="study-note">暂无知识合集。</p>
+              {% endfor %}
+            </div>
+          </section>
+
+          <section class="study-panel">
+            <h2>后台分类与搜索标签</h2>
+            <div class="v041-tag-cloud">
+              {% for category in categories %}
+                <a class="study-pill" href="{{ url_for('public.category_detail', category_id=category.id) }}">{{ category.name }}</a>
+              {% endfor %}
+              {% for tag in tags[:12] %}
+                <a class="study-pill" href="{{ url_for('public.tag_detail', tag_id=tag.id) }}">{{ tag.name }}</a>
+              {% endfor %}
+            </div>
+          </section>
+
+          <section class="study-panel">
+            <h2>活跃作者</h2>
+            <div class="quiet-list">
+              {% for author in active_authors %}
+                <a class="quiet-list-item" href="{{ url_for('user.profile', user_id=author.id) }}">
+                  <span>{{ author.nickname }}</span>
+                  <small>{{ author.bio or "这个作者还没有填写简介。" }}</small>
+                </a>
+              {% else %}
+                <p class="study-note">暂无作者。</p>
+              {% endfor %}
+            </div>
+          </section>
+        </aside>
       </div>
-      <div class="principle-list">
-        <div class="principle-item">
-          <span>1</span>
-          <div><strong>平等创作</strong><p>专栏不是后台字段，而是每个用户都能建立的公开知识空间。</p></div>
-        </div>
-        <div class="principle-item">
-          <span>2</span>
-          <div><strong>内容优先</strong><p>页面层级围绕标题、摘要、作者、标签和评论展开，保证阅读效率。</p></div>
-        </div>
-        <div class="principle-item">
-          <span>3</span>
-          <div><strong>便于答辩</strong><p>功能闭环明确，设计规范统一，适合在周报和演示中说明迭代价值。</p></div>
-        </div>
-      </div>
-    </div>
-  </section>
+    </main>
+  </div>
 {% endblock %}

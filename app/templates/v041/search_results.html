@@ -1,20 +1,27 @@
 {% extends "base.html" %}
 {% from "shared/_ui_states.html" import empty_state, error_state %}
 
-{% block title %}搜索结果 - 稷下{% endblock %}
+{% block title %}{% if keyword %}{{ keyword }} - 搜索结果{% else %}知识搜索{% endif %} - 稷下{% endblock %}
 {% block site_nav %}{% endblock %}
 {% block site_footer %}{% endblock %}
 
 {% block content %}
   <div class="search-results-page">
     <section class="search-results-shell">
+      <div class="search-results-top">
+        <a class="search-back-home" href="{{ url_for('public.home') }}">
+          <span class="brand-mark">知</span>
+          <span>回到搜索首页</span>
+        </a>
+      </div>
+
       <form class="search-results-bar"
             action="{{ url_for('ai.smart_search') }}"
             method="post"
             data-v041-ai-search-form
             data-v041-ai-search-url="{{ url_for('ai.smart_search') }}">
         <input class="v041-input search-results-input" name="q" type="search"
-               value="{{ keyword }}" placeholder="描述你想找的内容，例如'想学Flask部署'"
+               value="{{ keyword }}" placeholder="描述你的问题，例如'想学 Flask 登录权限怎么做'"
                data-v041-search-input>
         <input type="hidden" name="page" value="1">
         <input type="hidden" name="pageSize" value="{{ page_size }}">
@@ -30,9 +37,9 @@
       {# 结果统计 #}
       <div class="search-results-meta" data-v041-ai-search-meta>
         {% if keyword %}
-          <p>关于「{{ keyword }}」共找到 {{ pagination.total }} 篇文字。</p>
+          <p>关于「{{ keyword }}」共找到 {{ pagination.total }} 篇相关内容。</p>
         {% else %}
-          <p>描述你的困惑或需求，AI 帮你找到最相关的文章。</p>
+          <p>描述你的困惑或需求，AI 会结合文章摘要、正文和互动数据寻找最相关的内容。</p>
         {% endif %}
       </div>
 
@@ -43,17 +50,33 @@
             <section class="search-result-list" aria-label="搜索结果列表">
               {% for article in articles %}
                 {% set author = article.user %}
-                {% set summary = article.summary or article.content[:140] %}
+                {% set search_summary = article.ai_search_summary or article.summary or article.content[:140] %}
                 <article class="search-result-card">
-                  <a class="search-result-author" href="{{ url_for('user.profile', user_id=author.id) if author else '#' }}">
-                    <span class="search-author-avatar">{{ author.nickname[:1] if author else article.author[:1] }}</span>
-                    <span>作者 {{ author.nickname if author else article.author }}</span>
-                  </a>
+                  <div class="search-result-header">
+                    <a class="search-result-author" href="{{ url_for('user.profile', user_id=author.id) if author else '#' }}">
+                      <span class="search-author-avatar">{{ author.nickname[:1] if author else article.author[:1] }}</span>
+                      <span>{{ author.nickname if author else article.author }}</span>
+                    </a>
+                    <div class="search-result-stats">
+                      <span title="点赞">♥ {{ article.like_count }}</span>
+                      <span title="收藏">☆ {{ article.favorite_count }}</span>
+                      <span title="评论">✎ {{ article.approved_comment_count }}</span>
+                    </div>
+                  </div>
                   <a class="search-result-body" href="{{ url_for('public.article_detail', slug=article.slug) }}">
                     <h2>{{ article.title }}</h2>
-                    <span class="search-ai-label">AI 总结</span>
-                    <p>{{ summary }}{% if summary|length >= 140 %}...{% endif %}</p>
+                    {% if article.ai_search_summary %}
+                      <span class="search-ai-label">AI 搜索摘要</span>
+                    {% endif %}
+                    <p>{{ search_summary }}{% if search_summary|length >= 200 %}...{% endif %}</p>
                   </a>
+                  {% if article.tags %}
+                    <div class="search-result-tags">
+                      {% for tag in article.tags[:4] %}
+                        <span class="search-tag">{{ tag.name }}</span>
+                      {% endfor %}
+                    </div>
+                  {% endif %}
                 </article>
               {% endfor %}
             </section>
@@ -72,10 +95,10 @@
               </nav>
             {% endif %}
           {% else %}
-            {{ empty_state("没有找到相关内容", "换一个问题再试试。", "回到首页", url_for('public.home')) }}
+            {{ empty_state("没有找到相关内容", "换一种方式描述你的需求，AI 会重新理解。", "回到搜索首页", url_for('public.home')) }}
           {% endif %}
         {% else %}
-          {{ empty_state("还没有搜索内容", "在上方输入你的需求，AI 帮你寻找文章。") }}
+          {{ empty_state("描述你的问题", "输入你想了解的内容，AI 会帮你找到最相关的文章。") }}
         {% endif %}
       </div>
     </section>

@@ -2,20 +2,20 @@
 {% from "shared/_app_topbar.html" import app_topbar with context %}
 {% from "shared/_ui_states.html" import empty_state %}
 
-{% block title %}{{ column.name }} - 专栏{% endblock %}
+{% block title %}{{ column.name }} - 知识合集{% endblock %}
 {% block site_nav %}{% endblock %}
 {% block site_footer %}{% endblock %}
 
 {% block content %}
   <div class="public-profile-page">
-    {{ app_topbar("专栏详情") }}
+    {{ app_topbar("知识合集") }}
     <main class="public-profile-shell">
       <section class="public-hero-card public-column-hero">
         <div class="public-hero-avatar">卷</div>
         <div>
-          <p class="profile-eyebrow">Column</p>
+          <p class="profile-eyebrow">Collection</p>
           <h1>{{ column.name }}</h1>
-          <p>{{ column.description or "这个专栏正在形成自己的知识方向。" }}</p>
+          <p>{{ column.description or "这个知识合集正在形成自己的主题方向。" }}</p>
           <div class="public-hero-meta">
             <span>创建者 <a href="{{ url_for('user.profile', user_id=column.user.id) }}">{{ column.user.nickname }}</a></span>
             <span>{{ articles|length }} 篇文章</span>
@@ -32,7 +32,7 @@
         <div class="study-panel-head">
           <div>
             <p class="profile-eyebrow">Collected Articles</p>
-            <h2>专栏文章</h2>
+            <h2>合集文章</h2>
           </div>
           <a class="v041-btn" href="{{ url_for('public.search') }}">继续搜索</a>
         </div>
@@ -47,7 +47,7 @@
             {% endfor %}
           </div>
         {% else %}
-          {{ empty_state("专栏暂无文章", "这个专栏还没有公开文章。", "返回作者主页", url_for('user.profile', user_id=column.user.id)) }}
+          {{ empty_state("合集暂无文章", "这个知识合集还没有公开文章。", "返回作者主页", url_for('user.profile', user_id=column.user.id)) }}
         {% endif %}
       </section>
     </main>

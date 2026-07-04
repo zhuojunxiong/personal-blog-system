@@ -1,20 +1,20 @@
 {% extends "base.html" %}
 {% from "shared/_app_topbar.html" import app_topbar %}
 
-{% block title %}{{ article.title }} - 阅读空间{% endblock %}
+{% block title %}{{ article.title }} - 稷下{% endblock %}
 {% block site_nav %}{% endblock %}
 {% block site_footer %}{% endblock %}
 
 {% block content %}
   <div class="article-reading-page" id="article-top">
     <header class="article-reading-topbar">
-      <a class="v041-brand" href="{{ url_for('public.home') }}" aria-label="稷下">
+      <a class="v041-brand" href="{{ url_for('public.home') }}" aria-label="稷下首页">
         <span>稷下</span>
         <span class="v041-brand-seal" aria-hidden="true">印</span>
       </a>
       <a class="article-back-link" href="{{ back_url }}" data-v041-back-search>
         <span aria-hidden="true">‹</span>
-        <span>返回搜索界面</span>
+        <span>返回搜索结果</span>
       </a>
       <div class="article-topbar-user">
         {% if current_user.is_authenticated %}
@@ -28,11 +28,11 @@
     <div class="article-reading-shell">
       <aside class="article-left-panel">
         <section class="article-side-card">
-          <p class="article-side-kicker">所属专栏</p>
+          <p class="article-side-kicker">知识合集</p>
           {% if article.column %}
             <a class="article-column-link" href="{{ url_for('column.detail', column_id=article.column.id) }}">{{ article.column.name }}</a>
           {% else %}
-            <span class="article-column-link">未归属专栏</span>
+            <span class="article-column-link">未归属知识合集</span>
           {% endif %}
         </section>
         <section class="article-side-card">
@@ -59,7 +59,7 @@
               <span class="article-author-avatar">{{ article.user.nickname[:1] }}</span>
               <span>
                 <strong>{{ article.user.nickname }}</strong>
-                <small>进入作者主页</small>
+                <small>进入作者知识主页</small>
               </span>
             </a>
           {% else %}
@@ -72,29 +72,99 @@
             <span>发布于 {{ article.published_at.strftime('%Y-%m-%d') if article.published_at else article.created_at.strftime('%Y-%m-%d') }}</span>
             <span>约 {{ word_count }} 字</span>
             <span>阅读约 {{ reading_minutes }} 分钟</span>
+            <span>♥ {{ article.like_count }} 赞</span>
+            <span>☆ {{ article.favorite_count }} 收藏</span>
+            <span>✎ {{ article.approved_comment_count }} 评论</span>
           </div>
           {% if article.summary %}
             <blockquote class="article-epigraph">{{ article.summary }}</blockquote>
           {% endif %}
+          {% if article.ai_search_summary %}
+            <section class="article-search-summary">
+              <span>AI 搜索摘要</span>
+              <p>{{ article.ai_search_summary }}</p>
+            </section>
+          {% endif %}
         </header>
 
         <section class="article-reading-body" id="article-body">
-          {% for block in content_blocks %}
-            {% if block.is_heading %}
-              <h2 id="section-{{ block.index }}">{{ block.text }}</h2>
-            {% else %}
-              <p>{{ block.text }}</p>
-            {% endif %}
-          {% endfor %}
+          {{ article.content|markdown }}
         </section>
 
         {% if article.column %}
           <footer class="article-reading-footer">
             本文收录于
             <a href="{{ url_for('column.detail', column_id=article.column.id) }}">「{{ article.column.name }}」</a>
-            专栏
+            知识合集
           </footer>
         {% endif %}
+
+        {# 互动区域 #}
+        <section class="article-interactions" aria-label="文章互动">
+          {% if current_user.is_authenticated %}
+            <form method="post" action="{{ url_for('comment.like', slug=article.slug) }}" class="article-inline-form">
+              <button class="article-interact-btn {% if liked %}is-active{% endif %}" type="submit">
+                <span aria-hidden="true">♥</span>
+                <span>{% if liked %}已点赞{% else %}点赞{% endif %}</span>
+                <small>{{ article.like_count }}</small>
+              </button>
+            </form>
+            <form method="post" action="{{ url_for('comment.favorite', slug=article.slug) }}" class="article-inline-form">
+              <button class="article-interact-btn {% if favorited %}is-active{% endif %}" type="submit">
+                <span aria-hidden="true">☆</span>
+                <span>{% if favorited %}已收藏{% else %}收藏{% endif %}</span>
+                <small>{{ article.favorite_count }}</small>
+              </button>
+            </form>
+          {% else %}
+            <a class="article-interact-btn" href="{{ url_for('auth.login', next=request.path) }}">
+              <span aria-hidden="true">♥</span>
+              <span>点赞</span>
+              <small>{{ article.like_count }}</small>
+            </a>
+            <a class="article-interact-btn" href="{{ url_for('auth.login', next=request.path) }}">
+              <span aria-hidden="true">☆</span>
+              <span>收藏</span>
+              <small>{{ article.favorite_count }}</small>
+            </a>
+          {% endif %}
+        </section>
+
+        {# 评论区域 #}
+        <section class="article-comments" aria-label="文章评论" id="article-comments">
+          <h2>评论 ({{ article.approved_comment_count }})</h2>
+          {% if article.comments %}
+            {% set approved = article.comments | selectattr('status', 'equalto', 'approved') | list %}
+            {% if approved %}
+              <div class="comment-list">
+                {% for comment in approved %}
+                  <div class="comment-item">
+                    <div class="comment-meta">
+                      <strong>{{ comment.nickname }}</strong>
+                      <time>{{ comment.created_at.strftime('%Y-%m-%d') }}</time>
+                    </div>
+                    <p>{{ comment.content }}</p>
+                  </div>
+                {% endfor %}
+              </div>
+            {% else %}
+              <p class="v041-muted">暂无评论，成为第一个评论的人。</p>
+            {% endif %}
+          {% else %}
+            <p class="v041-muted">暂无评论。</p>
+          {% endif %}
+
+          {% if current_user.is_authenticated %}
+            <form class="comment-form" method="post" action="{{ url_for('comment.submit', slug=article.slug) }}">
+              <textarea name="content" rows="3" placeholder="写下你的想法、补充或提问…" required></textarea>
+              <button class="v041-btn v041-btn-primary" type="submit">提交评论</button>
+            </form>
+          {% else %}
+            <p class="v041-muted">
+              <a href="{{ url_for('auth.login', next=request.path) }}">登录</a>后可以发表评论。
+            </p>
+          {% endif %}
+        </section>
       </article>
 
       <aside class="article-right-panel">
@@ -103,7 +173,13 @@
             <form method="post" action="{{ url_for('comment.favorite', slug=article.slug) }}">
               <button class="article-action-button" type="submit">
                 <span aria-hidden="true">☆</span>
-                <span>{{ "已收藏" if favorited else "收藏" }}</span>
+                <span>{{ "已收藏" if favorited else "收藏文章" }}</span>
+              </button>
+            </form>
+            <form method="post" action="{{ url_for('comment.like', slug=article.slug) }}">
+              <button class="article-action-button" type="submit">
+                <span aria-hidden="true">♥</span>
+                <span>{{ "已点赞" if liked else "点赞文章" }}</span>
               </button>
             </form>
           {% else %}
@@ -111,30 +187,23 @@
               <span aria-hidden="true">☆</span>
               <span>收藏</span>
             </a>
+            <a class="article-action-button" href="{{ url_for('auth.login', next=request.path) }}">
+              <span aria-hidden="true">♥</span>
+              <span>点赞</span>
+            </a>
           {% endif %}
           <a class="article-action-button" href="#article-top">
             <span aria-hidden="true">↑</span>
             <span>回到顶部</span>
           </a>
-          {% if current_user.is_authenticated %}
-            <a class="article-action-button" href="{{ url_for('user.talk', article=article.slug) }}">
-              <span aria-hidden="true">✎</span>
-              <span>发起清谈</span>
-            </a>
-          {% else %}
-            <a class="article-action-button" href="{{ url_for('auth.login', next=url_for('user.talk', article=article.slug)) }}">
-              <span aria-hidden="true">✎</span>
-              <span>发起清谈</span>
-            </a>
-          {% endif %}
         </section>
 
-        <section class="article-side-card ai-reading-card">
-          <h2>AI 阅读提示</h2>
-          <button type="button" data-v041-ai-unavailable>可为你概括要点</button>
-          <button type="button" data-v041-ai-unavailable>可提炼文章结构</button>
-          <button type="button" data-v041-ai-unavailable>可生成阅读问题</button>
-        </section>
+        {% if article.ai_search_summary %}
+          <section class="article-side-card ai-reading-card">
+            <h2>搜索可见性</h2>
+            <p>这篇文章发布时生成了 AI 搜索摘要，会被自然语言搜索匹配到。</p>
+          </section>
+        {% endif %}
       </aside>
     </div>
   </div>

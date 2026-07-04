@@ -9,17 +9,17 @@
         <div>
           <p class="eyebrow">My Workspace</p>
           <h1>{{ current_user.nickname }} 的个人中心</h1>
-          <p class="text-secondary">{{ current_user.bio or "在这里管理你的专栏、文章和互动记录。" }}</p>
+          <p class="text-secondary">{{ current_user.bio or "在这里管理你的知识合集、文章和互动记录。" }}</p>
         </div>
         <div class="d-flex gap-2 flex-wrap">
           <a class="btn btn-dark" href="{{ url_for('user.write_article') }}">写文章</a>
-          <a class="btn btn-outline-dark" href="{{ url_for('column.my_columns') }}">创建专栏</a>
-          <a class="btn btn-outline-secondary" href="{{ url_for('user.edit_profile') }}">编辑资料</a>
+          <a class="btn btn-outline-dark" href="{{ url_for('column.my_columns') }}">创建知识合集</a>
+          <a class="btn btn-outline-secondary" href="{{ url_for('user.edit_profile') }}">编辑知识主页</a>
         </div>
       </div>
 
       <div class="stats-grid mb-4">
-        <div class="stat-card"><span>我的专栏</span><strong>{{ columns|length }}</strong></div>
+        <div class="stat-card"><span>我的知识合集</span><strong>{{ columns|length }}</strong></div>
         <div class="stat-card"><span>我的文章</span><strong>{{ articles|length }}</strong></div>
         <div class="stat-card"><span>我的收藏</span><strong>{{ interactions.favorites|length }}</strong></div>
         <div class="stat-card"><span>我的点赞</span><strong>{{ interactions.likes|length }}</strong></div>
@@ -34,7 +34,7 @@
             </div>
             <div class="table-responsive">
               <table class="table align-middle">
-                <thead><tr><th>标题</th><th>状态</th><th>专栏</th><th>操作</th></tr></thead>
+                <thead><tr><th>标题</th><th>状态</th><th>知识合集</th><th>操作</th></tr></thead>
                 <tbody>
                   {% for article in articles %}
                     <tr>
@@ -60,14 +60,14 @@
         </div>
         <div class="col-lg-5">
           <div class="admin-panel mb-4">
-            <h2>我的专栏</h2>
+            <h2>我的知识合集</h2>
             {% for column in columns %}
               <a class="author-row" href="{{ url_for('column.detail', column_id=column.id) }}">
                 <strong>{{ column.name }}</strong>
                 <span>{{ column.description }}</span>
               </a>
             {% else %}
-              <div class="empty-state compact">暂无专栏</div>
+              <div class="empty-state compact">暂无知识合集</div>
             {% endfor %}
           </div>
           <div class="admin-panel">

@@ -1,126 +1,79 @@
-# V0.4 Frontend UI Design Spec
+# 稷下：AI 驱动的知识写作与搜索平台 — 设计说明
 
-## 1. Design Direction
+## 1. 产品定位
 
-V0.4 treats the product as a multi-user knowledge column platform, not a single-person blog or an admin console. The visual language follows the supplied UI reference image: clean, modern, restrained, content-first, and suitable for a course project presentation.
+稷下是一个 **AI 驱动的知识写作与搜索平台**。它服务两类用户：
 
-Core adjectives:
+- **写作者**：用 Markdown 将知识、项目经验、学习笔记整理成文章，AI 辅助查资料、列大纲、润色和自动生成搜索摘要。
+- **阅读者**：用自然语言搜索问题，系统基于 AI 理解找到最相关的文章，展示推荐理由和文章特征。
 
-- Clean: generous spacing, clear information hierarchy, low visual noise.
-- Modern: card-based layout, unified navigation, refined form controls.
-- Restrained: soft blue-violet accent, light borders, subtle shadows, no neon colors.
-- Knowledge community: articles, columns, authors, tags, comments, and search all feel like equal parts of the same product.
-- Demo-friendly: every page should immediately communicate its purpose.
+核心目标不是展示很多栏目，而是解决一个清晰的问题：
 
-The UI must avoid default browser styling, default blue underlined links, naked buttons, naked inputs, and old-fashioned HTML list pages.
+> 知识被写出来之后，怎样被真正需要它的人找到？
 
-## 2. Layout Rules
+系统主线：**写作 → AI 总结 → 搜索 → 阅读 → 互动**。
 
-- Global page max width: use `1120px` for dense content and up to `1200px` for wider product sections.
-- Main content is centered with consistent horizontal padding.
-- Header is shared by all public/user pages and remains sticky at the top.
-- Page sections use clear vertical rhythm: normal sections around `56px-72px`, compact sections around `32px-40px`.
-- Home page structure:
-  - Unified top navigation.
-  - Hero area with platform positioning.
-  - Prominent search bar.
-  - Primary action: start reading.
-  - Secondary action: become a creator.
-  - Feature cards.
-  - Latest articles.
-  - Recommended columns.
-  - Platform philosophy.
-  - Footer.
-- Article list, search, category, and tag pages use a main list plus optional right sidebar.
-- Column list uses a card grid and must feel like a creator-facing public product page.
-- Article detail page uses a comfortable reading column and a right sidebar for author, table of contents, and related column information.
-- Auth pages use a centered card with a lightweight illustration/product panel.
-- Write article page uses an editor workspace layout, with a prominent title field, spacious body editor, and clear publish/draft actions.
+## 2. 设计方向
 
-## 3. Component System
+- **搜索优先**：前台以自然语言搜索为主入口，分类、标签、专栏降级为后台组织和作者合集能力。
+- **内容为先**：文章正文和 Markdown 个人主页是核心展示内容，导航和装饰尽量克制。
+- **安静写作**：写作页是安静的工作台，左边写 Markdown，右边是 AI 助手，作者专注写内容。
+- **知识推荐**：搜索结果不是标题列表，而是包含推荐理由、搜索摘要、互动数据的知识推荐卡片。
+- **纸质质感**：暖白色调、墨色文字、柔和边框，营造阅读纸质书的安静感。
 
-All pages should reuse the same component classes.
+## 3. 核心页面与交互
 
-- Header:
-  - Sticky, white translucent background, subtle border, compact nav links.
-  - Brand mark plus product name.
-  - Search icon/input area.
-  - Login/register/user actions on the right.
-- Search Bar:
-  - Rounded 8px-12px.
-  - Light border, soft background, clear focus ring.
-  - Used in header, hero, article list, and search page.
-- Buttons:
-  - Primary button uses blue-violet brand color.
-  - Secondary button uses white/transparent background with brand border.
-  - Ghost/text button is allowed for quiet navigation.
-  - Buttons need hover, focus, active, and disabled states.
-- Article Card:
-  - Title, summary, author, category, tags, time, view/comment placeholders.
-  - Prefer horizontal layout on list/search pages and compact grid layout on home.
-- Column Card:
-  - Column name, description, creator, article count, follower placeholder, entry button.
-  - Should communicate that ordinary users can create columns.
-- User Card:
-  - Avatar placeholder, nickname, bio, article count, column count.
-- Tag:
-  - Rounded pill with light background and hover state.
-- Category Badge:
-  - Small brand-tinted pill or outlined badge.
-- Comment Card:
-  - White card/row, reviewer status wording, author name, time, content.
-- Auth Card:
-  - Centered, white card, strong title, clear form labels, full-width primary submit.
-- Editor Form:
-  - Large title field, spacious body editor, grouped metadata side panel.
-- Empty State:
-  - Light dashed/solid panel with concise message and optional action.
-- Footer:
-  - Product name, version, course-project positioning, and public navigation links.
+### 3.1 `/` 首次进入页
 
-## 4. Visual Rules
+用户首次访问时看到产品定位和一句核心命题。点击后进入 `/home`，并设置 cookie，后续访问 `/` 自动跳转到 `/home`。
 
-- Remove default blue underlined links across public pages.
-- Use CSS variables for all core colors and shared dimensions.
-- Use 8px border radius for cards and controls unless a pill shape is semantically appropriate.
-- Use light borders and subtle shadows; avoid heavy drop shadows.
-- Avoid excessive gradients. Gradients may be used only as soft section backgrounds.
-- Avoid fluorescent colors and one-note palettes.
-- Text hierarchy:
-  - Hero headline: large but controlled.
-  - Page title: strong, compact.
-  - Card title: medium weight, readable.
-  - Metadata: muted and compact.
-- Reading pages prioritize line length, line height, and content contrast.
+### 3.2 `/home` AI 搜索首页
 
-## 5. Interaction States
+极简搜索入口。用户不需要先选分类，也不需要知道文章标题，只需用自然语言描述问题。系统完成三件事：
 
-All primary interactive elements must define:
+1. 理解用户真正想找什么
+2. 从所有文章中找出最相关的内容
+3. 说明为什么推荐这些文章
 
-- Hover: color, border, background, or shadow changes.
-- Focus: visible focus ring for keyboard users.
-- Active: slightly pressed or darker state.
-- Disabled: reduced opacity and no pointer interaction.
+### 3.3 搜索结果页
 
-This applies to buttons, links, inputs, selects, textareas, article cards, column cards, tag pills, and pagination.
+搜索结果以知识推荐卡片形式呈现：
+- 文章标题
+- AI 搜索摘要
+- 推荐理由和相关性
+- 作者信息
+- 点赞、收藏、评论数据
+- 关键标签
 
-## 6. Responsive Rules
+### 3.4 文章阅读页
 
-- Desktop: multi-column layouts, sidebars where useful.
-- Tablet: grids wrap naturally, sidebars move below content.
-- Mobile: single-column layout, full-width buttons when needed, compact nav.
-- Navigation must not squeeze or overlap.
-- No horizontal scrollbar is allowed.
-- Fixed-format UI elements such as cards, toolbars, stats, and form actions must use stable dimensions and responsive constraints.
+干净的文章阅读体验：
+- Markdown 渲染正文
+- 作者信息和知识主页入口
+- AI 搜索摘要（说明为什么能被搜到）
+- 点赞、收藏、评论互动
+- 左侧目录导航
 
-## 7. Page-Level Acceptance Notes
+### 3.5 写作工作台
 
-- Home communicates: every user can create a knowledge column.
-- Articles page uses a modern list/card layout with search and sidebar filters.
-- Columns page presents public creator columns, not admin management.
-- Article detail is a reader page with comments and sidebar context.
-- Login/register pages are productized auth experiences, not bare forms.
-- Write article page feels like a writing tool.
-- User profile shows avatar, bio, stats, articles, and columns.
-- Search results separate article, column, and user result types where data is available.
-- AI functionality remains out of scope for V0.4.
+左右分栏布局：
+- **左侧**：标题、摘要、Markdown 正文、发布设置（知识合集、分类、标签）
+- **右侧**：AI 写作助手（搜资料、整理大纲、润色正文、生成搜索摘要）
+
+### 3.6 Markdown 个人知识主页
+
+每个用户拥有可自定义的知识主页，用 Markdown 编写：作者简介、研究方向、代表文章、学习路线、项目经历、知识合集。
+
+## 4. 视觉规则
+
+- 暖白纸色调（`#f8f5ed`），墨色文字（`#1d1a16`）
+- 楷体/宋体用于标题和品牌，系统字体用于正文
+- 8px–18px 圆角，柔和阴影
+- 避免荧光色、重阴影、过度渐变
+- 响应式：桌面多栏，平板折叠，手机单栏
+
+## 5. 技术栈
+
+Python / Flask / Flask-Login / Flask-SQLAlchemy / SQLite / Jinja2 / Bootstrap 5 / 原生 CSS
+
+AI 能力通过 OpenAI 兼容 Chat Completions API 接入（默认 DeepSeek）。

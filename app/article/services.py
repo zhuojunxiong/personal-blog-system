@@ -42,6 +42,7 @@ class ArticleService:
                 or_(
                     Article.title.ilike(like),
                     Article.summary.ilike(like),
+                    Article.ai_search_summary.ilike(like),
                     Article.content.ilike(like),
                     Article.author.ilike(like),
                     Article.tags.any(Tag.name.ilike(like)),
@@ -148,6 +149,7 @@ class ArticleService:
             title=normalize_text(data.get("title")),
             slug=ArticleService.unique_slug(data.get("title")),
             summary=normalize_text(data.get("summary")),
+            ai_search_summary=ArticleService.local_search_summary(data),
             content=normalize_text(data.get("content")),
             status=status,
             user_id=user.id if user else data.get("user_id") or None,
@@ -159,6 +161,8 @@ class ArticleService:
         article.tags = Tag.query.filter(Tag.id.in_(tag_ids)).all() if tag_ids else []
         db.session.add(article)
         db.session.commit()
+        if article.status == ARTICLE_STATUS_PUBLISHED:
+            ArticleService.refresh_ai_search_summary(article)
         return article, []
 
     @staticmethod
@@ -172,6 +176,7 @@ class ArticleService:
         article.title = normalize_text(data.get("title"))
         article.summary = normalize_text(data.get("summary"))
         article.content = normalize_text(data.get("content"))
+        article.ai_search_summary = ArticleService.local_search_summary(data)
         article.status = status
         article.column_id = data.get("column_id") or None
         article.category_id = int(data.get("category_id"))
@@ -184,6 +189,8 @@ class ArticleService:
             article.published_at = None
         article.tags = Tag.query.filter(Tag.id.in_(tag_ids)).all() if tag_ids else []
         db.session.commit()
+        if article.status == ARTICLE_STATUS_PUBLISHED:
+            ArticleService.refresh_ai_search_summary(article)
         return []
 
     @staticmethod
@@ -251,3 +258,30 @@ class ArticleService:
     @staticmethod
     def admin_comment_count(article):
         return Comment.query.filter_by(article_id=article.id).count()
+
+    @staticmethod
+    def local_search_summary(data):
+        from app.ai.services import ai_service
+
+        return ai_service.build_local_search_summary(
+            normalize_text(data.get("title")),
+            normalize_text(data.get("summary")),
+            normalize_text(data.get("content")),
+        )
+
+    @staticmethod
+    def refresh_ai_search_summary(article):
+        from app.ai.services import AIServiceError, ai_service
+
+        try:
+            article.ai_search_summary = ai_service.generate_search_summary(
+                article.title,
+                article.summary,
+                article.content,
+            )
+            article.ai_search_generated_at = utcnow()
+            db.session.commit()
+        except AIServiceError:
+            db.session.rollback()
+        except Exception:
+            db.session.rollback()

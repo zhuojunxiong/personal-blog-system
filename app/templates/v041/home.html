@@ -1,34 +1,45 @@
 {% extends "base.html" %}
 
-{% block title %}首页 - 稷下{% endblock %}
+{% block title %}稷下 - AI 知识搜索{% endblock %}
 {% block site_nav %}{% endblock %}
 {% block site_footer %}{% endblock %}
 
 {% block content %}
   <div class="home-page">
     <header class="home-header">
-      {% if current_user.is_authenticated %}
-        <a class="home-login-button" href="{{ url_for('user.profile_home') }}" aria-label="进入个人空间">
-          <span class="v041-avatar">{{ current_user.nickname[:1] }}</span>
-          <span>{{ current_user.nickname }}</span>
-        </a>
-      {% else %}
-        <a class="home-login-button" href="{{ url_for('auth.login') }}">
-          <span aria-hidden="true">人</span>
-          <span>登录</span>
-        </a>
-      {% endif %}
+      <a class="home-brand-mark" href="{{ url_for('public.home') }}" aria-label="稷下首页">
+        <span class="brand-mark">知</span>
+        <span>稷下</span>
+      </a>
+      <div class="home-header-actions">
+        {% if current_user.is_authenticated %}
+          <a class="home-login-button" href="{{ url_for('user.profile_home') }}" aria-label="进入个人空间">
+            <span class="v041-avatar">{{ current_user.nickname[:1] }}</span>
+            <span>{{ current_user.nickname }}</span>
+          </a>
+          <a class="home-login-button" href="{{ url_for('user.write_article') }}">
+            <span aria-hidden="true">写</span>
+            <span>写文章</span>
+          </a>
+        {% else %}
+          <a class="home-login-button" href="{{ url_for('auth.login') }}">
+            <span aria-hidden="true">人</span>
+            <span>登录</span>
+          </a>
+        {% endif %}
+      </div>
     </header>
 
     <section class="home-search-stage" aria-labelledby="home-search-title">
-      <h1 id="home-search-title" class="visually-hidden">内容搜索</h1>
+      <h1 id="home-search-title" class="visually-hidden">AI 知识搜索</h1>
+      <p class="home-search-kicker">描述你的问题，AI 帮你找到真正相关的知识</p>
       <form class="home-search-box"
             action="{{ url_for('ai.smart_search') }}"
             method="post"
             data-v041-ai-search-form
             data-v041-ai-search-url="{{ url_for('ai.smart_search') }}">
         <input class="home-search-input" name="q" type="search"
-               placeholder="描述你想找的内容，例如'想学Flask部署'"
+               placeholder="例如：想学 Flask 登录权限怎么做"
                autocomplete="off" data-v041-search-input>
         <input type="hidden" name="page" value="1">
         <input type="hidden" name="pageSize" value="5">
@@ -37,7 +48,26 @@
           <span>AI 搜索</span>
         </button>
       </form>
-      <p class="home-search-note v041-serif">读书行路，终身有益</p>
+      <p class="home-search-note v041-serif">知识被写出来之后，怎样被真正需要它的人找到？</p>
     </section>
+
+    <footer class="home-clues">
+      <div class="home-clue">
+        <span class="home-clue-icon" aria-hidden="true">✎</span>
+        <span>Markdown 写作</span>
+      </div>
+      <div class="home-clue">
+        <span class="home-clue-icon" aria-hidden="true">◇</span>
+        <span>AI 自动摘要</span>
+      </div>
+      <div class="home-clue">
+        <span class="home-clue-icon" aria-hidden="true">⌕</span>
+        <span>自然语言搜索</span>
+      </div>
+      <div class="home-clue">
+        <span class="home-clue-icon" aria-hidden="true">♥</span>
+        <span>阅读互动</span>
+      </div>
+    </footer>
   </div>
 {% endblock %}

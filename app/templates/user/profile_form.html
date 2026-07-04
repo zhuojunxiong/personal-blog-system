@@ -13,6 +13,13 @@
         <input class="form-control mb-3" name="email" type="email" required maxlength="120" value="{{ current_user.email }}">
         <label class="form-label">个人简介</label>
         <textarea class="form-control mb-3" name="bio" rows="5" maxlength="500">{{ current_user.bio }}</textarea>
+        <label class="form-label">Markdown 知识主页</label>
+        <textarea
+          class="form-control mb-3"
+          name="profile_markdown"
+          rows="12"
+          placeholder="# 关于我&#10;&#10;## 研究方向&#10;- Flask 项目实践&#10;- AI 协作开发&#10;&#10;## 代表文章&#10;- 写下你最想展示的内容"
+        >{{ current_user.profile_markdown or "" }}</textarea>
         <button class="btn btn-dark" type="submit">保存</button>
         <a class="btn btn-outline-dark" href="{{ url_for('user.center') }}">返回</a>
       </form>
