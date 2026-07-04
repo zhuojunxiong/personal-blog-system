@@ -105,10 +105,31 @@ cd personal-blog-system
 ## 首次运行
 
 ```bash
+python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
-.venv/bin/python scripts/init_db.py --reset
-.venv/bin/python scripts/demo_data.py
 .venv/bin/python run.py
+```
+
+数据库已内置在仓库中，无需额外初始化。
+
+## 数据安全
+
+演示数据（56 位用户、114 篇文章）随仓库分发，以下操作**不会**丢失数据：
+
+| 场景 | 结果 |
+|------|------|
+| 正常启停 | ✅ 完好 |
+| 代码修改后 Flask 自动重载 | ✅ 完好 |
+| 换电脑 / 别人 clone | ✅ 仓库自带 |
+| `pytest tests/` | ✅ 用内存库，互不影响 |
+| `python test_e2e.py` | ✅ 不删已有表 |
+
+**唯一会清空数据的操作**：`python scripts/init_db.py --reset`
+
+即使误操作清空了，一行命令即可恢复：
+
+```bash
+git checkout instance/personal_blog.sqlite
 ```
 
 ## 测试账号
