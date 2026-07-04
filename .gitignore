@@ -2,8 +2,6 @@
 __pycache__/
 *.py[cod]
 
-instance/*.sqlite
-instance/*.db
 instance/.secret_key
 instance/.csrf_secret_key
 
