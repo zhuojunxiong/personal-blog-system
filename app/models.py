@@ -11,6 +11,17 @@ ARTICLE_STATUS_DRAFT = "draft"
 ARTICLE_STATUS_PUBLISHED = "published"
 ARTICLE_STATUSES = (ARTICLE_STATUS_DRAFT, ARTICLE_STATUS_PUBLISHED)
 
+AI_REVIEW_STATUS_PENDING = "pending"
+AI_REVIEW_STATUS_PASSED = "passed"
+AI_REVIEW_STATUS_SUSPECTED = "suspected"
+AI_REVIEW_STATUS_UNAVAILABLE = "unavailable"
+AI_REVIEW_STATUSES = (
+    AI_REVIEW_STATUS_PENDING,
+    AI_REVIEW_STATUS_PASSED,
+    AI_REVIEW_STATUS_SUSPECTED,
+    AI_REVIEW_STATUS_UNAVAILABLE,
+)
+
 COMMENT_STATUS_PENDING = "pending"
 COMMENT_STATUS_APPROVED = "approved"
 COMMENT_STATUS_HIDDEN = "hidden"
@@ -134,6 +145,9 @@ class Article(db.Model):
     summary = db.Column(db.String(500), default="")
     ai_search_summary = db.Column(db.Text, default="")
     ai_search_generated_at = db.Column(db.DateTime)
+    ai_review_status = db.Column(db.String(32), nullable=False, default=AI_REVIEW_STATUS_PENDING, index=True)
+    ai_review_reason = db.Column(db.Text, default="")
+    ai_reviewed_at = db.Column(db.DateTime)
     content = db.Column(db.Text, nullable=False)
     status = db.Column(db.String(32), nullable=False, default=ARTICLE_STATUS_DRAFT, index=True)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), index=True)

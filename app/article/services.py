@@ -7,6 +7,10 @@ from app.models import (
     ARTICLE_STATUS_DRAFT,
     ARTICLE_STATUS_PUBLISHED,
     ARTICLE_STATUSES,
+    AI_REVIEW_STATUS_PENDING,
+    AI_REVIEW_STATUS_PASSED,
+    AI_REVIEW_STATUS_SUSPECTED,
+    AI_REVIEW_STATUS_UNAVAILABLE,
     Article,
     BlogColumn,
     Category,
@@ -163,6 +167,7 @@ class ArticleService:
         db.session.commit()
         if article.status == ARTICLE_STATUS_PUBLISHED:
             ArticleService.refresh_ai_search_summary(article)
+            ArticleService.refresh_ai_content_review(article)
         return article, []
 
     @staticmethod
@@ -187,10 +192,16 @@ class ArticleService:
             article.published_at = utcnow()
         if status == ARTICLE_STATUS_DRAFT:
             article.published_at = None
+            article.ai_review_status = AI_REVIEW_STATUS_PENDING
+            article.ai_review_reason = ""
+            article.ai_reviewed_at = None
+        else:
+            article.ai_review_status = AI_REVIEW_STATUS_PENDING
         article.tags = Tag.query.filter(Tag.id.in_(tag_ids)).all() if tag_ids else []
         db.session.commit()
         if article.status == ARTICLE_STATUS_PUBLISHED:
             ArticleService.refresh_ai_search_summary(article)
+            ArticleService.refresh_ai_content_review(article)
         return []
 
     @staticmethod
@@ -287,3 +298,44 @@ class ArticleService:
         # Catch-all fallback to prevent AI failures from breaking article publishing
         except Exception:
             db.session.rollback()
+
+    @staticmethod
+    def refresh_ai_content_review(article):
+        from app.ai.services import AIServiceError, ai_service
+
+        if article.status != ARTICLE_STATUS_PUBLISHED:
+            article.ai_review_status = AI_REVIEW_STATUS_PENDING
+            article.ai_review_reason = ""
+            article.ai_reviewed_at = None
+            db.session.commit()
+            return
+
+        try:
+            result = ai_service.review_article_content(
+                article.title,
+                article.summary,
+                article.content,
+            )
+            article.ai_review_status = (
+                AI_REVIEW_STATUS_SUSPECTED
+                if result.get("status") == AI_REVIEW_STATUS_SUSPECTED
+                else AI_REVIEW_STATUS_PASSED
+            )
+            reason = result.get("reason") or "AI 审核未发现明显垃圾内容。"
+            risk_type = result.get("risk_type") or "normal"
+            confidence = result.get("confidence", 0)
+            article.ai_review_reason = f"{reason}（风险类型：{risk_type}，置信度：{confidence}）"
+            article.ai_reviewed_at = utcnow()
+            db.session.commit()
+        except AIServiceError as exc:
+            db.session.rollback()
+            article.ai_review_status = AI_REVIEW_STATUS_UNAVAILABLE
+            article.ai_review_reason = str(exc)[:500]
+            article.ai_reviewed_at = utcnow()
+            db.session.commit()
+        except Exception as exc:
+            db.session.rollback()
+            article.ai_review_status = AI_REVIEW_STATUS_UNAVAILABLE
+            article.ai_review_reason = f"AI 审核失败：{exc}"[:500]
+            article.ai_reviewed_at = utcnow()
+            db.session.commit()

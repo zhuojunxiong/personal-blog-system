@@ -2,8 +2,16 @@ import secrets
 from pathlib import Path
 import os
 
+try:
+    from dotenv import load_dotenv
+except ImportError:
+    load_dotenv = None
+
 
 BASE_DIR = Path(__file__).resolve().parent
+
+if load_dotenv:
+    load_dotenv(BASE_DIR / ".env")
 
 _SECRET_FILE = Path(__file__).parent / "instance" / ".secret_key"
 _CSRF_SECRET_FILE = Path(__file__).parent / "instance" / ".csrf_secret_key"

@@ -12,6 +12,8 @@ from app.extensions import db
 from app.models import (
     ARTICLE_STATUS_DRAFT,
     ARTICLE_STATUS_PUBLISHED,
+    AI_REVIEW_STATUS_PENDING,
+    AI_REVIEW_STATUS_UNAVAILABLE,
     COMMENT_STATUS_APPROVED,
     COMMENT_STATUS_PENDING,
     Article,
@@ -147,6 +149,8 @@ class TestArticleService:
             assert article.user_id == normal_user.id
             assert article.status == ARTICLE_STATUS_PUBLISHED
             assert article.published_at is not None
+            assert article.ai_review_status == AI_REVIEW_STATUS_UNAVAILABLE
+            assert "AI 接口已关闭" in article.ai_review_reason
 
     def test_create_draft(self, app, normal_user, category):
         with app.app_context():
@@ -160,6 +164,7 @@ class TestArticleService:
             assert len(errors) == 0
             assert article.status == ARTICLE_STATUS_DRAFT
             assert article.published_at is None
+            assert article.ai_review_status == AI_REVIEW_STATUS_PENDING
 
     def test_update_article(self, app, published_article, category):
         with app.app_context():

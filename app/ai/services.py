@@ -36,6 +36,7 @@ class AIService:
         "search_summary": (3000, 0.3),   # 搜索摘要：更详细的文章特征提取
         "search_intent":  (1200, 0.3),   # 搜索意图：更多扩展关键词
         "search_rerank":  (3000, 0.3),   # 搜索重排：更多候选文章可处理
+        "moderation":     (1200, 0.1),   # 内容审核：稳定输出 JSON 判断
     }
 
     def is_configured(self):
@@ -143,6 +144,70 @@ class AIService:
         )
         user_content = f"文章内容：\n{article_text}\n\n用户问题：{question}"
         return self._call("chat", system, user_content).text
+
+    def assist_article_reading(self, title, summary, content, mode, question=""):
+        mode_map = {
+            "summary": (
+                "请用 150 字以内总结这篇文章。先给一句核心结论，再列出 3 条关键内容。"
+            ),
+            "key_points": (
+                "请提取这篇文章的阅读重点。用 4-6 条列表回答，每条要具体，避免空泛概括。"
+            ),
+            "quiz": (
+                "请基于这篇文章生成 3 道复习题，并给出简短参考答案。题目要覆盖文章重点。"
+            ),
+            "question": (
+                "请基于文章内容回答读者问题。如果文章没有足够信息，请说明不足并给出补充阅读建议。"
+            ),
+        }
+        if mode not in mode_map:
+            raise AIServiceError("不支持的 AI 阅读方式。")
+        if mode == "question" and not question.strip():
+            raise AIServiceError("请输入想问文章的问题。")
+
+        system = (
+            "你是知识写作平台的 AI 阅读助手。你的任务是帮助读者理解文章，"
+            "不能编造文章中没有的信息。\n\n"
+            "回答规则：\n"
+            "1. 优先基于文章内容回答。\n"
+            "2. 如果信息不足，要明确说明。\n"
+            "3. 语言简洁、清楚，适合课程项目读者。\n"
+            "4. 不要输出与文章无关的泛泛建议。\n\n"
+            f"本次任务：{mode_map[mode]}"
+        )
+        user_content = (
+            f"标题：{title}\n\n"
+            f"摘要：{summary or '无'}\n\n"
+            f"正文：\n{content}\n\n"
+            f"读者问题：{question if mode == 'question' else '无'}"
+        )
+        return self._call("chat", system, user_content).text
+
+    def review_article_content(self, title, summary, content):
+        system = (
+            "你是知识写作平台的内容审核助手。请判断文章是否疑似垃圾文章或明显不适合发布到知识平台。\n\n"
+            "垃圾文章包括：广告引流、博彩色情、诈骗、恶意推广、重复灌水、无意义拼接、明显违法违规、"
+            "与知识写作无关且低质量的内容。\n\n"
+            "审核规则：\n"
+            "1. 不要因为文章短或表达普通就轻易判定为垃圾。\n"
+            "2. 如果只是质量一般但仍是正常学习笔记，应判定为 passed。\n"
+            "3. 如果存在明显广告、违规或灌水风险，应判定为 suspected。\n"
+            "4. reason 要具体说明判断依据，控制在 80 字以内。\n\n"
+            "严格只返回 JSON 对象，格式：\n"
+            '{"status": "passed 或 suspected", "reason": "审核原因", "risk_type": "normal/spam/ad/illegal/low_quality/other", "confidence": 0.0}'
+        )
+        user_content = f"标题：{title}\n\n摘要：{summary or '无'}\n\n正文：\n{content}"
+        result = self._call("moderation", system, user_content).text
+        data = self._parse_json_dict(result)
+        status = data.get("status")
+        if status not in ("passed", "suspected"):
+            raise AIServiceError("AI 审核返回结构不符合预期。")
+        return {
+            "status": status,
+            "reason": str(data.get("reason") or "").strip()[:500],
+            "risk_type": str(data.get("risk_type") or "other").strip()[:40],
+            "confidence": data.get("confidence", 0),
+        }
 
     def generate_outline(self, content):
         system = (

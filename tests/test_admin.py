@@ -40,6 +40,14 @@ class TestAdminArticles:
         r = client.get("/admin/articles/")
         assert r.status_code == 200
 
+    def test_article_list_shows_ai_review_column(self, client, admin_user, published_article):
+        login_admin(client)
+        r = client.get("/admin/articles/")
+        data = r.data.decode()
+        assert r.status_code == 200
+        assert "AI 审核" in data
+        assert "待审核" in data
+
     def test_create_article_page(self, client, admin_user, category):
         login_admin(client)
         r = client.get("/admin/articles/new")

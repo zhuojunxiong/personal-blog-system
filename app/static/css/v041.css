@@ -71,6 +71,18 @@
   color: var(--v041-ink-muted);
 }
 
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .v041-card {
   border: 1px solid var(--v041-line);
   border-radius: var(--v041-radius);
@@ -2524,7 +2536,98 @@
 
 .ai-reading-card {
   display: grid;
-  gap: 0.3rem;
+  gap: 0.75rem;
+}
+
+.ai-reading-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+
+.ai-reading-actions button,
+.ai-reading-question button {
+  display: inline-flex;
+  min-height: 38px;
+  align-items: center;
+  justify-content: center;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid var(--v041-line);
+  border-radius: var(--v041-radius-sm);
+  color: var(--v041-ink-soft);
+  background: rgba(255, 252, 245, 0.58);
+  font-family: var(--v041-font-serif);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.ai-reading-actions button:hover,
+.ai-reading-actions button:focus-visible,
+.ai-reading-question button:hover,
+.ai-reading-question button:focus-visible {
+  color: var(--v041-accent-dark);
+  border-color: rgba(138, 106, 66, 0.42);
+  background: rgba(234, 223, 206, 0.42);
+  outline: none;
+}
+
+.ai-reading-actions button[disabled],
+.ai-reading-question button[disabled] {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.ai-reading-question {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0;
+}
+
+.ai-reading-question textarea {
+  width: 100%;
+  min-height: 84px;
+  padding: 0.68rem 0.75rem;
+  border: 1px solid var(--v041-line);
+  border-radius: var(--v041-radius-sm);
+  color: var(--v041-ink);
+  background: rgba(255, 252, 245, 0.64);
+  font: inherit;
+  line-height: 1.65;
+  resize: vertical;
+}
+
+.ai-reading-question textarea:focus {
+  border-color: rgba(138, 106, 66, 0.58);
+  box-shadow: 0 0 0 4px rgba(138, 106, 66, 0.1);
+  outline: none;
+}
+
+.ai-reading-output {
+  min-height: 96px;
+  max-height: 320px;
+  overflow: auto;
+  padding: 0.75rem;
+  border: 1px solid var(--v041-line);
+  border-radius: var(--v041-radius-sm);
+  color: var(--v041-ink-soft);
+  background: rgba(234, 223, 206, 0.22);
+  font-family: var(--v041-font-serif);
+  line-height: 1.75;
+  white-space: pre-wrap;
+}
+
+.ai-reading-output span {
+  color: var(--v041-ink-muted);
+}
+
+.ai-reading-output.is-loading {
+  color: var(--v041-accent-dark);
+}
+
+.ai-reading-output.is-error {
+  color: var(--v041-danger);
+  border-color: rgba(138, 79, 50, 0.35);
+  background: rgba(138, 79, 50, 0.06);
 }
 
 .auth-page {

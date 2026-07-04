@@ -504,6 +504,74 @@
     });
   }
 
+  function initReadingAssistant() {
+    var shell = document.querySelector("[data-v041-reading-page]");
+    if (!shell) {
+      return;
+    }
+    var output = document.querySelector("[data-v041-reading-output]");
+    var buttons = Array.prototype.slice.call(document.querySelectorAll("[data-v041-reading-action]"));
+    var questionForm = document.querySelector("[data-v041-reading-question]");
+    var questionInput = questionForm ? questionForm.querySelector("textarea[name='question']") : null;
+
+    function setOutput(text, state) {
+      if (!output) {
+        return;
+      }
+      output.classList.toggle("is-loading", state === "loading");
+      output.classList.toggle("is-error", state === "error");
+      output.textContent = text;
+    }
+
+    function setBusy(value) {
+      buttons.forEach(function (button) {
+        button.disabled = value;
+      });
+      if (questionForm) {
+        var submit = questionForm.querySelector("button[type='submit']");
+        if (submit) submit.disabled = value;
+      }
+    }
+
+    function runReadingAction(mode, question) {
+      var url = shell.dataset.aiReadingUrl || "";
+      var slug = shell.dataset.articleSlug || "";
+      setBusy(true);
+      setOutput("AI 正在阅读这篇文章...", "loading");
+      return requestAi(url, {
+        slug: slug,
+        mode: mode,
+        question: question || ""
+      }).then(function (data) {
+        setOutput(data.result || "AI 没有返回内容。", "success");
+      }).catch(function (error) {
+        setOutput(error.message, "error");
+        showMessage(error.message);
+      }).finally(function () {
+        setBusy(false);
+      });
+    }
+
+    buttons.forEach(function (button) {
+      button.addEventListener("click", function () {
+        runReadingAction(button.getAttribute("data-v041-reading-action"), "");
+      });
+    });
+
+    if (questionForm) {
+      questionForm.addEventListener("submit", function (event) {
+        event.preventDefault();
+        var question = questionInput ? questionInput.value.trim() : "";
+        if (!question) {
+          showMessage("请输入想问文章的问题。");
+          if (questionInput) questionInput.focus();
+          return;
+        }
+        runReadingAction("question", question);
+      });
+    }
+  }
+
   function initWriteAiActions() {
     document.querySelectorAll("[data-v041-ai-action]").forEach(function (button) {
       button.addEventListener("click", function () {
@@ -660,6 +728,7 @@
     initAiPlaceholders();
     initBackToSearch();
     initPasswordModal();
+    initReadingAssistant();
     initWritePage();
     initWriteAiActions();
     initWriteAiChat();

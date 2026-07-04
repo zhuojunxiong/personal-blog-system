@@ -12,6 +12,9 @@ SQLITE_COMPAT_COLUMNS = {
     "articles": {
         "ai_search_summary": "TEXT DEFAULT ''",
         "ai_search_generated_at": "DATETIME",
+        "ai_review_status": "VARCHAR(32) DEFAULT 'pending' NOT NULL",
+        "ai_review_reason": "TEXT DEFAULT ''",
+        "ai_reviewed_at": "DATETIME",
     },
 }
 
@@ -84,6 +87,9 @@ def ensure_sqlite_schema(app):
             "articles": {
                 "ai_search_summary": "TEXT DEFAULT ''",
                 "ai_search_generated_at": "DATETIME",
+                "ai_review_status": "VARCHAR(32) DEFAULT 'pending' NOT NULL",
+                "ai_review_reason": "TEXT DEFAULT ''",
+                "ai_reviewed_at": "DATETIME",
             },
         }
         try:

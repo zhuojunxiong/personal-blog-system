@@ -43,6 +43,28 @@
         <label class="form-label">AI 占位</label>
         <button class="btn btn-outline-secondary w-100" formaction="{{ url_for('ai.placeholder') }}" formmethod="post">AI 功能暂未开放</button>
       </div>
+      {% if article %}
+        <div class="col-12">
+          <div class="alert alert-light border mb-0">
+            <strong>AI 内容审核：</strong>
+            {% if article.ai_review_status == 'passed' %}
+              <span class="badge text-bg-success">通过</span>
+            {% elif article.ai_review_status == 'suspected' %}
+              <span class="badge text-bg-danger">疑似垃圾</span>
+            {% elif article.ai_review_status == 'unavailable' %}
+              <span class="badge text-bg-warning">AI 未配置</span>
+            {% else %}
+              <span class="badge text-bg-secondary">待审核</span>
+            {% endif %}
+            {% if article.ai_reviewed_at %}
+              <span class="text-secondary ms-2">{{ article.ai_reviewed_at.strftime('%Y-%m-%d %H:%M') }}</span>
+            {% endif %}
+            {% if article.ai_review_reason %}
+              <p class="mb-0 mt-2 text-secondary">{{ article.ai_review_reason }}</p>
+            {% endif %}
+          </div>
+        </div>
+      {% endif %}
       <div class="col-12">
         <label class="form-label">标签</label>
         <div class="tag-select">

@@ -13,7 +13,7 @@
       <table class="table align-middle">
         <thead>
           <tr>
-            <th>标题</th><th>作者</th><th>专栏</th><th>分类</th><th>状态</th><th>浏览</th><th>评论</th><th>更新时间</th><th>操作</th>
+            <th>标题</th><th>作者</th><th>专栏</th><th>分类</th><th>状态</th><th>AI 审核</th><th>浏览</th><th>评论</th><th>更新时间</th><th>操作</th>
           </tr>
         </thead>
         <tbody>
@@ -24,6 +24,17 @@
               <td>{{ article.column.name if article.column else '未归属' }}</td>
               <td>{{ article.category.name }}</td>
               <td><span class="badge text-bg-{{ 'success' if article.status == 'published' else 'secondary' }}">{{ '已发布' if article.status == 'published' else '草稿' }}</span></td>
+              <td>
+                {% if article.ai_review_status == 'passed' %}
+                  <span class="badge text-bg-success" title="{{ article.ai_review_reason or 'AI 审核通过' }}">通过</span>
+                {% elif article.ai_review_status == 'suspected' %}
+                  <span class="badge text-bg-danger" title="{{ article.ai_review_reason or '疑似垃圾文章' }}">疑似垃圾</span>
+                {% elif article.ai_review_status == 'unavailable' %}
+                  <span class="badge text-bg-warning" title="{{ article.ai_review_reason or 'AI 审核暂不可用' }}">AI 未配置</span>
+                {% else %}
+                  <span class="badge text-bg-secondary">待审核</span>
+                {% endif %}
+              </td>
               <td>{{ article.view_count }}</td>
               <td>{{ article.comments|length }}</td>
               <td>{{ article.updated_at.strftime('%Y-%m-%d %H:%M') }}</td>
@@ -37,7 +48,7 @@
               </td>
             </tr>
           {% else %}
-            <tr><td colspan="9" class="text-secondary">暂无文章</td></tr>
+            <tr><td colspan="10" class="text-secondary">暂无文章</td></tr>
           {% endfor %}
         </tbody>
       </table>

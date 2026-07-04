@@ -53,6 +53,8 @@ class TestArticleDetail:
         assert r.status_code == 200
         data = r.data.decode()
         assert published_article.title in data
+        assert "AI 阅读助手" in data
+        assert "登录后使用" in data
 
     def test_article_detail_not_found(self, client):
         r = client.get("/articles/nonexistent-slug-xyz")

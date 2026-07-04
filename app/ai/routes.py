@@ -110,6 +110,37 @@ def chat():
     return _run_ai("chat", input_text, article, lambda: ai_service.chat_with_article(content, question))
 
 
+@ai_bp.route("/ai/reading", methods=["POST"])
+@csrf.exempt
+@login_required
+def reading_assistant():
+    data = _request_data()
+    slug = (data.get("slug") or "").strip()
+    mode = (data.get("mode") or "").strip()
+    question = (data.get("question") or "").strip()
+    article = ArticleService.get_published_by_slug(slug)
+    if not article:
+        return jsonify({"ok": False, "message": "文章不存在或尚未发布。"}), 404
+    input_text = (
+        f"阅读方式：{mode}\n\n"
+        f"标题：{article.title}\n\n"
+        f"读者问题：{question}\n\n"
+        f"正文：\n{article.content}"
+    )
+    return _run_ai(
+        "reading_assistant",
+        input_text,
+        article,
+        lambda: ai_service.assist_article_reading(
+            article.title,
+            article.summary,
+            article.content,
+            mode,
+            question,
+        ),
+    )
+
+
 @ai_bp.route("/ai/outline", methods=["POST"])
 @csrf.exempt
 @login_required

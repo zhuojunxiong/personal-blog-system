@@ -6,7 +6,14 @@
 {% block site_footer %}{% endblock %}
 
 {% block content %}
-  <div class="article-reading-page" id="article-top">
+  <div
+    class="article-reading-page"
+    id="article-top"
+    data-v041-reading-page
+    data-ai-reading-url="{{ url_for('ai.reading_assistant') }}"
+    data-article-slug="{{ article.slug }}"
+    data-login-url="{{ url_for('auth.login', next=request.path) }}"
+  >
     <header class="article-reading-topbar">
       <a class="v041-brand" href="{{ url_for('public.home') }}" aria-label="稷下首页">
         <span>稷下</span>
@@ -196,6 +203,31 @@
             <span aria-hidden="true">↑</span>
             <span>回到顶部</span>
           </a>
+        </section>
+
+        <section class="article-side-card ai-reading-card" aria-label="AI 阅读助手">
+          <h2>AI 阅读助手</h2>
+          <p>让 AI 基于本文生成摘要、重点和复习题，也可以直接提问。</p>
+          {% if current_user.is_authenticated %}
+            <div class="ai-reading-actions" role="group" aria-label="AI 阅读操作">
+              <button type="button" data-v041-reading-action="summary">总结</button>
+              <button type="button" data-v041-reading-action="key_points">重点</button>
+              <button type="button" data-v041-reading-action="quiz">复习题</button>
+            </div>
+            <form class="ai-reading-question" data-v041-reading-question>
+              <label class="visually-hidden" for="ai-reading-question">向 AI 提问</label>
+              <textarea id="ai-reading-question" name="question" rows="3" placeholder="问问这篇文章里的某个知识点"></textarea>
+              <button type="submit">提问</button>
+            </form>
+            <div class="ai-reading-output" data-v041-reading-output aria-live="polite">
+              <span>选择一个操作开始阅读辅助。</span>
+            </div>
+          {% else %}
+            <a class="article-action-button" href="{{ url_for('auth.login', next=request.path) }}">
+              <span aria-hidden="true">问</span>
+              <span>登录后使用</span>
+            </a>
+          {% endif %}
         </section>
 
         {% if article.ai_search_summary %}
