@@ -1,7 +1,19 @@
-from flask import Flask
+from flask import Flask, current_app
+from sqlalchemy.exc import SQLAlchemyError
 
 from app.extensions import csrf, db, login_manager
 from config import Config
+
+
+SQLITE_COMPAT_COLUMNS = {
+    "users": {
+        "profile_markdown": "TEXT DEFAULT ''",
+    },
+    "articles": {
+        "ai_search_summary": "TEXT DEFAULT ''",
+        "ai_search_generated_at": "DATETIME",
+    },
+}
 
 
 def create_app(config_class=Config):
@@ -19,7 +31,23 @@ def create_app(config_class=Config):
     def load_user(user_id):
         from app.models import User
 
-        return User.query.get(int(user_id))
+        try:
+            user_id = int(user_id)
+        except (TypeError, ValueError):
+            return None
+
+        try:
+            return User.query.get(user_id)
+        except SQLAlchemyError:
+            db.session.rollback()
+            current_app.logger.warning("User lookup failed; checking SQLite schema.", exc_info=True)
+            ensure_sqlite_schema(current_app._get_current_object())
+            try:
+                return User.query.get(user_id)
+            except SQLAlchemyError:
+                db.session.rollback()
+                current_app.logger.exception("User lookup failed after SQLite schema recovery.")
+                return None
 
     register_blueprints(app)
     register_error_handlers(app)
@@ -34,6 +62,9 @@ def ensure_sqlite_schema(app):
     if not app.config.get("SQLALCHEMY_DATABASE_URI", "").startswith("sqlite:///"):
         return
     from sqlalchemy import text
+
+    # Ensure all models are imported before create_all
+    from app import models  # noqa: F401
 
     with app.app_context():
         # Check if core tables exist; if not, create all tables from models

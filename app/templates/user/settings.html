@@ -41,10 +41,15 @@
 
       <section class="settings-row is-muted">
         <div>
-          <h2>个人展示界面</h2>
-          <p>待开发。后续会用于整理公开主页的展示方式。</p>
+          <h2>Markdown 知识主页</h2>
+          <p>用 Markdown 编写你的个人展示页，介绍研究方向、项目经历、学习路线和代表作品。</p>
+          {% if current_user.profile_markdown %}
+            <p class="v041-muted" style="font-size: 0.8rem;">已填写 {{ current_user.profile_markdown|length }} 字符</p>
+          {% else %}
+            <p class="v041-muted" style="font-size: 0.8rem;">暂未填写</p>
+          {% endif %}
         </div>
-        <span class="study-pill">待开发</span>
+        <a class="v041-btn v041-btn-primary" href="{{ url_for('user.edit_profile') }}">编辑主页</a>
       </section>
     </div>
 

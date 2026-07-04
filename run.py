@@ -16,3 +16,10 @@ app = create_app()
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
+
+# 启动方式：
+#   cd /Users/lion/Desktop/系统开发版/personal-blog-system
+#   .venv/bin/python run.py
+#
+# 停止：Ctrl + C
+# 访问：http://127.0.0.1:5000

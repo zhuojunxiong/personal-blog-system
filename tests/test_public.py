@@ -111,6 +111,21 @@ class TestUserProfile:
         r = client.get(f"/users/{normal_user.id}")
         assert r.status_code == 200
 
+    def test_user_profile_showcase_content(self, client, app, normal_user, published_article, column):
+        normal_user.profile_markdown = "## 研究方向\n- Flask\n- AI 写作"
+        db.session.commit()
+
+        r = client.get(f"/users/{normal_user.id}")
+        assert r.status_code == 200
+        data = r.data.decode()
+        assert "Personal Showcase" in data
+        assert "@alice" in data
+        assert "公开文章" in data
+        assert "知识合集" in data
+        assert "研究方向" in data
+        assert published_article.title in data
+        assert column.name in data
+
     def test_user_not_found(self, client):
         r = client.get("/users/99999")
         assert r.status_code == 404

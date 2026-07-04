@@ -10,35 +10,90 @@
   <div class="public-profile-page">
     {{ app_topbar("作者主页") }}
     <main class="public-profile-shell">
-      <section class="public-hero-card">
-        <div class="public-hero-avatar">{{ profile_user.nickname[:1] }}</div>
-        <div>
-          <p class="profile-eyebrow">Author</p>
-          <h1>{{ profile_user.nickname }}</h1>
+      {% set featured_article = articles[0] if articles else none %}
+      <section class="public-showcase-hero">
+        <div class="public-showcase-copy">
+          <p class="profile-eyebrow">Personal Showcase</p>
+          <div class="public-showcase-title">
+            <div class="public-hero-avatar">{{ profile_user.nickname[:1] }}</div>
+            <div>
+              <h1>{{ profile_user.nickname }}</h1>
+              <p class="public-showcase-handle">@{{ profile_user.username }}</p>
+            </div>
+          </div>
           {% if profile_user.bio %}
-            <p>{{ profile_user.bio }}</p>
+            <p class="public-showcase-bio">{{ profile_user.bio }}</p>
           {% else %}
-            <p class="v041-muted">这位作者还没有写下简介。</p>
+            <p class="public-showcase-bio v041-muted">这位作者还没有写下简介。</p>
           {% endif %}
-          <div class="public-hero-meta">
-            <span>{{ articles|length }} 篇文章</span>
-            <span>{{ columns|length }} 个知识合集</span>
-            <span>加入于 {{ profile_user.created_at.strftime("%Y-%m-%d") }}</span>
+          <div class="public-showcase-actions">
+            <a class="v041-btn v041-btn-primary" href="#profile-work">查看作品</a>
+            <a class="v041-btn" href="{{ url_for('public.search', q=profile_user.nickname) }}">搜索 TA 的内容</a>
           </div>
         </div>
-        <div class="public-hero-actions">
-          <a class="v041-btn" href="{{ url_for('public.home') }}">返回首页</a>
-          <a class="v041-btn v041-btn-primary" href="{{ url_for('public.search') }}">进入搜索</a>
+
+        <div class="public-showcase-card">
+          <div class="public-showcase-stat-grid">
+            <div>
+              <strong>{{ articles|length }}</strong>
+              <span>公开文章</span>
+            </div>
+            <div>
+              <strong>{{ columns|length }}</strong>
+              <span>知识合集</span>
+            </div>
+            <div>
+              <strong>{{ profile_user.created_at.strftime("%Y") }}</strong>
+              <span>加入年份</span>
+            </div>
+          </div>
+          {% if featured_article %}
+            <a class="public-featured-work" href="{{ url_for('public.article_detail', slug=featured_article.slug) }}">
+              <span>最新作品</span>
+              <strong>{{ featured_article.title }}</strong>
+              <em>{{ featured_article.summary or featured_article.content[:72] }}</em>
+            </a>
+          {% else %}
+            <div class="public-featured-work is-empty">
+              <span>最新作品</span>
+              <strong>还没有公开文章</strong>
+              <em>发布文章后，这里会优先展示最新内容。</em>
+            </div>
+          {% endif %}
         </div>
       </section>
 
-      <div class="public-content-grid">
+      <section class="public-profile-summary">
+        <div>
+          <span>内容方向</span>
+          <strong>{{ columns[0].name if columns else "知识写作" }}</strong>
+        </div>
+        <div>
+          <span>展示主页</span>
+          <strong>{{ "已完善" if profile_user.profile_markdown else "待完善" }}</strong>
+        </div>
+        <div>
+          <span>最近更新</span>
+          <strong>{{ (featured_article.published_at or featured_article.created_at).strftime("%Y-%m-%d") if featured_article else profile_user.updated_at.strftime("%Y-%m-%d") }}</strong>
+        </div>
+      </section>
+
+      <div class="public-content-grid" id="profile-work">
         <section class="public-panel public-panel-large">
-          {% if profile_user.profile_markdown %}
-            <div class="public-markdown-profile">
-              {{ profile_user.profile_markdown|markdown }}
+          <div class="study-panel-head">
+            <div>
+              <p class="profile-eyebrow">About</p>
+              <h2>个人介绍</h2>
             </div>
-          {% endif %}
+          </div>
+          <div class="public-markdown-profile">
+            {% if profile_user.profile_markdown %}
+              {{ profile_user.profile_markdown|markdown }}
+            {% else %}
+              <p>作者暂未填写 Markdown 个人主页。可以在个人资料中补充研究方向、项目经历、学习路线或代表作品。</p>
+            {% endif %}
+          </div>
+
           <div class="study-panel-head">
             <div>
               <p class="profile-eyebrow">Articles</p>
@@ -79,6 +134,12 @@
           {% else %}
             {{ empty_state("暂无知识合集", "作者还没有建立公开知识合集。") }}
           {% endif %}
+
+          <div class="public-profile-note">
+            <span>加入时间</span>
+            <strong>{{ profile_user.created_at.strftime("%Y-%m-%d") }}</strong>
+            <p>公开作者主页仅展示已发布文章和已有知识合集，不展示草稿或个人隐私信息。</p>
+          </div>
         </aside>
       </div>
     </main>
