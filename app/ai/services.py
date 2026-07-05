@@ -37,6 +37,7 @@ class AIService:
         "search_intent":  (1200, 0.3),   # 搜索意图：更多扩展关键词
         "search_rerank":  (3000, 0.3),   # 搜索重排：更多候选文章可处理
         "moderation":     (1200, 0.1),   # 内容审核：稳定输出 JSON 判断
+        "quality":        (2500, 0.2),   # 质量诊断：结构化文章体检报告
     }
 
     def is_configured(self):
@@ -207,6 +208,53 @@ class AIService:
             "reason": str(data.get("reason") or "").strip()[:500],
             "risk_type": str(data.get("risk_type") or "other").strip()[:40],
             "confidence": data.get("confidence", 0),
+        }
+
+    def evaluate_article_quality(self, title, summary, content, metrics=None):
+        metrics = metrics or {}
+        system = (
+            "你是知识写作平台的内容质量诊断专家。请从知识文章质量和作者改进角度做体检，"
+            "目标是帮助作者把文章写得更清楚、更有搜索价值，而不是替作者重写全文。\n\n"
+            "诊断维度：\n"
+            "1. 主题一致性：标题、摘要、正文是否围绕同一问题。\n"
+            "2. 结构完整度：是否有背景、问题、步骤、总结或实践结论。\n"
+            "3. 知识密度：是否包含具体概念、步骤、经验或例子。\n"
+            "4. 可读性：目标读者是否容易理解。\n"
+            "5. 搜索友好度：是否容易被自然语言搜索匹配到。\n"
+            "6. 作者反馈：结合阅读量、点赞、收藏、评论等数据给出改进建议；如果数据很少，要说明样本不足。\n\n"
+            "评分规则：score 必须是 0 到 100 的整数，60 表示基本合格，80 以上表示质量较好。\n\n"
+            "严格只返回 JSON 对象，格式：\n"
+            '{"score": 0-100, "audience": "适合人群", "diagnosis": "体检报告", '
+            '"suggestions": ["建议1", "建议2", "建议3"], '
+            '"search_advice": "搜索优化建议", "feedback": "作者反馈"}'
+        )
+        user_content = (
+            f"标题：{title}\n\n"
+            f"摘要：{summary or '无'}\n\n"
+            f"当前数据：阅读量 {metrics.get('views', 0)}，"
+            f"点赞 {metrics.get('likes', 0)}，收藏 {metrics.get('favorites', 0)}，"
+            f"评论 {metrics.get('comments', 0)}。\n\n"
+            f"正文：\n{content}"
+        )
+        result = self._call("quality", system, user_content).text
+        data = self._parse_json_dict(result)
+        try:
+            score = int(data.get("score", 0))
+        except (TypeError, ValueError):
+            score = 0
+        if 0 < score <= 10:
+            score *= 10
+        score = max(0, min(score, 100))
+        suggestions = data.get("suggestions") or []
+        if not isinstance(suggestions, list):
+            suggestions = [str(suggestions)]
+        return {
+            "score": score,
+            "audience": str(data.get("audience") or "需人工确认").strip(),
+            "diagnosis": str(data.get("diagnosis") or "").strip(),
+            "suggestions": [str(item).strip() for item in suggestions if str(item).strip()][:5],
+            "search_advice": str(data.get("search_advice") or "").strip(),
+            "feedback": str(data.get("feedback") or "").strip(),
         }
 
     def generate_outline(self, content):

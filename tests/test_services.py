@@ -151,6 +151,8 @@ class TestArticleService:
             assert article.published_at is not None
             assert article.ai_review_status == AI_REVIEW_STATUS_UNAVAILABLE
             assert "AI 接口已关闭" in article.ai_review_reason
+            assert article.ai_quality_score is None
+            assert "AI 质量诊断暂不可用" in article.ai_quality_report
 
     def test_create_draft(self, app, normal_user, category):
         with app.app_context():
@@ -165,6 +167,7 @@ class TestArticleService:
             assert article.status == ARTICLE_STATUS_DRAFT
             assert article.published_at is None
             assert article.ai_review_status == AI_REVIEW_STATUS_PENDING
+            assert article.ai_quality_score is None
 
     def test_update_article(self, app, published_article, category):
         with app.app_context():

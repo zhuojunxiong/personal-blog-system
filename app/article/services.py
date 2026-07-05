@@ -168,6 +168,7 @@ class ArticleService:
         if article.status == ARTICLE_STATUS_PUBLISHED:
             ArticleService.refresh_ai_search_summary(article)
             ArticleService.refresh_ai_content_review(article)
+            ArticleService.refresh_ai_quality_feedback(article)
         return article, []
 
     @staticmethod
@@ -195,6 +196,10 @@ class ArticleService:
             article.ai_review_status = AI_REVIEW_STATUS_PENDING
             article.ai_review_reason = ""
             article.ai_reviewed_at = None
+            article.ai_quality_score = None
+            article.ai_quality_report = ""
+            article.ai_quality_suggestions = ""
+            article.ai_quality_generated_at = None
         else:
             article.ai_review_status = AI_REVIEW_STATUS_PENDING
         article.tags = Tag.query.filter(Tag.id.in_(tag_ids)).all() if tag_ids else []
@@ -202,6 +207,7 @@ class ArticleService:
         if article.status == ARTICLE_STATUS_PUBLISHED:
             ArticleService.refresh_ai_search_summary(article)
             ArticleService.refresh_ai_content_review(article)
+            ArticleService.refresh_ai_quality_feedback(article)
         return []
 
     @staticmethod
@@ -338,4 +344,57 @@ class ArticleService:
             article.ai_review_status = AI_REVIEW_STATUS_UNAVAILABLE
             article.ai_review_reason = f"AI 审核失败：{exc}"[:500]
             article.ai_reviewed_at = utcnow()
+            db.session.commit()
+
+    @staticmethod
+    def refresh_ai_quality_feedback(article):
+        from app.ai.services import AIServiceError, ai_service
+
+        if article.status != ARTICLE_STATUS_PUBLISHED:
+            article.ai_quality_score = None
+            article.ai_quality_report = ""
+            article.ai_quality_suggestions = ""
+            article.ai_quality_generated_at = None
+            db.session.commit()
+            return
+
+        metrics = {
+            "views": article.view_count,
+            "likes": article.like_count,
+            "favorites": article.favorite_count,
+            "comments": article.approved_comment_count,
+        }
+        try:
+            result = ai_service.evaluate_article_quality(
+                article.title,
+                article.summary,
+                article.content,
+                metrics,
+            )
+            report_parts = [
+                f"质量评分：{result.get('score', 0)}/100",
+                f"适合人群：{result.get('audience') or '需人工确认'}",
+                result.get("diagnosis") or "",
+                f"搜索优化：{result.get('search_advice')}" if result.get("search_advice") else "",
+                f"作者反馈：{result.get('feedback')}" if result.get("feedback") else "",
+            ]
+            article.ai_quality_score = result.get("score", 0)
+            article.ai_quality_report = "\n".join(part for part in report_parts if part)
+            suggestions = result.get("suggestions") or []
+            article.ai_quality_suggestions = "\n".join(f"- {item}" for item in suggestions)
+            article.ai_quality_generated_at = utcnow()
+            db.session.commit()
+        except AIServiceError as exc:
+            db.session.rollback()
+            article.ai_quality_score = None
+            article.ai_quality_report = f"AI 质量诊断暂不可用：{str(exc)[:460]}"
+            article.ai_quality_suggestions = "请稍后在 AI 配置可用时重新发布或编辑文章以刷新诊断。"
+            article.ai_quality_generated_at = utcnow()
+            db.session.commit()
+        except Exception as exc:
+            db.session.rollback()
+            article.ai_quality_score = None
+            article.ai_quality_report = f"AI 质量诊断失败：{exc}"[:500]
+            article.ai_quality_suggestions = "请人工检查文章结构、知识密度和搜索摘要。"
+            article.ai_quality_generated_at = utcnow()
             db.session.commit()

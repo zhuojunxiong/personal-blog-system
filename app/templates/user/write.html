@@ -125,6 +125,30 @@
         <div class="write-ai-messages" data-v041-ai-messages>
           <div class="write-ai-message is-ai">可以帮你搜索资料、整理大纲、润色正文，并自动推荐分类和标签。</div>
         </div>
+        {% if article %}
+          <section class="write-quality-card" aria-label="AI 知识体检报告">
+            <div class="write-quality-head">
+              <div>
+                <p class="profile-eyebrow">Quality Check</p>
+                <h2>AI 知识体检</h2>
+              </div>
+              {% if article.ai_quality_score is not none %}
+                <span>{{ article.ai_quality_score }}/100</span>
+              {% else %}
+                <span>待生成</span>
+              {% endif %}
+            </div>
+            {% if article.ai_quality_report %}
+              <pre>{{ article.ai_quality_report }}</pre>
+            {% else %}
+              <p>发布文章后，系统会自动生成主题、结构、知识密度、可读性和搜索友好度诊断。</p>
+            {% endif %}
+            {% if article.ai_quality_suggestions %}
+              <h3>改进建议</h3>
+              <pre>{{ article.ai_quality_suggestions }}</pre>
+            {% endif %}
+          </section>
+        {% endif %}
         <form class="write-ai-form" data-v041-ai-chat>
           <input class="v041-input" name="question" placeholder="输入资料主题，例如 Flask 登录权限" autocomplete="off">
           <button class="v041-btn" type="submit">搜资料</button>

@@ -211,9 +211,17 @@ class TestEditArticle:
     """Tests for editing articles."""
 
     def test_edit_page(self, client, normal_user, published_article):
+        published_article.ai_quality_score = 76
+        published_article.ai_quality_report = "质量评分：76/100\n适合 Flask 初学者。"
+        published_article.ai_quality_suggestions = "- 增加错误路径说明"
+        db.session.commit()
         login_alice(client)
         r = client.get(f"/my/articles/{published_article.id}/edit")
+        data = r.data.decode()
         assert r.status_code == 200
+        assert "AI 知识体检" in data
+        assert "76/100" in data
+        assert "增加错误路径说明" in data
 
     def test_edit_success(self, client, normal_user, published_article, category):
         login_alice(client)

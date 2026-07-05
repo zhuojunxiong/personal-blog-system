@@ -64,6 +64,27 @@
             {% endif %}
           </div>
         </div>
+        <div class="col-12">
+          <div class="alert alert-light border mb-0">
+            <div class="d-flex flex-wrap align-items-center gap-2">
+              <strong>AI 知识体检：</strong>
+              {% if article.ai_quality_score is not none %}
+                <span class="badge text-bg-info">{{ article.ai_quality_score }}/100</span>
+              {% else %}
+                <span class="badge text-bg-secondary">暂无评分</span>
+              {% endif %}
+              {% if article.ai_quality_generated_at %}
+                <span class="text-secondary">{{ article.ai_quality_generated_at.strftime('%Y-%m-%d %H:%M') }}</span>
+              {% endif %}
+            </div>
+            {% if article.ai_quality_report %}
+              <pre class="admin-ai-report mt-2 mb-0">{{ article.ai_quality_report }}</pre>
+            {% endif %}
+            {% if article.ai_quality_suggestions %}
+              <pre class="admin-ai-report mt-2 mb-0">{{ article.ai_quality_suggestions }}</pre>
+            {% endif %}
+          </div>
+        </div>
       {% endif %}
       <div class="col-12">
         <label class="form-label">标签</label>

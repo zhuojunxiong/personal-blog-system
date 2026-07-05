@@ -66,9 +66,17 @@ class TestAdminArticles:
         assert "文章创建成功" in r.data.decode()
 
     def test_edit_article_page(self, client, admin_user, published_article):
+        published_article.ai_quality_score = 82
+        published_article.ai_quality_report = "质量评分：82/100\n结构完整度较好。"
+        published_article.ai_quality_suggestions = "- 补充一个实践示例"
+        db.session.commit()
         login_admin(client)
         r = client.get(f"/admin/articles/{published_article.id}/edit")
+        data = r.data.decode()
         assert r.status_code == 200
+        assert "AI 知识体检" in data
+        assert "82/100" in data
+        assert "补充一个实践示例" in data
 
     def test_edit_article(self, client, admin_user, published_article, category):
         login_admin(client)

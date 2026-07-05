@@ -15,6 +15,10 @@ SQLITE_COMPAT_COLUMNS = {
         "ai_review_status": "VARCHAR(32) DEFAULT 'pending' NOT NULL",
         "ai_review_reason": "TEXT DEFAULT ''",
         "ai_reviewed_at": "DATETIME",
+        "ai_quality_score": "INTEGER",
+        "ai_quality_report": "TEXT DEFAULT ''",
+        "ai_quality_suggestions": "TEXT DEFAULT ''",
+        "ai_quality_generated_at": "DATETIME",
     },
 }
 
@@ -90,6 +94,10 @@ def ensure_sqlite_schema(app):
                 "ai_review_status": "VARCHAR(32) DEFAULT 'pending' NOT NULL",
                 "ai_review_reason": "TEXT DEFAULT ''",
                 "ai_reviewed_at": "DATETIME",
+                "ai_quality_score": "INTEGER",
+                "ai_quality_report": "TEXT DEFAULT ''",
+                "ai_quality_suggestions": "TEXT DEFAULT ''",
+                "ai_quality_generated_at": "DATETIME",
             },
         }
         try:
