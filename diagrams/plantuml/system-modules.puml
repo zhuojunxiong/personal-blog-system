@@ -1,0 +1,125 @@
+@startuml
+title v1.0 AI 驱动的知识写作与搜索平台 - 系统功能模块图
+
+skinparam componentStyle rectangle
+skinparam packageStyle rectangle
+skinparam defaultFontSize 13
+
+actor "用户" as User
+
+rectangle "稷下知识博客系统 v1.0" as System {
+
+  package "前台展示模块\n(public)" as Frontend {
+    component "首次着陆页 /\n引导进入 /home" as LandingPage
+    component "首页 /home\n极简自然语言搜索" as HomePage
+    component "发现页\n文章封面流浏览" as DiscoverPage
+    component "文章阅读页\n正文/目录/AI 阅读助手" as ArticleRead
+    component "分类浏览\n按分类筛选文章" as CategoryBrowse
+    component "标签浏览\n按标签筛选文章" as TagBrowse
+    component "知识合集浏览\n(原专栏)聚合文章" as ColumnBrowse
+    component "作者主页\nMarkdown 知识主页" as AuthorPage
+    component "传统搜索\n关键词匹配标题/摘要/正文" as LegacySearch
+  }
+
+  package "用户认证模块\n(auth)" as AuthModule {
+    component "注册\n用户名/邮箱/密码" as Register
+    component "登录\n普通登录/管理员登录" as Login
+    component "退出登录" as Logout
+    component "密码修改" as ChangePwd
+  }
+
+  package "用户中心模块\n(user)" as UserCenter {
+    component "个人资料\n昵称/简介/Markdown 主页" as Profile
+    component "我的文章\n草稿/已发布管理" as MyArticles
+    component "我的知识合集\n创建/编辑/管理合集" as MyColumns
+    component "收藏与点赞\n收藏列表/点赞记录" as MyFavorites
+    component "统计面板\n文章数/合集数/收藏数" as UserStats
+  }
+
+  package "文章写作模块\n(article)" as WritingModule {
+    component "新建文章\nMarkdown 编辑器" as NewArticle
+    component "编辑文章\n草稿继续编辑" as EditArticle
+    component "文章管理\n状态切换/删除" as ArticleManage
+    component "分类与标签\n手动输入 + AI 推荐" as TaxSelection
+    component "合集归属\n选择发布知识合集" as ColumnAssign
+    component "搜索摘要\n发布时 AI 自动生成" as SearchSummary
+  }
+
+  package "AI 辅助模块 v1.0\n(ai/)" as AIModule {
+    component "AI 写作助手（四项核心）\n搜资料/大纲/润色/搜索摘要" as AIWriteCore
+    component "AI 阅读助手\n文章智能问答分析" as AIReading
+    component "AI 内容审核\n质量评分/报告/建议" as AIReview
+    component "AI 智能搜索\n意图理解/扩展/SQL候选/重排/降级" as AISearch
+    component "AI 配置管理\nAPI Key 状态查看" as AIConfig
+    component "AI 日志记录\n调用记录/结果追踪" as AILog
+  }
+
+  package "社交互动模块\n(comment/like/favorite)" as SocialModule {
+    component "评论系统\n提交评论/审核展示" as CommentSys
+    component "点赞功能\n文章点赞/取消" as LikeSys
+    component "收藏功能\n文章收藏/取消" as FavoriteSys
+  }
+
+  package "后台管理模块\n(admin/dashboard)" as AdminModule {
+    component "管理仪表盘\n全站数据统计面板" as Dashboard
+    component "用户管理\n列表/状态/角色管理" as UserMgmt
+    component "文章管理\n全站文章审核/AI审核状态" as ArticleMgmt
+    component "分类管理\n创建/编辑/排序/删除" as CategoryMgmt
+    component "标签管理\n创建/编辑/删除" as TagMgmt
+    component "知识合集管理\n全站合集管理" as ColumnMgmt
+    component "评论审核\n通过/隐藏/删除" as CommentMod
+  }
+
+  package "测试与工程化模块 v1.0\n(tests/ scripts/ docs/)" as Engineering {
+    component "E2E 测试\ntest_e2e.py" as E2ETest
+    component "单元/集成测试\ntests/ (10+文件)" as UnitTest
+    component "文章增强脚本\nscripts/enhance_articles.py" as EnhanceScript
+    component "数据库初始化\nscripts/init_db.py" as InitDB
+    component "正式文档体系\ndocs/ (00-15 + ADR + CR)" as DocSystem
+  }
+
+  package "基础设施层" as Infra {
+    component "Flask 应用工厂\ncreate_app()" as AppFactory
+    component "Blueprint 路由\n11 个蓝图模块" as Blueprints
+    component "Jinja2 模板引擎\n服务端渲染 HTML" as Templates
+    component "SQLAlchemy ORM\n9 个数据模型" as ORM
+    component "Flask-Login\n会话管理与认证" as Session
+    component "CSRF 保护\nFlask-WTF" as CSRF
+    component "SQLite 数据库\n本地持久化 + 演示数据" as SQLiteDB
+  }
+}
+
+' 用户交互
+User --> Frontend
+User --> AuthModule
+User --> UserCenter
+User --> WritingModule
+User --> SocialModule
+User --> AdminModule
+
+' 模块间依赖
+WritingModule ..> AIModule : AI 辅助写作
+WritingModule ..> SearchSummary : 发布时调用
+Frontend ..> AIModule : AI 搜索/阅读助手
+AIModule ..> AILog : 写入调用日志
+
+' 工程化支撑
+Engineering ..> Infra : 测试/脚本/文档
+
+' 基础设施支撑
+Frontend --> Infra
+AuthModule --> Infra
+UserCenter --> Infra
+WritingModule --> Infra
+AIModule --> Infra
+SocialModule --> Infra
+AdminModule --> Infra
+
+note bottom
+  v1.0 课程交付阶段（分支 work/v1.0-course-delivery）。
+  CR-009 产品基线：AI 驱动的知识写作与搜索平台。
+  新增 v1.0：首次着陆页、AI 阅读助手、AI 内容审核、
+  测试套件、文档体系、文章增强脚本、演示数据库。
+  AI 模块需配置 API Key 后验证真实远程调用。
+end note
+@enduml

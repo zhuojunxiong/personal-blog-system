@@ -1,5 +1,5 @@
 @startuml
-title v0.5.1 当前 SQLAlchemy 模型 ER 图
+title v1.0 当前 SQLAlchemy 模型 ER 图
 
 hide circle
 skinparam linetype ortho
@@ -136,7 +136,7 @@ articles ||--o{ favorites : favorited_by
 articles ||--o{ ai_logs : records
 
 note bottom
-  当前分支：process/unified-main-repo（工程治理分支）。
+  当前分支：work/v1.0-course-delivery（课程交付分支）。
   ADR-002：方案 B，保留当前技术栈，受控局部重构。
   本图仅基于 app/models.py 当前 SQLAlchemy 模型；
   不包含 ReadingHistory、关注、私信、付费、热榜、问答等不存在的表。

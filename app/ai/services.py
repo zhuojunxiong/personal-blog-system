@@ -341,22 +341,70 @@ class AIService:
 
     def smart_search(self, query, page=1, per_page=5):
         """AI 智能搜索主入口。编排三个阶段并处理降级。
-        返回: {understanding, results: [{article, reason, relevance}], total, fallback}
+        返回: {understanding, keywords, pipeline, results, total, fallback, source}
         """
+        pipeline = []
+        intent_fallback = False
+
         # 阶段1: AI 理解意图并扩展关键词
         try:
             intent_data = self.search_intent_and_expand(query)
             keywords = intent_data.get("keywords", [query])
             understanding = intent_data.get("understanding", f"您搜索了「{query}」")
         except AIServiceError:
+            intent_fallback = True
             keywords = [query]
             understanding = f"您搜索了「{query}」"
+        pipeline.append(
+            {
+                "step": "intent",
+                "title": "理解问题",
+                "actor": "AI" if not intent_fallback else "系统降级",
+                "status": "fallback" if intent_fallback else "done",
+                "detail": understanding,
+            }
+        )
 
         # 阶段2: 多关键词 SQL 搜索（最多取 20 篇候选）
         candidates = self._sql_multi_keyword_search(keywords, limit=20)
+        pipeline.append(
+            {
+                "step": "recall",
+                "title": "查找内容",
+                "actor": "后端 API",
+                "status": "done",
+                "detail": f"从知识库中找到了 {len(candidates)} 篇可能相关的内容。",
+            }
+        )
 
         if not candidates:
-            return {"understanding": understanding, "results": [], "total": 0, "fallback": False}
+            pipeline.append(
+                {
+                    "step": "rerank",
+                    "title": "智能排序",
+                    "actor": "AI",
+                    "status": "skipped",
+                    "detail": "没有找到匹配的内容，建议换个说法试试。",
+                }
+            )
+            pipeline.append(
+                {
+                    "step": "response",
+                    "title": "呈现结果",
+                    "actor": "浏览器",
+                    "status": "done",
+                    "detail": "本次搜索未找到结果，换个关键词再试试吧。",
+                }
+            )
+            return {
+                "understanding": understanding,
+                "keywords": keywords,
+                "pipeline": pipeline,
+                "results": [],
+                "total": 0,
+                "fallback": intent_fallback,
+                "source": "empty",
+            }
 
         # 阶段3: AI 重排序
         try:
@@ -364,14 +412,35 @@ class AIService:
         except AIServiceError:
             # 降级：保持原始顺序，不加推荐理由
             paged = candidates[(page - 1) * per_page : page * per_page]
+            pipeline.append(
+                {
+                    "step": "rerank",
+                    "title": "智能排序",
+                    "actor": "系统降级",
+                    "status": "fallback",
+                    "detail": "智能排序暂时不可用，按关键词匹配度展示结果。",
+                }
+            )
+            pipeline.append(
+                {
+                    "step": "response",
+                    "title": "呈现结果",
+                    "actor": "浏览器",
+                    "status": "done",
+                    "detail": f"为你展示了 {len(paged)} 条相关内容。",
+                }
+            )
             return {
                 "understanding": understanding,
+                "keywords": keywords,
+                "pipeline": pipeline,
                 "results": [
                     {"article": c, "reason": "", "relevance": 0}
                     for c in paged
                 ],
                 "total": len(candidates),
                 "fallback": True,
+                "source": "keyword_fallback",
             }
 
         # 按 AI 排序组装结果
@@ -388,11 +457,32 @@ class AIService:
 
         total = len(final_results)
         paged = final_results[(page - 1) * per_page : page * per_page]
+        pipeline.append(
+            {
+                "step": "rerank",
+                "title": "智能排序",
+                "actor": "AI",
+                "status": "done",
+                "detail": f"从 {len(candidates)} 篇中为你筛选出最相关的 {total} 篇。",
+            }
+        )
+        pipeline.append(
+            {
+                "step": "response",
+                "title": "呈现结果",
+                "actor": "浏览器",
+                "status": "done",
+                "detail": f"已为你整理好 {len(paged)} 条结果。",
+            }
+        )
         return {
             "understanding": understanding,
+            "keywords": keywords,
+            "pipeline": pipeline,
             "results": paged,
             "total": total,
-            "fallback": False,
+            "fallback": intent_fallback,
+            "source": "ai_rerank",
         }
 
     @staticmethod

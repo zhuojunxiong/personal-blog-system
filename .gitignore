@@ -4,8 +4,10 @@ __pycache__/
 
 instance/.secret_key
 instance/.csrf_secret_key
+instance/*.sqlite
 
 .pytest_cache/
 .coverage
 
 .env
+.DS_Store

@@ -1,0 +1,363 @@
+@startuml
+title v1.0 稷下知识博客系统 - 时序图集合
+
+' ============================================
+' 时序图 1：用户注册与登录
+' ============================================
+newpage 用户注册与登录流程
+
+actor "用户" as User
+participant "Browser\n(HTML表单)" as Browser
+participant "auth_bp\n/auth/*" as AuthRoute
+participant "AuthService" as AuthSvc
+participant "User\n(Model)" as UserModel
+database "SQLite" as DB
+
+== 注册 ==
+
+User -> Browser : 访问 /register
+Browser -> AuthRoute : GET /register
+AuthRoute --> Browser : register.html 表单
+User -> Browser : 填写用户名/邮箱/密码
+Browser -> AuthRoute : POST /register
+AuthRoute -> AuthSvc : register(username, email, password)
+AuthSvc -> UserModel : 检查 username/email 唯一性
+UserModel -> DB : SELECT
+DB --> UserModel : 查询结果
+AuthSvc -> UserModel : User(password_hash=...)
+UserModel -> DB : INSERT
+DB --> UserModel : OK
+AuthSvc --> AuthRoute : User 对象
+AuthRoute -> AuthRoute : login_user(user)
+AuthRoute --> Browser : 302 → 个人中心
+
+== 登录 ==
+
+User -> Browser : 访问 /login
+Browser -> AuthRoute : GET /login
+AuthRoute --> Browser : login.html 表单
+User -> Browser : 填写用户名/邮箱+密码
+Browser -> AuthRoute : POST /login
+AuthRoute -> AuthSvc : authenticate(login_id, password)
+AuthSvc -> UserModel : 按 username/email 查询
+UserModel -> DB : SELECT
+DB --> UserModel : User 记录
+AuthSvc -> UserModel : check_password(password)
+UserModel --> AuthSvc : True/False
+AuthSvc --> AuthRoute : User 或 None
+AuthRoute -> AuthRoute : login_user(user)
+alt 管理员登录管理后台
+  AuthRoute --> Browser : 302 → /admin/dashboard
+else 普通用户
+  AuthRoute --> Browser : 302 → /user/center
+end
+
+' ============================================
+' 时序图 2：文章发布流程
+' ============================================
+newpage 文章发布流程
+
+actor "作者" as Writer
+participant "Browser\n(写作页)" as WritePage
+participant "article_bp\n/article/*" as ArticleRoute
+participant "ArticleService" as ArtSvc
+participant "Article\n(Model)" as ArtModel
+participant "Tag\n(Model)" as TagModel
+database "SQLite" as DB2
+
+Writer -> WritePage : 访问 /write
+WritePage -> ArticleRoute : GET /write
+ArticleRoute --> WritePage : write.html (含分类/标签/专栏选择)
+Writer -> WritePage : 填写标题/正文/摘要\n选择分类/标签/专栏\n点击发布
+WritePage -> ArticleRoute : POST /write
+ArticleRoute -> ArtSvc : validate(form, user)
+ArtSvc --> ArticleRoute : 校验结果 (errors or OK)
+alt 校验失败
+  ArticleRoute --> WritePage : 返回表单错误信息
+else 校验通过
+  ArticleRoute -> ArtSvc : create_or_update(form, user, article=None)
+  ArtSvc -> ArtModel : 生成 slug
+  ArtSvc -> ArtModel : Article(title, content, ...)
+  ArtModel -> DB2 : INSERT INTO articles
+  DB2 --> ArtModel : article.id
+  loop 每个选中的标签
+    ArtSvc -> TagModel : create_or_get(name)
+    TagModel -> DB2 : INSERT OR IGNORE
+    ArtSvc -> DB2 : INSERT INTO article_tags
+  end
+  ArtSvc --> ArticleRoute : Article 对象
+  alt status = published
+    ArticleRoute --> WritePage : 302 → /article/<slug>
+  else status = draft
+    ArticleRoute --> WritePage : 302 → /write?edit=<id>
+  end
+end
+
+' ============================================
+' 时序图 3：AI 智能搜索
+' ============================================
+newpage AI 智能搜索流程
+
+actor "用户" as Searcher
+participant "Browser\n(搜索页)" as SearchPage
+participant "ai_bp\n/ai/search" as AiRoute
+participant "AIService" as AiSvc
+participant "AI API\n(OpenAI 兼容)" as AIAPI
+participant "ArticleService" as ArtSvc2
+participant "AiLog\n(Model)" as AiLogModel
+database "SQLite" as DB3
+
+Searcher -> SearchPage : 输入搜索词
+SearchPage -> SearchPage : fetch("/ai/search", {q: "..."})
+SearchPage -> AiRoute : POST /ai/search (JSON)
+AiRoute -> AiSvc : smart_search(query)
+
+== 阶段1: 意图理解与关键词扩展 ==
+AiSvc -> AIAPI : POST Chat Completions\n(提示词: 意图理解+关键词扩展)
+alt API 调用成功
+  AIAPI --> AiSvc : {意图, 扩展关键词[]}
+else API 未配置或失败
+  AIAPI --> AiSvc : 错误/降级信号
+  AiSvc -> AiSvc : 降级: 使用原始关键词
+end
+
+== 阶段2: SQL 多关键词检索 ==
+AiSvc -> ArtSvc2 : search_published(keywords)
+ArtSvc2 -> DB3 : SELECT ... WHERE title/content/summary LIKE ...
+DB3 --> ArtSvc2 : 候选文章列表
+ArtSvc2 --> AiSvc : 候选文章
+
+== 阶段3: AI 重排序 ==
+AiSvc -> AIAPI : POST Chat Completions\n(候选文章 + 重排提示词)
+alt 重排成功
+  AIAPI --> AiSvc : {排序结果, 推荐理由[]}
+else 重排失败
+  AiSvc -> AiSvc : 降级: 返回 SQL 候选结果
+end
+
+== 阶段4: 记录日志并返回 ==
+AiSvc -> AiLogModel : AiLog(scene="ai_search", ...)
+AiLogModel -> DB3 : INSERT INTO ai_logs
+AiSvc --> AiRoute : {pipeline[], results[]}
+AiRoute --> SearchPage : JSON 响应
+SearchPage -> SearchPage : renderAiSearchResults()\n渲染流水线步骤 + 结果卡片
+
+' ============================================
+' 时序图 4：评论审核流程
+' ============================================
+newpage 评论提交与审核流程
+
+actor "读者" as Reader
+actor "管理员" as Admin
+participant "Browser" as Browser2
+participant "comment_bp\n/comment/*" as CommentRoute
+participant "admin_bp\n/admin/*" as AdminRoute
+participant "CommentService" as CommentSvc
+participant "Comment\n(Model)" as CommentModel
+database "SQLite" as DB4
+
+== 读者提交评论 ==
+
+Reader -> Browser2 : 在文章页填写评论
+Browser2 -> CommentRoute : POST /comment/<article_id>
+CommentRoute -> CommentRoute : @login_required 检查
+CommentRoute -> CommentSvc : create(form, article, user)
+CommentSvc -> CommentModel : Comment(status="pending", ...)
+CommentModel -> DB4 : INSERT INTO comments
+CommentSvc --> CommentRoute : Comment 对象
+CommentRoute --> Browser2 : 提示"等待审核"
+
+== 管理员审核 ==
+
+Admin -> Browser2 : 访问 /admin/comments
+Browser2 -> AdminRoute : GET /admin/comments
+AdminRoute -> CommentModel : 查询 pending/hidden 评论
+CommentModel -> DB4 : SELECT
+DB4 --> CommentModel : 评论列表
+AdminRoute --> Browser2 : admin/comments.html
+
+alt 审核通过
+  Admin -> Browser2 : 点击"通过"
+  Browser2 -> AdminRoute : POST /admin/comment/<id>/approve
+  AdminRoute -> CommentSvc : approve(comment)
+  CommentSvc -> CommentModel : status = "approved"
+  CommentModel -> DB4 : UPDATE comments
+  CommentSvc --> AdminRoute : OK
+  AdminRoute --> Browser2 : 刷新列表
+  note right: 评论在文章页公开展示
+else 隐藏
+  Admin -> Browser2 : 点击"隐藏"
+  Browser2 -> AdminRoute : POST /admin/comment/<id>/hide
+  AdminRoute -> CommentSvc : hide(comment)
+  CommentSvc -> CommentModel : status = "hidden"
+  CommentModel -> DB4 : UPDATE
+  note right: 评论对读者不可见但保留记录
+else 删除
+  Admin -> Browser2 : 点击"删除"
+  Browser2 -> AdminRoute : POST /admin/comment/<id>/delete
+  AdminRoute -> CommentSvc : delete(comment)
+  CommentSvc -> DB4 : DELETE FROM comments
+  note right: 物理删除评论记录
+end
+
+' ============================================
+' 时序图 5：AI 辅助写作
+' ============================================
+newpage AI 辅助写作流程
+
+actor "作者" as Writer2
+participant "Browser\n(写作页)" as WritePage2
+participant "ai_bp\n/ai/*" as AiRoute2
+participant "AIService" as AiSvc2
+participant "AI API\n(OpenAI 兼容)" as AIAPI2
+participant "AiLog" as AiLogModel2
+database "SQLite" as DB5
+
+Writer2 -> WritePage2 : 在写作页选择 AI 功能
+note over WritePage2 : 摘要/标签/润色/问答/大纲/标题
+
+alt 搜资料 (v1.0)
+  Writer2 -> WritePage2 : 点击"AI 搜资料"
+  WritePage2 -> AiRoute2 : POST /ai/research
+  AiRoute2 -> AiSvc2 : research(query)
+
+else 生成大纲 (v1.0)
+  Writer2 -> WritePage2 : 点击"AI 大纲"
+  WritePage2 -> AiRoute2 : POST /ai/outline
+  AiRoute2 -> AiSvc2 : generate_outline(topic)
+
+else 内容润色 (v1.0)
+  Writer2 -> WritePage2 : 选中文本 + 润色指令
+  WritePage2 -> AiRoute2 : POST /ai/polish
+  AiRoute2 -> AiSvc2 : polish(content, instruction)
+
+else 搜索摘要 (v1.0)
+  Writer2 -> WritePage2 : 点击"AI 搜索摘要"
+  WritePage2 -> AiRoute2 : POST /ai/search-summary
+  AiRoute2 -> AiSvc2 : search_summary(article)
+
+else AI 对话 (v1.0)
+  Writer2 -> WritePage2 : 输入对话消息
+  WritePage2 -> AiRoute2 : POST /ai/chat
+  AiRoute2 -> AiSvc2 : chat(article, message)
+end
+
+AiSvc2 -> AiSvc2 : check_config()
+alt API Key 已配置
+  AiSvc2 -> AIAPI2 : POST Chat Completions
+  alt 调用成功
+    AIAPI2 --> AiSvc2 : AI 返回结果
+    AiSvc2 -> AiLogModel2 : AiLog(is_adopted=False)\n记录调用日志
+    AiLogModel2 -> DB5 : INSERT
+    AiSvc2 --> AiRoute2 : AI 结果
+  else 调用失败
+    AIAPI2 --> AiSvc2 : 错误
+    AiSvc2 -> AiLogModel2 : 记录错误日志
+    AiSvc2 --> AiRoute2 : 错误信息
+  end
+else API Key 未配置
+  AiSvc2 --> AiRoute2 : "AI 接口未配置，请设置 API Key"
+end
+AiRoute2 --> WritePage2 : JSON 响应
+WritePage2 -> WritePage2 : 展示 AI 结果到编辑器
+
+' ============================================
+' 时序图 6：AI 阅读助手 (v1.0 新增)
+' ============================================
+newpage AI 阅读助手流程 (v1.0)
+
+actor "读者" as Reader2
+participant "Browser\n(文章页)" as ArticlePage
+participant "ai_bp\n/ai/reading" as AiReadingRoute
+participant "AIService" as AiSvc3
+participant "AI API\n(OpenAI 兼容)" as AIAPI3
+participant "AiLog" as AiLogModel3
+database "SQLite" as DB6
+
+Reader2 -> ArticlePage : 阅读文章
+ArticlePage -> ArticlePage : 展示 AI 阅读助手入口
+Reader2 -> ArticlePage : 点击"AI 阅读助手"\n或输入问题
+ArticlePage -> AiReadingRoute : POST /ai/reading\n{article_id, question}
+AiReadingRoute -> AiReadingRoute : _get_accessible_article()\n验证文章可访问性
+AiReadingRoute -> AiSvc3 : reading_assistant(article, question)
+
+AiSvc3 -> AiSvc3 : check_config()
+alt API Key 已配置
+  AiSvc3 -> AIAPI3 : POST Chat Completions\n(文章内容 + 读者问题)
+  alt 调用成功
+    AIAPI3 --> AiSvc3 : AI 分析结果
+    AiSvc3 -> AiLogModel3 : AiLog(scene="reading")\n记录调用日志
+    AiLogModel3 -> DB6 : INSERT
+    AiSvc3 --> AiReadingRoute : AI 阅读分析结果
+  else 调用失败
+    AiSvc3 -> AiLogModel3 : 记录错误日志
+    AiSvc3 --> AiReadingRoute : 降级提示
+  end
+else API Key 未配置
+  AiSvc3 --> AiReadingRoute : "AI 阅读助手未配置"
+end
+AiReadingRoute --> ArticlePage : JSON 响应
+ArticlePage -> ArticlePage : 展示 AI 阅读分析
+
+' ============================================
+' 时序图 7：AI 内容审核 (v1.0 新增)
+' ============================================
+newpage AI 内容审核流程 (v1.0)
+
+actor "管理员" as Admin2
+participant "Browser\n(管理后台)" as AdminPage
+participant "admin_bp / ai_bp" as AdminRoute2
+participant "AIService" as AiSvc4
+participant "AI API\n(OpenAI 兼容)" as AIAPI4
+participant "Article\n(Model)" as ArtModel2
+participant "AiLog" as AiLogModel4
+database "SQLite" as DB7
+
+== AI 质量检测 ==
+
+Admin2 -> AdminPage : 访问文章管理
+AdminPage -> AdminRoute2 : 触发 AI 质量检测
+AdminRoute2 -> AiSvc4 : quality_check(article)
+AiSvc4 -> AiSvc4 : check_config()
+
+alt API Key 已配置
+  AiSvc4 -> AIAPI4 : POST Chat Completions\n(文章内容 + 质量评估提示词)
+  alt 调用成功
+    AIAPI4 --> AiSvc4 : {score, report, suggestions}
+    AiSvc4 -> ArtModel2 : 更新 ai_quality_score\nai_quality_report\nai_quality_suggestions\nai_quality_generated_at
+    ArtModel2 -> DB7 : UPDATE articles
+    AiSvc4 -> AiLogModel4 : AiLog(scene="quality_check")
+    AiLogModel4 -> DB7 : INSERT
+    AiSvc4 --> AdminRoute2 : 质量报告
+  else 调用失败
+    AiSvc4 --> AdminRoute2 : 降级提示
+  end
+else API Key 未配置
+  AiSvc4 --> AdminRoute2 : "AI 审核未配置"
+end
+AdminRoute2 --> AdminPage : 展示 AI 质量评分/报告/建议
+
+== AI 内容审核 ==
+
+Admin2 -> AdminPage : 触发 AI 内容审核
+AdminPage -> AdminRoute2 : POST /ai 审核
+AdminRoute2 -> AiSvc4 : 调用审核逻辑
+AiSvc4 -> AIAPI4 : POST Chat Completions\n(文章内容 + 合规审核提示词)
+alt 审核通过
+  AIAPI4 --> AiSvc4 : review_status=passed
+  AiSvc4 -> ArtModel2 : ai_review_status="passed"\nai_reviewed_at=now()
+else 疑似违规
+  AIAPI4 --> AiSvc4 : review_status=suspected + reason
+  AiSvc4 -> ArtModel2 : ai_review_status="suspected"\nai_review_reason=reason
+end
+ArtModel2 -> DB7 : UPDATE articles
+AiSvc4 --> AdminRoute2 : 审核结果
+AdminRoute2 --> AdminPage : 展示审核状态
+
+note bottom
+  v1.0 课程交付阶段。所有时序图基于当前代码实现。
+  新增 v1.0 序列：AI 阅读助手、AI 内容审核。
+  AI API 调用需配置 API Key 后验证真实远程调用。
+  ADR-002：方案 B，保留 Flask + Jinja2 + SQLAlchemy + SQLite 技术栈。
+end note
+@enduml

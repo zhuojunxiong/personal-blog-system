@@ -26,7 +26,7 @@
         <input type="hidden" name="page" value="1">
         <input type="hidden" name="pageSize" value="{{ page_size }}">
         <button class="v041-btn v041-btn-primary search-results-submit"
-                type="submit" data-v041-loading-label="AI 思考中…">
+                type="submit" data-v041-loading-label="正在查找…">
           AI 搜索
         </button>
       </form>
@@ -34,12 +34,14 @@
       {# AI 理解区域（初始隐藏，JS 动态填充） #}
       <div class="ai-search-understanding" data-v041-ai-understanding style="display:none;"></div>
 
+      <section class="ai-search-pipeline" data-v041-ai-pipeline aria-label="搜索过程" style="display:none;"></section>
+
       {# 结果统计 #}
       <div class="search-results-meta" data-v041-ai-search-meta>
         {% if keyword %}
           <p>关于「{{ keyword }}」共找到 {{ pagination.total }} 篇相关内容。</p>
         {% else %}
-          <p>描述你的困惑或需求，AI 会结合文章摘要、正文和互动数据寻找最相关的内容。</p>
+          <p>描述你的困惑或需求，AI 会帮你找到最相关的内容。</p>
         {% endif %}
       </div>
 
@@ -66,7 +68,7 @@
                   <a class="search-result-body" href="{{ url_for('public.article_detail', slug=article.slug) }}">
                     <h2>{{ article.title }}</h2>
                     {% if article.ai_search_summary %}
-                      <span class="search-ai-label">AI 搜索摘要</span>
+                      <span class="search-ai-label">文章摘要</span>
                     {% endif %}
                     <p>{{ search_summary }}{% if search_summary|length >= 200 %}...{% endif %}</p>
                   </a>
@@ -95,10 +97,10 @@
               </nav>
             {% endif %}
           {% else %}
-            {{ empty_state("没有找到相关内容", "换一种方式描述你的需求，AI 会重新理解。", "回到搜索首页", url_for('public.home')) }}
+            {{ empty_state("没有找到相关内容", "换一种方式描述你的需求，AI 会重新帮你查找。", "回到搜索首页", url_for('public.home')) }}
           {% endif %}
         {% else %}
-          {{ empty_state("描述你的问题", "输入你想了解的内容，AI 会帮你找到最相关的文章。") }}
+          {{ empty_state("描述你的问题", "输入你想了解的内容，AI 帮你找到最相关的文章。") }}
         {% endif %}
       </div>
     </section>

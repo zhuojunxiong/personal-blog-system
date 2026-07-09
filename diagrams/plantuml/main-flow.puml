@@ -1,5 +1,5 @@
 @startuml
-title v0.5.1 主要业务流程图
+title v1.0 主要业务流程图
 
 skinparam conditionStyle diamond
 
@@ -59,8 +59,13 @@ partition "评论审核流程" {
   endif
 }
 
-partition "AI 辅助调用流程" {
-  :登录用户在写作页调用 AI 摘要/标签/润色/问答/大纲/标题;
+partition "AI 写作辅助流程 v1.0" {
+  :登录用户在写作页调用 AI 助手;
+  note right
+    v1.0 四项核心：
+    搜资料(research)、大纲(outline)、
+    润色(polish)、搜索摘要(search-summary)
+  end note
   :POST /ai/* JSON 接口;
   :检查 AI 配置;
   if (已配置 API Key?) then (是)
@@ -73,7 +78,7 @@ partition "AI 辅助调用流程" {
       :写入 ai_logs 基础日志;
     endif
   else (否)
-    :返回“AI 接口未配置”提示;
+    :返回"AI 接口未配置"提示;
     :写入 ai_logs 基础日志;
   endif
 }
@@ -82,7 +87,7 @@ partition "搜索流程" {
   :游客或用户输入搜索词;
   if (传统搜索 /search?) then (是)
     :ArticleService.search_published 匹配文章标题/摘要/正文/作者/标签/用户;
-    :补充匹配 active 专栏与 active 普通用户;
+    :补充匹配 active 知识合集与 active 普通用户;
     :渲染 v041/search_results.html;
   else (AI 搜索 /ai/search)
     :AI 意图理解和关键词扩展;
@@ -96,13 +101,32 @@ partition "搜索流程" {
   endif
 }
 
-stop
+partition "AI 阅读与审核流程 v1.0" {
+  :读者在文章页触发 AI 阅读助手;
+  :POST /ai/reading;
+  :AIService.reading_assistant() 分析文章内容;
+  :返回 AI 阅读分析结果;
+  :管理员在后台触发 AI 内容审核;
+  :AIService.quality_check() 生成质量评分;
+  :更新 ai_quality_* 字段;
+  :写入 ai_logs;
+}
+
+partition "首次访问流程 v1.0" {
+  :新用户访问 /;
+  :展示着陆页;
+  :点击进入 /home;
+  :展示极简自然语言搜索入口;
+  :输入搜索词进入 AI 搜索或传统搜索;
+}
 
 note bottom
-  当前分支：process/unified-main-repo（工程治理分支）。
+  当前分支：work/v1.0-course-delivery（课程交付分支）。
   ADR-002：方案 B，保留当前 Flask + Jinja2 + SQLAlchemy + SQLite 技术栈，
   在测试保护、需求确认和 ADR 约束下做受控局部重构。
   AI API：需配置 API Key 后验证。
   本图只覆盖当前实现流程，不把未来计划画成当前实现。
 end note
+
+stop
 @enduml

@@ -1,60 +1,63 @@
 @startuml
-title v0.5.1 当前架构图
+title v1.0 当前架构图
 
 skinparam componentStyle rectangle
 skinparam packageStyle rectangle
 
 actor "浏览器\n游客/注册用户/管理员" as Browser
 cloud "AI API\nOpenAI 兼容 Chat Completions\n需配置 API Key 后验证" as AIAPI
-database "SQLite\n本地开发/课程演示数据库" as SQLite
+database "SQLite\n本地开发/课程演示数据库\n含 115 篇增强文章" as SQLite
 
-rectangle "personal-blog-system\n当前分支：process/unified-main-repo（工程治理分支）" {
-  component "run.py" as Run
+rectangle "personal-blog-system v1.0\n当前分支：work/v1.0-course-delivery（课程交付分支）" {
+  component "run.py\n启动入口" as Run
   component "config.py\n环境变量配置" as Config
 
   package "Flask App\napp/__init__.py" as FlaskApp {
     component "create_app()" as CreateApp
     component "extensions.py\ndb / login_manager / csrf" as Extensions
     component "错误处理\n400 / 403 / 404 / 500" as Errors
+    component "Markdown 渲染器\nrender_markdown()" as Markdown
   }
 
-  package "Blueprint 路由层\napp/*/routes.py" as Routes {
-    component "public" as Public
-    component "auth" as Auth
-    component "user" as UserBP
-    component "article" as ArticleBP
-    component "comment" as CommentBP
-    component "column" as ColumnBP
-    component "category" as CategoryBP
-    component "tag" as TagBP
+  package "Blueprint 路由层 v1.0\napp/*/routes.py" as Routes {
+    component "public\n/ /home /discover /search" as Public
+    component "auth\n/register /login /logout" as Auth
+    component "user\n/center /profile" as UserBP
+    component "article\n/write /edit /delete" as ArticleBP
+    component "comment\n提交评论" as CommentBP
+    component "column\n知识合集管理" as ColumnBP
+    component "category / tag" as TaxBP
     component "dashboard / admin" as AdminBP
-    component "ai" as AiBP
+    component "ai v1.0\n写作/搜索/阅读/审核" as AiBP
   }
 
-  package "Service 层\napp/*/services.py" as Services {
+  package "Service 层 v1.0\napp/*/services.py" as Services {
     component "AuthService" as AuthService
     component "UserService" as UserService
-    component "ArticleService" as ArticleService
+    component "ArticleService\n含 AI 搜索摘要/审核" as ArticleService
     component "CommentService" as CommentService
     component "Column/Category/Tag Service" as TaxonomyService
-    component "AIService" as AIService
+    component "AIService v1.0\nresearch/outline/polish\nsearch-summary/reading\nreview/chat/search" as AIService
   }
 
   package "Model 层\napp/models.py" as Models {
-    component "User / BlogColumn / Article" as CoreModels
+    component "User / BlogColumn / Article\n含 ai_search_summary,\nai_review_*, ai_quality_*,\nprofile_markdown 字段" as CoreModels
     component "Category / Tag / ArticleTag" as TaxonomyModels
     component "Comment / Like / Favorite" as InteractionModels
     component "AiLog" as AiLogModel
   }
 
-  package "Template 层\napp/templates/" as Templates {
-    component "base.html / admin/base.html" as BaseTemplates
-    component "public / v041 / user / auth / admin / errors / shared" as PageTemplates
+  package "Template + Static 层\napp/templates/ app/static/" as View {
+    component "Jinja2 模板\npublic/v041/user/auth/admin" as Templates
+    component "CSS\nmain.css / v041.css" as CSS
+    component "JS\nv041.js" as JS
   }
 
-  package "Static 层\napp/static/" as Static {
-    component "css/main.css\ncss/v041.css" as CSS
-    component "js/v041.js" as JS
+  package "测试与工程化 v1.0" as Engineering {
+    component "E2E 测试\ntest_e2e.py" as E2E
+    component "单元/集成测试\ntests/" as UnitTests
+    component "增强脚本\nscripts/" as Scripts
+    component "文档体系\ndocs/ (00-15 + ADR + CR)" as Docs
   }
 }
 
@@ -62,15 +65,16 @@ Browser --> Public : HTML GET/POST
 Browser --> Auth
 Browser --> UserBP
 Browser --> CommentBP
-Browser --> AiBP : AI JSON / 搜索增强
+Browser --> AiBP : AI JSON（写作/搜索/阅读/审核）
 Browser <-- Templates : 服务端渲染 HTML
 Browser <-- Static : CSS / JS
 
 Run --> CreateApp
 CreateApp --> Config
 CreateApp --> Extensions
-CreateApp --> Routes : 注册 Blueprint
+CreateApp --> Routes : 注册 11 个 Blueprint
 CreateApp --> Errors
+CreateApp --> Markdown
 
 Routes --> Services : 调用业务逻辑
 Routes --> Models : 少量直接查询
@@ -79,22 +83,29 @@ Models --> Extensions : SQLAlchemy db
 Extensions --> SQLite
 
 Routes --> Templates : render_template()
-Templates --> Static : 引用静态资源
-JS --> AiBP : fetch /ai/search 等
 
 AIService --> AIAPI : requests.post()
 AiBP --> AIService
 AIService --> AiLogModel : 基础日志
-AIService --> ArticleService : SQL 候选检索
+AIService --> ArticleService : SQL 候选检索/审核
+
+Engineering ..> Models : 测试覆盖
+Engineering ..> Services : 测试覆盖
+Engineering ..> Routes : 测试覆盖
 
 note right of AIAPI
-  真实 AI 调用需配置 AI_API_KEY 后验证；
-  未配置时返回友好提示，不应视为远程调用已验收。
+  v1.0 AI 接口矩阵：
+  /ai/summary, /ai/tags, /ai/research,
+  /ai/search-summary, /ai/polish, /ai/chat,
+  /ai/reading, /ai/outline, /ai/titles,
+  /ai/search
+  真实调用需配置 API Key 后验证。
 end note
 
 note bottom
-  ADR-002：方案 B，保留当前技术栈，受控局部重构。
-  当前架构是 Flask 服务端渲染单体应用；
-  不是微服务，不是前后端完全分离，不引入未来计划架构。
+  v1.0 课程交付阶段。ADR-002 方案 B：Flask 服务端渲染单体应用。
+  新增：首次着陆页、AI 阅读助手、AI 内容审核、Markdown 主页、
+  测试套件、文档体系、文章增强、演示数据库。
+  不是微服务，不是前后端完全分离。
 end note
 @enduml

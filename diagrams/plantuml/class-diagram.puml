@@ -1,0 +1,261 @@
+@startuml
+title v1.0 稷下知识博客系统 - 类图
+
+skinparam classAttributeIconSize 0
+skinparam defaultFontSize 12
+
+' ============================================
+' Model 层 - 数据模型
+' ============================================
+
+class User {
+  + id: Integer <<PK>>
+  + username: String(64) <<unique, index>>
+  + email: String(120) <<unique, index>>
+  - password_hash: String(255)
+  + nickname: String(64) = "知识创作者"
+  + role: String(32) = "user"
+  + status: String(32) = "active"
+  + bio: String(500)
+  + profile_markdown: Text
+  + avatar: String(255)
+  + created_at: DateTime
+  + updated_at: DateTime
+  --
+  + set_password(password: str): void
+  + check_password(password: str): bool
+  + is_active: bool <<property>>
+  + is_admin: bool <<property>>
+}
+
+class BlogColumn {
+  + id: Integer <<PK>>
+  + user_id: Integer <<FK>>
+  + name: String(120)
+  + description: String(500)
+  + status: String(32) = "active"
+  + created_at: DateTime
+  + updated_at: DateTime
+}
+
+class Category {
+  + id: Integer <<PK>>
+  + name: String(80) <<unique, index>>
+  + description: String(255)
+  + sort_order: Integer = 0
+  + created_at: DateTime
+  + updated_at: DateTime
+}
+
+class Tag {
+  + id: Integer <<PK>>
+  + name: String(80) <<unique, index>>
+  + created_at: DateTime
+  + updated_at: DateTime
+}
+
+class ArticleTag {
+  + article_id: Integer <<PK, FK>>
+  + tag_id: Integer <<PK, FK>>
+  + created_at: DateTime
+}
+
+class Article {
+  + id: Integer <<PK>>
+  + title: String(160) <<index>>
+  + slug: String(180) <<unique, index>>
+  + summary: String(500)
+  + ai_search_summary: Text
+  + ai_search_generated_at: DateTime
+  + ai_review_status: String(32) = "pending"
+  + ai_review_reason: Text
+  + ai_reviewed_at: DateTime
+  + ai_quality_score: Integer
+  + ai_quality_report: Text
+  + ai_quality_suggestions: Text
+  + ai_quality_generated_at: DateTime
+  + content: Text
+  + status: String(32) = "draft"
+  + user_id: Integer <<FK>>
+  + column_id: Integer <<FK>>
+  + category_id: Integer <<FK>>
+  + author: String(80) = "管理员"
+  + view_count: Integer = 0
+  + like_count: Integer = 0
+  + favorite_count: Integer = 0
+  + created_at: DateTime
+  + updated_at: DateTime
+  + published_at: DateTime
+  --
+  + approved_comment_count: int <<property>>
+}
+
+class Comment {
+  + id: Integer <<PK>>
+  + article_id: Integer <<FK>>
+  + user_id: Integer <<FK>>
+  + nickname: String(80)
+  + email: String(120)
+  + content: Text
+  + status: String(32) = "pending"
+  + created_at: DateTime
+  + updated_at: DateTime
+}
+
+class Like {
+  + id: Integer <<PK>>
+  + user_id: Integer <<FK>>
+  + article_id: Integer <<FK>>
+  + created_at: DateTime
+  --
+  {unique(user_id, article_id)}
+}
+
+class Favorite {
+  + id: Integer <<PK>>
+  + user_id: Integer <<FK>>
+  + article_id: Integer <<FK>>
+  + created_at: DateTime
+  --
+  {unique(user_id, article_id)}
+}
+
+class AiLog {
+  + id: Integer <<PK>>
+  + article_id: Integer <<FK>>
+  + scene: String(80)
+  + input_text: Text
+  + ai_output: Text
+  + adopted_result: Text
+  + is_adopted: Boolean = false
+  + problem_found: String(255)
+  + created_at: DateTime
+}
+
+' ============================================
+' Service 层
+' ============================================
+
+class AuthService {
+  + register(username, email, password): User
+  + authenticate(login_id, password): User|None
+  + change_password(user, old_pw, new_pw): bool
+}
+
+class UserService {
+  + update_profile(user, data): User
+  + get_user_articles(user, status): List[Article]
+  + get_user_columns(user): List[BlogColumn]
+  + get_user_favorites(user): List[Article]
+}
+
+class ArticleService {
+  + validate(form, user): List[str]
+  + create_or_update(form, user, article): Article
+  + delete(article): void
+  + search_published(query, page): Pagination
+  + get_published_by_category(category, page): Pagination
+  + get_published_by_tag(tag, page): Pagination
+  + get_published_by_column(column, page): Pagination
+  + increment_view(article): void
+}
+
+class CommentService {
+  + create(form, article, user): Comment
+  + approve(comment): void
+  + hide(comment): void
+  + delete(comment): void
+  + get_pending_count(): int
+}
+
+class AIService {
+  + check_config(): dict
+  {static} + generate_summary(article): str
+  {static} + generate_tags(article): List[str]
+  {static} + research(query): str
+  {static} + search_summary(article): str
+  {static} + polish(content, instruction): str
+  {static} + chat(article, message): str
+  {static} + reading_assistant(article, question): str
+  {static} + generate_outline(topic): str
+  {static} + generate_title(content): List[str]
+  {static} + smart_search(query, page): dict
+  {static} + quality_check(article): dict
+  - _call_ai(messages): str
+  - _log(scene, input, output, article): void
+}
+
+note right of AIService
+  v1.0 新增方法：
+  research（搜资料）
+  search_summary（搜索摘要）
+  reading_assistant（阅读助手）
+  chat（AI 对话）
+end note
+
+class DashboardService {
+  + get_stats(): dict
+}
+
+class ColumnService {
+  + create(form, user): BlogColumn
+  + update(column, form): BlogColumn
+  + delete(column): void
+}
+
+class CategoryService {
+  + create(form): Category
+  + update(category, form): Category
+  + delete(category): void
+  + get_all_sorted(): List[Category]
+}
+
+class TagService {
+  + create_or_get(name): Tag
+  + update(tag, form): Tag
+  + delete(tag): void
+}
+
+' ============================================
+' 关系定义
+' ============================================
+
+' Model 层关系
+User "1" -- "0..*" BlogColumn : owns >
+User "1" -- "0..*" Article : writes >
+BlogColumn "1" -- "0..*" Article : contains >
+Category "1" -- "0..*" Article : classifies >
+Article "1" -- "0..*" ArticleTag : has >
+Tag "1" -- "0..*" ArticleTag : labels >
+Article "1" -- "0..*" Comment : receives >
+User "1" -- "0..*" Comment : submits >
+User "1" -- "0..*" Like : creates >
+Article "1" -- "0..*" Like : liked_by >
+User "1" -- "0..*" Favorite : creates >
+Article "1" -- "0..*" Favorite : favorited_by >
+Article "1" -- "0..*" AiLog : records >
+
+' Service → Model 依赖
+AuthService ..> User : operates on
+UserService ..> User : operates on
+UserService ..> Article : operates on
+ArticleService ..> Article : operates on
+CommentService ..> Comment : operates on
+AIService ..> Article : operates on
+AIService ..> AiLog : writes
+ColumnService ..> BlogColumn : operates on
+CategoryService ..> Category : operates on
+TagService ..> Tag : operates on
+DashboardService ..> Article : queries
+DashboardService ..> User : queries
+DashboardService ..> Comment : queries
+
+note bottom
+  v1.0 课程交付阶段。ADR-002：方案 B，保留 Flask + SQLAlchemy 技术栈。
+  Model 层：app/models.py（9 个 SQLAlchemy 模型），v1.0 新增字段：
+  profile_markdown, ai_search_summary, ai_review_*, ai_quality_*。
+  Service 层：app/*/services.py，v1.0 AIService 新增：
+  research, search_summary, reading_assistant, chat。
+  AI API 相关字段和方法需配置 API Key 后验证。
+end note
+@enduml

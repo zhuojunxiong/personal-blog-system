@@ -56,6 +56,24 @@ def create_app(config_class=Config):
                 current_app.logger.exception("User lookup failed after SQLite schema recovery.")
                 return None
 
+    # ---- DEMO 模式：自动登录 ----
+    demo_user = app.config.get("DEMO_AUTO_LOGIN")
+    if demo_user:
+        from flask import request
+        from flask_login import login_user
+
+        @app.before_request
+        def demo_auto_login():
+            from flask_login import current_user
+            from app.models import User
+
+            if current_user.is_authenticated:
+                return
+            user = User.query.filter_by(username=demo_user).first()
+            if user:
+                login_user(user)
+                app.logger.info(f"[DEMO] 自动登录: {demo_user} (端口 {request.host.split(':')[-1] if ':' in request.host else '?'})")
+
     register_blueprints(app)
     register_error_handlers(app)
     register_template_helpers(app)

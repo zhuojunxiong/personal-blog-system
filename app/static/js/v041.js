@@ -129,6 +129,7 @@
 
         var resultsContainer = document.querySelector("[data-v041-ai-search-results]");
         var understandingEl = document.querySelector("[data-v041-ai-understanding]");
+        var pipelineEl = document.querySelector("[data-v041-ai-pipeline]");
         var metaEl = document.querySelector("[data-v041-ai-search-meta]");
         var paginationEl = document.querySelector("[data-v041-ai-pagination]");
         var button = form.querySelector("[data-v041-loading-label]");
@@ -140,12 +141,13 @@
             '<p class="v041-state-text">AI 正在理解你的问题并搜索相关内容…</p></div></div>';
         }
         if (understandingEl) understandingEl.style.display = "none";
+        if (pipelineEl) pipelineEl.style.display = "none";
         if (metaEl) metaEl.style.display = "none";
         if (paginationEl) paginationEl.innerHTML = "";
 
         if (button) {
           button.dataset.v041OriginalLabel = button.textContent;
-          button.textContent = button.getAttribute("data-v041-loading-label") || "AI 思考中…";
+          button.textContent = button.getAttribute("data-v041-loading-label") || "正在查找…";
           button.disabled = true;
         }
 
@@ -165,7 +167,7 @@
           .then(function (response) {
             return response.json().then(function (data) {
               if (!response.ok || !data.ok) {
-                throw new Error(data.message || "AI 搜索请求失败。");
+                throw new Error(data.message || "搜索请求失败，请稍后重试。");
               }
               return data;
             });
@@ -210,6 +212,7 @@
 
   function renderAiSearchResults(data, query, form) {
     var understandingEl = document.querySelector("[data-v041-ai-understanding]");
+    var pipelineEl = document.querySelector("[data-v041-ai-pipeline]");
     var metaEl = document.querySelector("[data-v041-ai-search-meta]");
     var resultsContainer = document.querySelector("[data-v041-ai-search-results]");
     var paginationEl = document.querySelector("[data-v041-ai-pagination]");
@@ -220,14 +223,32 @@
     }
 
     if (understandingEl && data.understanding) {
-      understandingEl.textContent = data.understanding;
+      understandingEl.innerHTML = '<p class="ai-search-understanding-text">' + escapeHtml(data.understanding) + '</p>';
       understandingEl.style.display = "block";
+    }
+
+    if (pipelineEl && data.pipeline && data.pipeline.length > 0) {
+      var pipelineHtml = '<div class="ai-search-pipeline-head">' +
+        '<span>搜索过程</span>';
+      if (data.keywords && data.keywords.length > 0) {
+        pipelineHtml += '<small>也在搜索：' + escapeHtml(data.keywords.slice(0, 6).join(" / ")) + '</small>';
+      }
+      pipelineHtml += '</div><ol>';
+      data.pipeline.forEach(function (step) {
+        pipelineHtml += '<li class="is-' + escapeHtml(step.status || "done") + '">' +
+          '<strong>' + escapeHtml(step.title || step.step || "") + '</strong>' +
+          '<p>' + escapeHtml(step.detail || "") + '</p>' +
+          '</li>';
+      });
+      pipelineHtml += '</ol>';
+      pipelineEl.innerHTML = pipelineHtml;
+      pipelineEl.style.display = "block";
     }
 
     if (metaEl) {
       metaEl.innerHTML = "<p>关于「" + escapeHtml(query) + "」共找到 " + data.total + " 篇相关内容。";
       if (data.fallback) {
-        metaEl.innerHTML += " <small>（AI 重排序暂不可用，显示关键词匹配结果）</small>";
+        metaEl.innerHTML += " <small>（当前为关键词匹配模式，AI 排序暂不可用）</small>";
       }
       metaEl.innerHTML += "</p>";
       metaEl.style.display = "block";

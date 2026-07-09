@@ -29,15 +29,26 @@
 
 ## 本轮仍未执行事项
 
-本轮 Agent / Skill 只用于反向阅读、整理和记录当前系统理解，没有执行以下操作：
+以下为截至 2026-07-08 仍未执行的操作：
 
-- 未生成 docx。
-- 未生成或渲染 UML 图片。
+- 未生成需求规格说明书 docx（md-to-srs-docx 未运行）。
+- 未生成概要设计说明书 docx（md-to-sd-docx 未运行）。
 - 未执行浏览器视觉验收。
-- 未执行自动化测试。
-- 未修改业务代码。
+- 未执行全量自动化测试（仅执行了 CR-010/011/012 的针对性测试）。
+- 未复制原始 zip、jar、字体、缓存、HTML 导出物或无关二进制资源。
 - 未读取或修改 `software-practice-records`。
-- 未提交整个 zip、jar、字体、HTML、缓存文件或大型二进制资源。
+
+## 2026-07-08 新增记录
+
+| 日期 | 分支 | Skill / 工作流 | 使用状态 | 已关联文档 | 输出或用途 | 人工确认 |
+| --- | --- | --- | --- | --- | --- | --- |
+| 2026-07-08 | `work/v1.0-course-delivery` | `uml-generator` | ✅ 已实际运行 | `diagrams/plantuml/*.puml`（10个源文件）→ `diagrams/images/*.png`（23张图片） | 生成并渲染全套 UML 图：用例图、系统功能模块图、架构图、ER模型图、类图、业务流程图、时序图×8、活动图×7、数据流图×2。PlantUML 本地安装（brew install plantuml）。版本号全部更新为 v1.0，内容更新含 CR-009 新功能。 | 需项目负责人确认图与实际设计一致。 |
+| 2026-07-08 | `work/v1.0-course-delivery` | `code-review` | 已参考 | `docs/14_最终交付检查清单.md` | 对照交付检查清单，逐项复核当前状态，更新项目总结（`docs/12_项目总结.md`）至 v1.0 最新状态。 | 需项目负责人确认最终交付口径。 |
+| 2026-07-08 | `work/v1.0-course-delivery` | dataviz (Claude Code Skill) | 已参考 | 未触发（无数据可视化需求） | 确认项目无图表库（无 ECharts、无 Chart.js），统计以数字卡片展示。 | 不适用。 |
+| 2026-07-08 | `work/v1.0-course-delivery` | Explore Agent | ✅ 已实际运行 | 扫描全项目（40+ 工具调用） | 扫描项目结构，确认无图表库、无图片生成、无 canvas/SVG 渲染。列出 10 类可新增图表。 | 项目负责人确认项目理解正确。 |
+| 2026-07-08 | `work/v1.0-course-delivery` | 版本号全局更新 | ✅ 已实际运行 | 10 个 .puml 文件 | v0.5.1 → v1.0；process/unified-main-repo → work/v1.0-course-delivery；工程治理分支 → 课程交付分支。 | 项目负责人确认版本口径。 |
+| 2026-07-08 | `work/v1.0-course-delivery` | PlantUML 本地渲染 | ✅ 已实际运行 | `diagrams/render_puml.py`（备用方案） | 最终采用 `brew install plantuml` → `plantuml -tpng -o ../images/ *.puml` 本地渲染。未使用在线服务（kroki.io/plantuml.com），保护源码不泄露。 | 项目负责人确认图片质量。 |
+| 2026-07-08 | `work/v1.0-course-delivery` | 项目总结更新 | ✅ 已实际运行 | `docs/12_项目总结.md` | 更新至 v1.0 最新状态：新增 4.2 节（v1.0 交付物）、更新 ADR 至 5 份、更新需求追溯含 CR-009、更新未解决问题、更新阶段性结论、更新教师 Agent 纳入总结。 | 需项目负责人审核。 |
 
 ## 后续记录模板
 

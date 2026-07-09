@@ -1,0 +1,353 @@
+@startuml
+title v1.0 用户登录活动图
+
+start
+:访问登录页 /login;
+
+if (已登录?) then (是)
+  :跳转对应首页;
+  detach
+else (否)
+endif
+
+:填写用户名/邮箱和密码;
+:提交登录表单;
+
+:AuthService.authenticate()
+查询 users 表;
+
+if (账号存在且密码正确?) then (是)
+  if (账号状态 = active?) then (是)
+    :Flask-Login 建立会话;
+    if (角色 = admin?) then (是)
+      :跳转 /admin/dashboard
+      后台仪表盘;
+    else (否)
+      :跳转 /user/center
+      用户中心;
+    endif
+  else (否)
+    :提示"账号已被禁用";
+    :返回登录页;
+  endif
+else (否)
+  :提示"用户名或密码错误";
+  :返回登录页;
+endif
+
+stop
+@enduml
+
+@startuml
+title v1.0 文章发布活动图
+
+start
+:用户访问写作页 /write;
+
+:系统加载分类列表;
+:系统加载标签列表;
+:系统加载用户专栏列表;
+
+:用户填写文章信息:
+- 标题
+- 正文 (Markdown)
+- 摘要
+- 分类 (必选)
+- 标签 (多选)
+- 专栏 (可选);
+
+:用户选择操作;
+
+if (保存草稿?) then (是)
+  :status = "draft";
+else (发布?) then (是)
+  :status = "published";
+endif
+
+:提交表单 POST /write;
+
+:ArticleService.validate()
+校验数据;
+
+if (校验通过?) then (是)
+  :生成 slug;
+
+  if (编辑已有文章?) then (是)
+    :更新 articles 记录;
+  else (否)
+    :创建 articles 记录;
+  endif
+
+  :保存 article_tags 关联;
+
+  :ArticleService.create_or_update();
+
+  if (status = published?) then (是)
+    :设置 published_at = now();
+    :跳转文章详情页;
+  else (草稿)
+    :跳转编辑页继续编辑;
+  endif
+
+else (否)
+  :展示表单错误信息;
+  :返回写作页;
+endif
+
+stop
+@enduml
+
+@startuml
+title v1.0 AI 智能搜索活动图
+
+start
+:用户输入搜索关键词;
+
+:前端 fetch POST /ai/search;
+
+:AIService.smart_search();
+
+partition "阶段1: 意图理解" {
+  :构建 AI 提示词
+  (意图理解 + 关键词扩展);
+
+  if (AI API Key 已配置?) then (是)
+    :调用 OpenAI Chat Completions API;
+    if (API 调用成功?) then (是)
+      :解析意图和扩展关键词;
+    else (否)
+      :降级：使用原始关键词;
+    endif
+  else (否)
+    :降级：使用原始关键词;
+  endif
+}
+
+partition "阶段2: SQL 检索" {
+  :ArticleService.search_published()
+  多关键词 LIKE 查询
+  匹配标题/摘要/正文/作者/标签;
+  :获取候选文章列表;
+}
+
+partition "阶段3: AI 重排序" {
+  if (候选文章 > 0 且 AI 可用?) then (是)
+    :构建重排序提示词
+    (候选文章 + 搜索意图);
+    :调用 AI API 重排序;
+    if (重排序成功?) then (是)
+      :获取排序结果和推荐理由;
+    else (否)
+      :降级：返回 SQL 排序结果;
+    endif
+  else (否)
+    :直接返回 SQL 候选结果;
+  endif
+}
+
+partition "阶段4: 日志与响应" {
+  :写入 ai_logs 记录;
+  :返回 JSON 响应
+  {pipeline[], results[]};
+}
+
+:前端 renderAiSearchResults()
+渲染流水线步骤
++ 搜索结果卡片;
+
+stop
+@enduml
+
+@startuml
+title v1.0 评论审核活动图
+
+start
+
+partition "读者提交评论" {
+  :读者在文章页填写评论;
+  :提交 POST /comment/<id>;
+
+  if (用户已登录?) then (是)
+    :CommentService.create()
+    status = "pending";
+    :写入 comments 表;
+    :提示"评论已提交，等待审核";
+  else (否)
+    :提示"请先登录";
+    :跳转登录页;
+    detach
+  endif
+}
+
+partition "管理员审核" {
+  :管理员访问后台评论管理;
+  :系统查询 pending/hidden 评论列表;
+
+  while (有待审核评论?) is (是)
+    :管理员查看评论内容;
+
+    switch (审核操作?)
+      case (通过)
+        :status = "approved";
+        :评论在前台公开展示;
+      case (隐藏)
+        :status = "hidden";
+        :评论对读者不可见
+        但保留记录;
+      case (删除)
+        :DELETE FROM comments;
+        :物理删除评论;
+    endswitch
+
+    :更新数据库;
+  endwhile (否)
+
+  :审核完成;
+}
+
+stop
+@enduml
+
+@startuml
+title v1.0 用户注册活动图
+
+start
+:访问注册页 /register;
+
+:填写注册信息:
+- 用户名
+- 邮箱
+- 密码
+- 确认密码;
+
+:提交 POST /register;
+
+:AuthService.register();
+
+:检查用户名唯一性;
+if (用户名已存在?) then (是)
+  :提示"用户名已被使用";
+  :返回注册页;
+  detach
+else (否)
+endif
+
+:检查邮箱唯一性;
+if (邮箱已注册?) then (是)
+  :提示"邮箱已被注册";
+  :返回注册页;
+  detach
+else (否)
+endif
+
+:校验密码强度;
+if (密码符合要求?) then (是)
+else (否)
+  :提示密码要求;
+  :返回注册页;
+  detach
+endif
+
+:pbkdf2:sha256 哈希密码;
+:创建 User 记录;
+:自动登录 login_user();
+:跳转个人中心;
+
+stop
+@enduml
+
+@startuml
+title v1.0 AI 阅读助手活动图 (v1.0 新增)
+
+start
+:读者在文章页点击"AI 阅读助手";
+
+:前端 POST /ai/reading
+{article_id, question};
+
+:AIService.reading_assistant();
+
+if (API Key 已配置?) then (是)
+  :构建阅读分析提示词
+  (文章内容 + 读者问题);
+  :调用 OpenAI API;
+  if (API 调用成功?) then (是)
+    :解析 AI 分析结果;
+    :写入 ai_logs
+    scene="reading";
+    :返回阅读分析
+    含文章理解/问题解答;
+  else (否)
+    :记录错误日志;
+    :降级提示"AI 服务暂不可用";
+  endif
+else (否)
+  :提示"AI 阅读助手未配置";
+endif
+
+:前端展示 AI 阅读分析结果;
+
+stop
+@enduml
+
+@startuml
+title v1.0 AI 内容审核活动图 (v1.0 新增)
+
+start
+
+partition "AI 质量检测" {
+  :管理员触发 AI 质量检测;
+  :AIService.quality_check(article);
+
+  if (API Key 已配置?) then (是)
+    :构建质量评估提示词;
+    :调用 OpenAI API;
+    if (调用成功?) then (是)
+      :获取质量评分/报告/建议;
+      :更新 articles:
+      - ai_quality_score
+      - ai_quality_report
+      - ai_quality_suggestions
+      - ai_quality_generated_at;
+      :写入 ai_logs;
+      :展示质量报告;
+    else (否)
+      :降级提示;
+    endif
+  else (否)
+    :提示"AI 审核未配置";
+  endif
+}
+
+partition "AI 内容合规审核" {
+  :管理员触发 AI 内容审核;
+  :调用 OpenAI API
+  合规审核提示词;
+
+  if (调用成功?) then (是)
+    switch (AI 审核结果?)
+      case (通过)
+        :ai_review_status = "passed";
+      case (疑似)
+        :ai_review_status = "suspected";
+        :ai_review_reason = 原因;
+    endswitch
+    :更新 ai_reviewed_at;
+  else (否)
+    :ai_review_status = "unavailable";
+  endif
+
+  :写入 ai_logs;
+  :更新数据库;
+}
+
+:管理后台展示审核状态;
+
+stop
+
+note bottom
+  v1.0 课程交付阶段。ADR-002：方案 B。
+  新增 v1.0 活动：AI 阅读助手、AI 内容审核。
+  AI API 需配置 API Key 后验证真实远程调用。
+end note
+@enduml

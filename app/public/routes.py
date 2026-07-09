@@ -27,6 +27,10 @@ public_bp = Blueprint("public", __name__)
 
 @public_bp.route("/")
 def index():
+    if request.args.get("landing") == "1":
+        response = make_response(render_template("v041/landing.html"))
+        response.delete_cookie("zjx_seen_landing")
+        return response
     if request.cookies.get("zjx_seen_landing") == "1":
         return redirect(url_for("public.home"))
     response = make_response(render_template("v041/landing.html"))

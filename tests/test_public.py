@@ -43,6 +43,8 @@ class TestPublicPages:
     def test_search_page_with_query(self, client):
         r = client.get("/search?q=Flask")
         assert r.status_code == 200
+        data = r.data.decode()
+        assert "data-v041-ai-pipeline" in data
 
 
 class TestArticleDetail:

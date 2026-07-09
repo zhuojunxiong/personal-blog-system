@@ -1,0 +1,132 @@
+@startuml
+title v1.0 AI 驱动的知识写作与搜索平台 - 数据流图 (Level 1)
+
+skinparam componentStyle rectangle
+skinparam defaultFontSize 12
+
+' 外部实体
+actor "游客" as Guest
+actor "注册用户" as User
+actor "管理员" as Admin
+cloud "AI API\n(OpenAI 兼容)" as AIAPI
+
+rectangle "稷下知识博客系统 v1.0" as System {
+
+  ' 处理过程 (v1.0 更新)
+  component "P1\n前台展示\n含着陆页/首页" as P1
+  component "P2\n用户认证" as P2
+  component "P3\n文章管理\n含搜索摘要" as P3
+  component "P4\n社交互动" as P4
+  component "P5\nAI 辅助 v1.0\n写作/搜索/阅读/审核" as P5
+  component "P6\n搜索服务\n传统+AI" as P6
+  component "P7\n后台管理\n含 AI 审核" as P7
+
+  ' 数据存储
+  database "D1\nusers\n含 profile_markdown" as D1
+  database "D2\narticles\n含 ai_search_summary\nai_review_*/ai_quality_*" as D2
+  database "D3\nblog_columns\n知识合集" as D3
+  database "D4\ncategories" as D4
+  database "D5\ntags + article_tags" as D5
+  database "D6\ncomments" as D6
+  database "D7\nlikes + favorites" as D7
+  database "D8\nai_logs" as D8
+}
+
+' ============================================
+' 游客数据流
+' ============================================
+Guest --> P1 : 访问 / (着陆页)\n访问 /home (首页)\n浏览发现页/文章/分类/标签/合集
+P1 --> D2 : 查询已发布文章
+P1 --> D1 : 查询作者主页\nMarkdown 知识主页
+P1 --> D4 : 查询分类
+P1 --> D5 : 查询标签
+P1 --> D3 : 查询知识合集
+P1 --> Guest : HTML 页面
+
+Guest --> P6 : 搜索关键词 (传统/AI)
+P6 --> D2 : 关键词匹配/候选查询
+P6 --> Guest : 搜索结果
+
+Guest --> P2 : 注册/登录
+P2 --> D1 : 创建/验证用户
+P2 --> Guest : 注册/登录结果
+
+' ============================================
+' 注册用户数据流
+' ============================================
+User --> P1 : AI 阅读助手请求
+P1 --> P5 : /ai/reading
+P5 --> AIAPI : 阅读分析请求
+AIAPI --> P5 : 阅读分析结果
+P5 --> D8 : 记录日志
+P1 --> User : AI 阅读分析
+
+User --> P3 : 创建/编辑/删除文章
+P3 --> D2 : 读写文章
+P3 --> D3 : 关联知识合集
+P3 --> D4 : 关联分类
+P3 --> D5 : 关联标签
+P3 --> P5 : 发布时生成搜索摘要
+P5 --> AIAPI : 搜索摘要生成请求
+AIAPI --> P5 : 搜索摘要
+P5 --> D2 : 更新 ai_search_summary
+P5 --> D8 : 记录日志
+P3 --> User : 操作结果
+
+User --> P4 : 提交评论
+P4 --> D6 : 写入评论 (status=pending)
+P4 --> User : 等待审核
+
+User --> P4 : 点赞/收藏
+P4 --> D7 : 写入/删除点赞或收藏
+P4 --> D2 : 更新计数
+P4 --> User : 操作反馈
+
+User --> P5 : AI 写作 (搜资料/大纲/润色/搜索摘要/对话)
+P5 --> AIAPI : Chat Completions
+AIAPI --> P5 : AI 生成结果
+P5 --> D8 : 记录调用日志
+P5 --> User : AI 返回结果
+
+' ============================================
+' 管理员数据流
+' ============================================
+Admin --> P7 : 查看仪表盘
+P7 --> D1 : 统计用户数
+P7 --> D2 : 统计文章/草稿/审核状态
+P7 --> D3 : 统计合集数
+P7 --> D4 : 统计分类数
+P7 --> D5 : 统计标签数
+P7 --> D6 : 统计待审核评论
+P7 --> Admin : 统计面板
+
+Admin --> P7 : 用户/分类/标签/合集管理
+P7 --> D1 : CRUD 用户
+P7 --> D4 : CRUD 分类
+P7 --> D5 : CRUD 标签
+P7 --> D3 : CRUD 合集
+P7 --> Admin : 管理结果
+
+Admin --> P7 : AI 内容审核/质量检测
+P7 --> P5 : quality_check/review
+P5 --> AIAPI : 审核/质量请求
+AIAPI --> P5 : 评分/报告/审核结果
+P5 --> D2 : 更新 ai_review_*/ai_quality_*
+P5 --> D8 : 记录日志
+P7 --> Admin : 审核/质量报告
+
+' ============================================
+' AI API 公共流
+' ============================================
+P5 --> AIAPI : Chat Completions
+P6 --> AIAPI : 意图理解/重排序
+AIAPI --> P5 : AI 结果
+AIAPI --> P6 : AI 结果
+
+note bottom
+  v1.0 课程交付阶段。DFD Level 1 — 系统内部数据流。
+  P5 新增 v1.0：research, search-summary, reading_assistant, chat, quality_check。
+  D1 新增：profile_markdown。D2 新增：ai_search_summary, ai_review_*, ai_quality_*。
+  AI API 需配置 API Key 后验证。
+end note
+@enduml

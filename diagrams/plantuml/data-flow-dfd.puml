@@ -1,0 +1,39 @@
+@startuml
+title v1.0 AI 驱动的知识写作与搜索平台 - 数据流图 (上下文图 / Level 0)
+
+skinparam componentStyle rectangle
+skinparam defaultFontSize 13
+
+actor "游客" as Guest
+actor "注册用户" as User
+actor "管理员" as Admin
+cloud "AI API\n(OpenAI 兼容)" as AIAPI
+
+rectangle "稷下知识博客系统 v1.0\n(personal-blog-system)" as System {
+
+  rectangle "P0\nAI 驱动的知识写作\n与搜索平台" as P0
+}
+
+' 游客数据流
+Guest --> P0 : 首次访问着陆页\n浏览 /home/发现页\n阅读文章\n传统搜索/AI 搜索\n注册/登录
+P0 --> Guest : 着陆页/首页/文章列表/详情\n搜索结果 (传统+AI)\nAI 阅读助手分析\n注册/登录结果
+
+' 注册用户数据流
+User --> P0 : 登录凭据\n文章内容/分类/标签/知识合集\n评论/点赞/收藏\nAI 写作请求 (搜资料/大纲/润色/搜索摘要)\nAI 阅读助手问答\nMarkdown 个人主页编辑
+P0 --> User : 个人中心/写作/发布结果\nAI 辅助结果\n评论状态反馈\n搜索摘要生成结果
+
+' 管理员数据流
+Admin --> P0 : 登录凭据\n用户/文章/分类/标签/合集管理\n评论审核\nAI 配置查询\nAI 内容审核/质量检测触发
+P0 --> Admin : 仪表盘统计数据\n管理操作结果\nAI 审核/质量报告\n待审核列表
+
+' AI API 数据流
+P0 --> AIAPI : Chat Completions 请求\n(写作/搜索/阅读/审核/搜索摘要)
+AIAPI --> P0 : AI 生成结果\n(文本/关键词/排序/评分/报告)
+
+note bottom
+  v1.0 课程交付阶段。DFD Level 0 — 上下文图。
+  CR-009 产品基线：AI 驱动的知识写作与搜索平台。
+  新增 v1.0 数据流：AI 阅读助手、AI 内容审核、搜索摘要、
+  首次着陆页、Markdown 个人主页。
+end note
+@enduml

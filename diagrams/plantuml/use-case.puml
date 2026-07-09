@@ -1,5 +1,5 @@
 @startuml
-title v0.5.1 多用户知识专栏博客系统 - 用例图
+title v1.0 AI 驱动的知识写作与搜索平台 - 用例图
 
 left to right direction
 skinparam packageStyle rectangle
@@ -7,43 +7,55 @@ skinparam packageStyle rectangle
 actor "游客" as Guest
 actor "注册用户" as User
 actor "管理员" as Admin
-actor "AI 服务\n需配置 API Key 后验证" as AI
+actor "AI 服务\n(OpenAI 兼容 API)" as AI
 
-rectangle "personal-blog-system\n当前分支：process/unified-main-repo（工程治理分支）" {
-  usecase "浏览首页/发现页/文章列表" as UC_Browse
-  usecase "阅读已发布文章" as UC_Read
-  usecase "按分类/标签/专栏/作者浏览" as UC_Discover
+rectangle "personal-blog-system\n当前分支：work/v1.0-course-delivery（课程交付分支）" {
+  ' 游客用例
+  usecase "首次访问着陆页 (/)" as UC_Landing
+  usecase "浏览首页 /home\n极简自然语言搜索入口" as UC_Home
+  usecase "浏览发现页/文章列表" as UC_Discover
+  usecase "阅读已发布文章\n含 AI 阅读助手" as UC_Read
+  usecase "按分类/标签/知识合集浏览" as UC_Browse
   usecase "传统关键词搜索" as UC_Search
   usecase "注册账号" as UC_Register
   usecase "登录/退出" as UC_Login
 
-  usecase "维护个人资料/修改密码" as UC_Profile
-  usecase "创建和管理自己的专栏" as UC_Column
-  usecase "新建/保存草稿/发布文章" as UC_Write
+  ' 注册用户用例
+  usecase "维护个人资料\nMarkdown 知识主页" as UC_Profile
+  usecase "创建和管理知识合集\n(原专栏)" as UC_Column
+  usecase "新建/保存草稿/发布文章\n分类标签可手动输入" as UC_Write
   usecase "编辑/删除自己的文章" as UC_EditArticle
   usecase "提交评论（待审核）" as UC_Comment
   usecase "点赞/收藏文章" as UC_LikeFav
 
-  usecase "后台仪表盘" as UC_Dashboard
+  ' 管理员用例
+  usecase "后台仪表盘\n全站数据统计" as UC_Dashboard
   usecase "管理用户" as UC_AdminUser
-  usecase "管理全站文章" as UC_AdminArticle
-  usecase "管理分类/标签/专栏" as UC_AdminTaxonomy
+  usecase "管理全站文章\n含 AI 审核状态" as UC_AdminArticle
+  usecase "管理分类/标签/知识合集" as UC_AdminTaxonomy
   usecase "审核/隐藏/删除评论" as UC_Moderate
   usecase "查看 AI 配置状态" as UC_AIStatus
 
-  usecase "AI 摘要/标签/润色/问答/大纲/标题" as UC_AIWriting
-  usecase "AI 智能搜索\n意图理解/扩展/SQL 候选/重排/降级" as UC_AISearch
-  usecase "记录 AI 基础日志" as UC_AILog
+  ' AI 辅助用例 (v1.0 扩展)
+  usecase "AI 写作助手\n搜资料/大纲/润色/搜索摘要" as UC_AIWriting
+  usecase "AI 阅读助手\n文章智能问答分析" as UC_AIReading
+  usecase "AI 内容审核\n质量评分/报告/建议" as UC_AIReview
+  usecase "AI 智能搜索\n意图理解/扩展/重排/降级" as UC_AISearch
+  usecase "记录 AI 调用日志" as UC_AILog
 }
 
-Guest --> UC_Browse
-Guest --> UC_Read
+' 游客关联
+Guest --> UC_Landing
+Guest --> UC_Home
 Guest --> UC_Discover
+Guest --> UC_Read
+Guest --> UC_Browse
 Guest --> UC_Search
 Guest --> UC_Register
 Guest --> UC_Login
 Guest --> UC_AISearch
 
+' 用户继承游客
 User --|> Guest
 User --> UC_Profile
 User --> UC_Column
@@ -52,7 +64,9 @@ User --> UC_EditArticle
 User --> UC_Comment
 User --> UC_LikeFav
 User --> UC_AIWriting
+User --> UC_AIReading
 
+' 管理员继承用户
 Admin --|> User
 Admin --> UC_Dashboard
 Admin --> UC_AdminUser
@@ -60,20 +74,30 @@ Admin --> UC_AdminArticle
 Admin --> UC_AdminTaxonomy
 Admin --> UC_Moderate
 Admin --> UC_AIStatus
+Admin --> UC_AIReview
 
-UC_AIWriting ..> UC_AILog : 写入基础日志
-UC_AISearch ..> UC_AILog : 写入基础日志
+' AI 辅助关系
+UC_AIWriting ..> UC_AILog : 写入日志
+UC_AISearch ..> UC_AILog : 写入日志
+UC_AIReading ..> UC_AILog : 写入日志
+UC_AIReview ..> UC_AILog : 写入日志
 AI --> UC_AIWriting
 AI --> UC_AISearch
+AI --> UC_AIReading
+AI --> UC_AIReview
 
 note right of UC_AIWriting
-  当前代码接口存在；
-  真实远程调用需配置 API Key 后验证。
+  v1.0 收束为四项核心：
+  搜资料(research)、大纲(outline)、
+  润色(polish)、搜索摘要(search-summary)。
+  真实调用需配置 API Key 后验证。
 end note
 
 note bottom
-  ADR-002：选择方案 B，保留 Flask + Jinja2 + SQLAlchemy + SQLite 技术栈，
-  在测试保护、需求确认和 ADR 约束下做受控局部重构。
-  本图只表达当前实现和文档确认范围，不包含未来候选能力。
+  v1.0 课程交付阶段（分支 work/v1.0-course-delivery）。
+  CR-009 产品重新基线化：AI 驱动的知识写作与搜索平台。
+  新增 v1.0 能力：首次着陆页、AI 阅读助手、AI 内容审核、
+  Markdown 个人主页、分类标签手动输入、文章增强。
+  保留 Flask + Jinja2 + SQLAlchemy + SQLite 技术栈。
 end note
 @enduml

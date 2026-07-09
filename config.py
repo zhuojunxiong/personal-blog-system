@@ -39,3 +39,4 @@ class Config:
     AI_MAX_TOKENS = int(os.getenv("AI_MAX_TOKENS", "2000"))
     AI_ENABLED = os.getenv("AI_ENABLED", "1") == "1"
     WTF_CSRF_SECRET_KEY = _get_or_create_secret("WTF_CSRF_SECRET_KEY", _CSRF_SECRET_FILE)
+    DEMO_AUTO_LOGIN = os.getenv("DEMO_AUTO_LOGIN", "")  # 演示模式：设为用户名即可自动登录

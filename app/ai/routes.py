@@ -174,8 +174,11 @@ def smart_search():
     if not query:
         return jsonify({"ok": False, "message": "请输入搜索内容。"}), 400
 
-    page = max(1, int(data.get("page") or 1))
-    page_size = min(max(1, int(data.get("page_size") or data.get("pageSize") or 5)), 20)
+    try:
+        page = max(1, int(data.get("page") or 1))
+        page_size = min(max(1, int(data.get("page_size") or data.get("pageSize") or 5)), 20)
+    except (TypeError, ValueError):
+        return jsonify({"ok": False, "message": "分页参数不正确。"}), 400
 
     try:
         result = ai_service.smart_search(query, page=page, per_page=page_size)
@@ -194,9 +197,14 @@ def smart_search():
         {
             "ok": True,
             "understanding": result.get("understanding", ""),
+            "keywords": result.get("keywords", []),
+            "pipeline": result.get("pipeline", []),
             "results": result.get("results", []),
             "total": result.get("total", 0),
             "fallback": result.get("fallback", False),
+            "source": result.get("source", ""),
+            "page": page,
+            "page_size": page_size,
         }
     )
 

@@ -1843,7 +1843,7 @@
   max-width: 980px;
   margin: 0;
   color: #11100e;
-  font-size: clamp(2.8rem, 6vw, 5.9rem);
+  font-size: clamp(2.2rem, 4.5vw, 4.2rem);
   font-weight: 700;
   line-height: 1.25;
   text-shadow: 0 8px 26px rgba(58, 42, 22, 0.08);
@@ -2189,13 +2189,84 @@
 }
 
 .ai-search-understanding::before {
-  content: "AI 理解";
+  content: "这样理解你的问题";
   display: block;
   margin-bottom: 0.45rem;
   color: var(--v041-accent-dark);
   font-size: 0.82rem;
   font-weight: 650;
   letter-spacing: 0.04em;
+}
+
+.ai-search-pipeline {
+  max-width: 880px;
+  margin: 0 auto 1.5rem;
+  padding: 1rem;
+  border: 1px solid rgba(70, 58, 43, 0.14);
+  border-radius: 8px;
+  background: rgba(255, 252, 246, 0.82);
+  box-shadow: 0 16px 36px rgba(46, 38, 29, 0.08);
+}
+
+.ai-search-pipeline-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.85rem;
+  color: var(--v041-ink);
+  font-weight: 700;
+}
+
+.ai-search-pipeline-head small {
+  color: var(--v041-muted);
+  font-size: 0.84rem;
+  font-weight: 500;
+}
+
+.ai-search-pipeline ol {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ai-search-pipeline li {
+  min-height: 132px;
+  padding: 0.8rem;
+  border: 1px solid rgba(70, 58, 43, 0.12);
+  border-radius: 8px;
+  background: rgba(250, 246, 238, 0.78);
+}
+
+.ai-search-pipeline li.is-fallback {
+  border-color: rgba(170, 102, 52, 0.35);
+  background: rgba(255, 239, 220, 0.72);
+}
+
+.ai-search-pipeline li.is-skipped {
+  opacity: 0.76;
+}
+
+.ai-search-pipeline strong,
+.ai-search-pipeline p {
+  display: block;
+}
+
+.ai-search-pipeline strong {
+  margin-bottom: 0.5rem;
+  color: var(--v041-ink);
+  font-size: 0.95rem;
+}
+
+.ai-search-pipeline p {
+  margin: 0;
+  color: var(--v041-muted);
+  font-size: 0.86rem;
+  line-height: 1.55;
 }
 
 .ai-search-reason {
@@ -2956,6 +3027,14 @@
 @media (max-width: 760px) {
   .landing-ink {
     opacity: 0.18;
+  }
+
+  .ai-search-pipeline ol {
+    grid-template-columns: 1fr;
+  }
+
+  .ai-search-pipeline li {
+    min-height: auto;
   }
 
   .home-search-box,
